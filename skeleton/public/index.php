@@ -11,6 +11,6 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-require_once dirname(__DIR__) . '/fraym.php';
+require_once __DIR__ . '/fraym.php';
 
 include_once INNER_PATH . 'src/index.php';

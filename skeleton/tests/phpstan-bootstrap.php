@@ -1,19 +1,16 @@
 <?php
 
-/*
- * This file is part of the Fraym package.
- *
- * (c) Alex Garshin <alxgarshin@gmail.com>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 declare(strict_types=1);
 
 use Fraym\BaseObject\CurrentUser;
 use Fraym\Enum\{ActEnum, ActionEnum, RequestTypeEnum};
 use Fraym\Service\{CacheService, SQLDatabaseService};
+
+/**
+ * Don't forget to add the following to the `phpstan.neon` of your project:
+ * includes:
+ *     - vendor/alxgarshin/fraym/extension.neon 
+ */
 
 define('INNER_PATH', '');
 define('PRE_REQUEST_CHECK', ($_REQUEST['preRequestCheck'] ?? '') === 'true');

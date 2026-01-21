@@ -1,0 +1,13 @@
+parameters:
+	dynamicConstantNames:
+		- ABSOLUTE_PATH
+		- INNER_PATH
+		- ACTION
+		- ACT
+		- KIND
+		- CMSVC
+		- ID
+		- OBJ_TYPE
+		- OBJ_ID
+		- PAGE
+		- SORTING

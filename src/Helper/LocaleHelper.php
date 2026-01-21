@@ -168,7 +168,7 @@ abstract class LocaleHelper implements Helper
         }
 
         if ($entityName === 'fraym') {
-            $filePath = INNER_PATH . 'lib/fraym/Locale/' . CookieHelper::getCookie('locale') . '.json';
+            $filePath = __DIR__ . '/../Locale/' . CookieHelper::getCookie('locale') . '.json';
         } elseif ($entityName === 'global') {
             $filePath = INNER_PATH . 'src/CMSVC/' . CookieHelper::getCookie('locale') . '.json';
         } else {

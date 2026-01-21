@@ -1,18 +1,7 @@
 includes:
+	- extension.neon
 	- phpstan-baseline.neon
 parameters:
-	dynamicConstantNames:
-		- ABSOLUTE_PATH
-		- INNER_PATH
-		- ACTION
-		- ACT
-		- KIND
-		- CMSVC
-		- ID
-		- OBJ_TYPE
-		- OBJ_ID
-		- PAGE
-		- SORTING
 	bootstrapFiles:
 		- tests/phpstan-bootstrap.php
 	level: 5
