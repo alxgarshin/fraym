@@ -11,10 +11,6 @@ use Fraym\Enum\ActionEnum;
 use Fraym\Helper\{CookieHelper, DataHelper, LocaleHelper, ResponseHelper, TextHelper};
 use Fraym\Interface\Response;
 use Fraym\Response\{ArrayResponse, HtmlResponse};
-use Fraym\Service\GlobalTimerService;
-
-/** Таймер */
-$_GLOBALTIMER = new GlobalTimerService();
 
 /** Логинимся / выходим */
 if ('logout' === ACTION) {
@@ -101,7 +97,7 @@ if ($RESPONSE_DATA instanceof ArrayResponse) {
         } else {
             $RESPONSE_RESULT['messages'] = $cookieMessages ?? [];
         }
-        $RESPONSE_RESULT['executionTime'] = $_GLOBALTIMER->getTimerDiff();
+        $RESPONSE_RESULT['executionTime'] = GLOBALTIMER->getTimerDiff();
     }
     header('Access-Control-Allow-Origin: *');
     echo DataHelper::jsonFixedEncode($RESPONSE_RESULT);
@@ -130,7 +126,7 @@ if ($RESPONSE_DATA instanceof ArrayResponse) {
                 'html' => $RESPONSE_DATA->getHtml(),
                 'pageTitle' => $PAGETITLE,
                 'messages' => $cookieMessages ?? [],
-                'executionTime' => $_GLOBALTIMER->getTimerDiff(),
+                'executionTime' => GLOBALTIMER->getTimerDiff(),
             ],
         );
         header('Access-Control-Allow-Origin: *');
@@ -154,6 +150,6 @@ if ($RESPONSE_DATA instanceof ArrayResponse) {
 
         /** Выводим html */
         echo $RESPONSE_RESULT;
-        echo $_GLOBALTIMER->getTimerDiffStr();
+        echo GLOBALTIMER->getTimerDiffStr();
     }
 }

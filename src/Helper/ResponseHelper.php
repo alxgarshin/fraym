@@ -44,7 +44,7 @@ abstract class ResponseHelper implements Helper
                 }
             }
             $response['redirect'] = $redirectPath;
-            $response['executionTime'] = $GLOBALS['_GLOBALTIMER']->getTimerDiff();
+            $response['executionTime'] = GLOBALTIMER->getTimerDiff();
             header('Access-Control-Allow-Origin: *');
             print DataHelper::jsonFixedEncode($response);
             exit;

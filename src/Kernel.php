@@ -16,12 +16,14 @@ namespace Fraym;
 use Fraym\BaseObject\CurrentUser;
 use Fraym\Enum\{ActEnum, ActionEnum, RequestTypeEnum};
 use Fraym\Helper\{CookieHelper, DataHelper, LocaleHelper};
-use Fraym\Service\{CacheService, EnvService, SQLDatabaseService};
+use Fraym\Service\{CacheService, EnvService, GlobalTimerService, SQLDatabaseService};
 
 class Kernel
 {
     public static function init(): void
     {
+        define('GLOBALTIMER', new GlobalTimerService());
+
         /** Определяем внутренний путь сервера */
         $_ENV['INNER_PATH'] = __DIR__ . '/../../../../';
         define('INNER_PATH', $_ENV['INNER_PATH']);
@@ -47,6 +49,7 @@ class Kernel
         if (REQUEST_TYPE->isApiRequest()) {
             $_ENV['GLOBALTIMERDRAWREPORT'] = false;
         }
+
         define('PRE_REQUEST_CHECK', ($_REQUEST['preRequestCheck'] ?? '') === 'true');
 
         define('ABSOLUTE_PATH', $_ENV['ABSOLUTE_PATH']);
