@@ -1,4 +1,5 @@
 {
+    "name": "alxgarshin/fraym",
     "type": "library",
     "license": "MIT",
     "description": "The Fraym PHP framework",
