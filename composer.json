@@ -39,7 +39,10 @@
     },
     "autoload": {
         "psr-4": {
-            "Fraym\\": "src/"
+            "Fraym\\": "src/",
+            "Captcha\\": "src/Vendor/Captcha/",
+            "Identicon\\": "src/Vendor/Identicon",
+            "WideImage\\": "src/Vendor/Wideimage/"
         }
     },
     "autoload-dev": {

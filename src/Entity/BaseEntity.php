@@ -16,7 +16,7 @@ namespace Fraym\Entity;
 use Fraym\BaseObject\{BaseController, BaseModel, BaseView};
 use Fraym\Element\Item\{Calendar, Checkbox, Email, File, H1, Login, Multiselect, Number, Password, Timestamp};
 use Fraym\Entity\Trait\PageCounter;
-use Fraym\Enum\{ActEnum, ActionEnum, MultiObjectsEntitySubTypeEnum, SubstituteDataTypeEnum};
+use Fraym\Enum\{ActEnum, ActionEnum, DbTypeEnum, MultiObjectsEntitySubTypeEnum, SubstituteDataTypeEnum};
 use Fraym\Helper\{AuthHelper, CookieHelper, DataHelper, DateHelper, LocaleHelper, ObjectsHelper, ResponseHelper, TextHelper};
 use Fraym\Interface\{DeletedAt, ElementItem, Response};
 use Fraym\Response\{ArrayResponse, HtmlResponse};
@@ -422,7 +422,7 @@ abstract class BaseEntity
                         if (!is_null($id)) {
                             if (!is_null($objectRights->changeRestrict)) {
                                 $result = DB->query(
-                                    'SELECT * FROM ' . $this->table . ' WHERE ' . $objectRights->changeRestrict . ' AND id=:id',
+                                    'SELECT * FROM ' . DB->dbType->quoteIdentifier($this->table) . ' WHERE ' . $objectRights->changeRestrict . ' AND id=:id',
                                     [['id', $id]],
                                     true,
                                 );
@@ -511,7 +511,7 @@ abstract class BaseEntity
                     if (!is_null($id)) {
                         if (!is_null($objectRights->deleteRestrict)) {
                             $result = DB->query(
-                                'SELECT * FROM ' . $this->table . ' WHERE ' . $objectRights->deleteRestrict . ' AND id=:id',
+                                'SELECT * FROM ' . DB->dbType->quoteIdentifier($this->table) . ' WHERE ' . $objectRights->deleteRestrict . ' AND id=:id',
                                 [['id', $id]],
                                 true,
                             );
@@ -659,7 +659,7 @@ abstract class BaseEntity
                     $QUERY_PARAMS = $filtersQueryParams;
                 }
 
-                $QUERY = "SELECT t1.*" . $leftJoinedFieldsSql . " FROM " . $this->table . " AS t1" . $leftJoinedTablesSql . $preparedViewRestrictSql;
+                $QUERY = "SELECT t1.*" . $leftJoinedFieldsSql . " FROM " . DB->dbType->quoteIdentifier($this->table) . " AS t1" . $leftJoinedTablesSql . $preparedViewRestrictSql;
 
                 if (!is_null($preparedViewRestrictSql) && $this->filters->getPreparedSearchQuerySql() !== "") {
                     $QUERY .= " AND";
@@ -850,7 +850,7 @@ abstract class BaseEntity
                     } else {
                         if (in_array($act, [ActEnum::view, ActEnum::edit]) && !is_null($modelRights->viewRestrict)) {
                             $viewCheckData = DB->query(
-                                'SELECT * FROM ' . $this->table . ' WHERE id=:id AND ' . $modelRights->viewRestrict,
+                                'SELECT * FROM ' . DB->dbType->quoteIdentifier($this->table) . ' WHERE id=:id AND ' . $modelRights->viewRestrict,
                                 [['id', $id]],
                                 true,
                             );
@@ -862,7 +862,7 @@ abstract class BaseEntity
 
                         if (in_array($act, [ActEnum::edit]) && !is_null($modelRights->changeRestrict)) {
                             $changeCheckData = DB->query(
-                                'SELECT * FROM ' . $this->table . ' WHERE id=:id AND ' . $modelRights->changeRestrict,
+                                'SELECT * FROM ' . DB->dbType->quoteIdentifier($this->table) . ' WHERE id=:id AND ' . $modelRights->changeRestrict,
                                 [['id', $id]],
                                 true,
                             );
@@ -874,7 +874,7 @@ abstract class BaseEntity
 
                         if (in_array($act, [ActEnum::edit]) && !is_null($modelRights->deleteRestrict)) {
                             $deleteCheckData = DB->query(
-                                'SELECT * FROM ' . $this->table . ' WHERE id=:id AND ' . $modelRights->deleteRestrict,
+                                'SELECT * FROM ' . DB->dbType->quoteIdentifier($this->table) . ' WHERE id=:id AND ' . $modelRights->deleteRestrict,
                                 [['id', $id]],
                                 true,
                             );
@@ -1249,7 +1249,7 @@ abstract class BaseEntity
                         }
 
                         if (count($substituteDataArray) > 0) {
-                            if ($_ENV['DATABASE_TYPE'] === "pgsql") {
+                            if (DB->dbType === DbTypeEnum::POSTGRESQL) {
                                 $count_fields = 0;
                                 $ordField = "CASE";
 

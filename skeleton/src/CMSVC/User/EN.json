@@ -1,0 +1,155 @@
+{
+  "global": {
+    "title": "Users",
+    "name_hidden": "hidden",
+    "online": "online",
+    "offline": "offline",
+    "was_online": "Was online%s",
+    "was_registered": "Has registered%s",
+    "you_re_banned": "Your profile was banned. If you think it's a mistake, please, contact <a href=\"\/help\/\">the administration<\/a>."
+  },
+  "fraym_model": {
+    "elements": {
+      "through_social_network": {
+        "shownName": "Via a social network"
+      },
+      "list_of_social_networks": {
+        "shownName": " ",
+        "defaultValue": "<div class=\"or_use_social_network_list\"><a href=\"\/vkauth\/\" title=\"enter using Vkontakte\" class=\"social_1\"><span class=\"sbi sbi-vk\"></span></a><a href=\"\/fbauth\/\" title=\"enter using Facebook\" class=\"social_2\"><span class=\"sbi sbi-fb\"></span></a></div>"
+      },
+      "or_by_inputting_data": {
+        "shownName": "Or fill in the information"
+      },
+      "block_auto_redirect": {
+        "shownName": "Turn off auto-redirect to the last visited page"
+      },
+      "block_save_referer": {
+        "shownName": "Turn off \"Go back to previous page\" by default"
+      },
+      "messaging_active": {
+        "shownName": "Activate notifications in browser"
+      },
+      "em_verified": {
+        "shownName": "Email verified",
+        "values": [
+          [
+            "",
+            "<span class=\"sbi sbi-times\"></span> <a action_request=\"user/reverify_em\">Send again a link to reverify email</a>."
+          ],
+          [
+            "1",
+            "<span class=\"sbi sbi-check\"></span>"
+          ],
+          [
+            "0",
+            "<span class=\"sbi sbi-times\"></span> <a action_request=\"user/reverify_em\">Send again a link to reverify email</a>."
+          ]
+        ]
+      },
+      "subs_objects": {
+        "values": [
+          [
+            "{conversation}",
+            "personal messages"
+          ]
+        ],
+        "shownName": "Send notifications about"
+      },
+      "subs_type": {
+        "shownName": "Send notifications",
+        "values": [
+          [
+            "1",
+            "immediately"
+          ],
+          [
+            "2",
+            "once per day"
+          ],
+          [
+            "10",
+            "never"
+          ]
+        ]
+      },
+      "bazecount": {
+        "shownName": "Records limit",
+        "helpText": "how many records to show on one page?"
+      },
+      "rights": {
+        "shownName": "Rights",
+        "values": [
+          [
+            "admin",
+            "admin"
+          ],
+          [
+            "help",
+            "Support: you receive messages from «Help» section"
+          ],
+          [
+            "blocked_profile",
+            "Profile change blocked"
+          ],
+          [
+            "banned",
+            "User is banned"
+          ]
+        ]
+      },
+      "updated_at": {
+        "shownName": "Last change"
+      },
+      "baseinfo": {
+        "shownName": "Basic information"
+      },
+      "h1_1": {
+        "shownName": "Basic information"
+      },
+      "sid": {
+        "shownName": "Your id"
+      },
+      "em": {
+        "shownName": "Email"
+      },
+      "password_hashed": {
+        "shownName": "Password",
+        "helpText": "No less than 3 and no more than 20 symbols."
+      },
+      "password_hashed2": {
+        "shownName": "Repeat password"
+      },
+      "h1_2": {
+        "shownName": "Access"
+      },
+      "full_name": {
+        "shownName": "Full name"
+      },
+      "avatar": {
+        "shownName": "Photo",
+        "helpText": "Format: gif, jpeg, png. Size: no more than 400 pixels."
+      },
+      "agreement": {
+        "shownName": "I fully accept all terms of <a href=\"/agreement/\" target=\"_blank\">the user agreement</a> and the personal data processing agreement."
+      },
+      "contacts": {
+        "shownName": "Contacts"
+      },
+      "h1_3": {
+        "shownName": "Contacts"
+      },
+      "phone": {
+        "shownName": "Telephone"
+      },
+      "google_id": {
+        "shownName": "Google"
+      },
+      "settings": {
+        "shownName": "Settings"
+      },
+      "h1_6": {
+        "shownName": "Settings"
+      }
+    }
+  }
+}

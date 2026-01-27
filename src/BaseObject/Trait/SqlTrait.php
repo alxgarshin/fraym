@@ -19,10 +19,12 @@ use PDOException;
 
 trait SqlTrait
 {
-    public function getSql(): ?string
+    public function getSql(?string $sqlPath = null): ?string
     {
-        $sqlPath = INNER_PATH . 'src/Migrations/Sql/Sql' .
-            ObjectsHelper::getClassShortName($this::class, ($this instanceof BaseMigration ? 'Migration' : 'Fixture')) . '.sql';
+        if ($sqlPath === null) {
+            $sqlPath = INNER_PATH . 'src/Migrations/Sql/Sql' .
+                ObjectsHelper::getClassShortName($this::class, ($this instanceof BaseMigration ? 'Migration' : 'Fixture')) . '.sql';
+        }
 
         if (file_exists($sqlPath)) {
             return trim(file_get_contents($sqlPath));
@@ -31,9 +33,9 @@ trait SqlTrait
         return null;
     }
 
-    public function executeSql(): bool
+    public function executeSql(?string $sqlPath = null): bool
     {
-        $SQL = $this->getSql();
+        $SQL = $this->getSql($sqlPath);
 
         if (!is_null($SQL) && $SQL !== '') {
             try {

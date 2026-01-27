@@ -84,10 +84,10 @@ class Checkbox extends BaseElement
         if (!isset($this->fieldValue)) {
             $pureValue = $this->model?->getModelDataFieldValue($this->name);
 
-            if (!is_null($pureValue) && trim($pureValue) !== '') {
+            if (is_null($pureValue) || is_bool($pureValue)) {
+                $this->fieldValue = $pureValue;
+            } elseif (trim($pureValue) !== '') {
                 $this->fieldValue = (bool) trim($pureValue);
-            } else {
-                $this->fieldValue = null;
             }
         }
 

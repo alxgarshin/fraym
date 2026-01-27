@@ -1,5 +1,7 @@
 {
   "global": {
-    "welcome": "Welcome!"
+    "welcome": "Welcome!",
+    "logged_links": "<a href=\"/profile/\">Profile</a><br><a href=\"/logout/\">Logout</a><br><a href=\"/article/\">Articles</a> (<a href=\"/articles_edit/\">edit</a>)<br><a href=\"/news/\">News</a> (<a href=\"/news_edit/\">edit</a>)<br><a href=\"/tag/\">Tags</a>",
+    "not_logged_links": "<a href=\"/login/\">Login</a> | <a href=\"/register/\">Registration</a>"
   }
 }

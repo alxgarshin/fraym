@@ -156,7 +156,7 @@ final class Filters
         $groupFieldsQuerySign = $_ENV['DATABASE_TYPE'] === 'mysql' ? "\\\"" : "do_not_change_this_quote";
 
         $firstSearchQuery = true;
-        [$regexpWord, $antiRegexpWord] = $this->getRegexpWords();
+        [$regexpWord, $antiRegexpWord] = DB->dbType->getRegexpWords();
 
         foreach ($filtersBlocks as $filtersBlock) {
             $blockSearchQuerySql = "";
@@ -974,22 +974,6 @@ final class Filters
         }
 
         return null;
-    }
-
-    private function getRegexpWords(): array
-    {
-        $regexpWord = 'REGEXP';
-        $antiRegexpWord = 'NOT REGEXP';
-
-        if ($_ENV['DATABASE_TYPE'] === "pgsql") {
-            $regexpWord = "~*";
-            $antiRegexpWord = "!~*";
-        }
-
-        return [
-            $regexpWord,
-            $antiRegexpWord,
-        ];
     }
 
     private function getSearchQuerySql(): ?string

@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Fraym\Service;
 
-use Fraym\Enum\OperandEnum;
+use Fraym\Enum\{DbTypeEnum, OperandEnum};
 use Fraym\Helper\{DataHelper, LocaleHelper};
 use Fraym\Interface\Database;
 use Generator;
@@ -23,6 +23,8 @@ use PDOStatement;
 
 final class SQLDatabaseService implements Database
 {
+    public DbTypeEnum $dbType;
+
     private PDO $DB;
 
     private array $lastQuery = [
@@ -36,13 +38,15 @@ final class SQLDatabaseService implements Database
     /** Конструктор соединения */
     private function __construct()
     {
+        $this->dbType = DbTypeEnum::init();
+
         try {
             $this->DB = new PDO(
                 $_ENV['DATABASE_TYPE'] . ':' .
                     ($_ENV['DATABASE_NAME'] !== '' ? 'dbname=' . $_ENV['DATABASE_NAME'] . ';' : '') .
                     'host=' . $_ENV['DATABASE_HOST'] .
                     ';port=' . $_ENV['DATABASE_PORT'] .
-                    ';charset=utf8mb4',
+                    ($_ENV['DATABASE_TYPE'] === "mysql" ? ';charset=utf8mb4' : ''),
                 $_ENV['DATABASE_USER'],
                 $_ENV['DATABASE_PASSWORD'],
             );
@@ -198,7 +202,7 @@ final class SQLDatabaseService implements Database
             foreach ($criteria as $key => $value) {
                 if (!is_null($value) && (!is_int($key) || !is_null($value[1] ?? null))) {
                     $useNoValue = false;
-                    $equalSign = "<=>";
+                    $equalSign = $_ENV['DATABASE_TYPE'] === 'mysql' ? "<=>" : "=";
                     $dbColumn = (is_array($value) && is_int($key)) ? $value[0] : $key;
 
                     if (is_array($value) && is_int($key) && !is_null($value[2] ?? null)) {
@@ -279,6 +283,8 @@ final class SQLDatabaseService implements Database
         bool $onlyCount = false,
         ?array $fieldsSet = null,
     ): false|array {
+        $tableName = $this->dbType->quoteIdentifier($tableName);
+
         [$whereQuery, $params] = $this->constructWhere($criteria);
 
         $orderQuery = "";
@@ -286,11 +292,13 @@ final class SQLDatabaseService implements Database
         if (!is_null($order)) {
             $orderQuery = " ORDER BY " . implode(", ", array_filter($order));
         }
+
         $limitQuery = "";
 
         if (!is_null($limit)) {
             $limitQuery = " LIMIT " . $limit;
         }
+
         $offsetQuery = "";
 
         if (!is_null($offset)) {
@@ -364,8 +372,9 @@ final class SQLDatabaseService implements Database
         array $data,
     ): false|array {
         if (count($data) > 0) {
-            $params = [];
+            $tableName = $this->dbType->quoteIdentifier($tableName);
 
+            $params = [];
             $keys = [];
 
             foreach ($data as $key => $value) {
@@ -398,8 +407,9 @@ final class SQLDatabaseService implements Database
         array $criteria,
     ): false|array {
         if (count($data) > 0) {
-            $params = [];
+            $tableName = $this->dbType->quoteIdentifier($tableName);
 
+            $params = [];
             $keys = [];
 
             foreach ($data as $key => $value) {
@@ -434,6 +444,8 @@ final class SQLDatabaseService implements Database
         array $criteria,
     ): false|array {
         if (count($criteria) > 0) {
+            $tableName = $this->dbType->quoteIdentifier($tableName);
+
             [$whereQuery, $params] = $this->constructWhere($criteria);
 
             /** @noinspection SqlWithoutWhere */
@@ -656,7 +668,10 @@ final class SQLDatabaseService implements Database
             }
 
             $and = $and !== '' ? " WHERE " . (str_starts_with($and, ' AND ') ? preg_replace('# AND #', '', $and, 1) : $and) : "";
-            $query = "SELECT " . (str_contains($table, " AS t1") ? "t1." : "") . "* FROM " . $table . $and . " ORDER BY " . $order;
+
+            $clearedTableName = str_replace(' AS t1', '', $table);
+
+            $query = "SELECT " . (str_contains($table, " AS t1") ? "t1." : "") . "* FROM " . $this->dbType->quoteIdentifier($clearedTableName) . (str_contains($table, " AS t1") ? " AS t1" : "") . $and . " ORDER BY " . $order;
 
             $fullDataArray = [];
             $data = $this->query(

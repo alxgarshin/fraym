@@ -1,0 +1,155 @@
+{
+  "global": {
+    "title": "Usuarios",
+    "name_hidden": "oculto",
+    "online": "en línea",
+    "offline": "desconectado",
+    "was_online": "Estuvo en línea%s",
+    "was_registered": "Se ha registrado%s",
+    "you_re_banned": "Tu perfil ha sido bloqueado. Si crees que es un error, por favor, contacta con <a href=\"\/help\/\">la administración<\/a>."
+  },
+  "fraym_model": {
+    "elements": {
+      "through_social_network": {
+        "shownName": "A través de una red social"
+      },
+      "list_of_social_networks": {
+        "shownName": " ",
+        "defaultValue": "<div class=\"or_use_social_network_list\"><a href=\"\/vkauth\/\" title=\"Ingresar usando Vkontakte\" class=\"social_1\"><span class=\"sbi sbi-vk\"></span></a><a href=\"\/fbauth\/\" title=\"Ingresar usando Facebook\" class=\"social_2\"><span class=\"sbi sbi-fb\"></span></a></div>"
+      },
+      "or_by_inputting_data": {
+        "shownName": "O completa la información"
+      },
+      "block_auto_redirect": {
+        "shownName": "Desactivar la redirección automática a la última página visitada"
+      },
+      "block_save_referer": {
+        "shownName": "Desactivar la opción \"Volver a la página anterior\" por defecto"
+      },
+      "messaging_active": {
+        "shownName": "Activar notificaciones en el navegador"
+      },
+      "em_verified": {
+        "shownName": "Correo electrónico verificado",
+        "values": [
+          [
+            "",
+            "<span class=\"sbi sbi-times\"></span> <a action_request=\"user/reverify_em\">Enviar de nuevo un enlace para volver a verificar el correo electrónico</a>."
+          ],
+          [
+            "1",
+            "<span class=\"sbi sbi-check\"></span>"
+          ],
+          [
+            "0",
+            "<span class=\"sbi sbi-times\"></span> <a action_request=\"user/reverify_em\">Enviar de nuevo un enlace para volver a verificar el correo electrónico</a>."
+          ]
+        ]
+      },
+      "subs_objects": {
+        "values": [
+          [
+            "{conversation}",
+            "mensajes personales"
+          ]
+        ],
+        "shownName": "Enviar notificaciones sobre"
+      },
+      "subs_type": {
+        "shownName": "Enviar notificaciones",
+        "values": [
+          [
+            "1",
+            "inmediatamente"
+          ],
+          [
+            "2",
+            "una vez al día"
+          ],
+          [
+            "10",
+            "nunca"
+          ]
+        ]
+      },
+      "bazecount": {
+        "shownName": "Límite de registros",
+        "helpText": "¿Cuántos registros mostrar en una página?"
+      },
+      "rights": {
+        "shownName": "Derechos",
+        "values": [
+          [
+            "admin",
+            "administrador"
+          ],
+          [
+            "help",
+            "Soporte: Recibes mensajes de la sección «Ayuda»"
+          ],
+          [
+            "blocked_profile",
+            "Cambio de perfil bloqueado"
+          ],
+          [
+            "banned",
+            "Usuario baneado"
+          ]
+        ]
+      },
+      "updated_at": {
+        "shownName": "Último cambio"
+      },
+      "baseinfo": {
+        "shownName": "Información básica"
+      },
+      "h1_1": {
+        "shownName": "Información básica"
+      },
+      "sid": {
+        "shownName": "Tu ID"
+      },
+      "em": {
+        "shownName": "Correo electrónico"
+      },
+      "password_hashed": {
+        "shownName": "Contraseña",
+        "helpText": "Mínimo de 3 y máximo de 20 símbolos."
+      },
+      "password_hashed2": {
+        "shownName": "Repetir contraseña"
+      },
+      "h1_2": {
+        "shownName": "Acceso"
+      },
+      "full_name": {
+        "shownName": "Nombre completo"
+      },
+      "avatar": {
+        "shownName": "Foto",
+        "helpText": "Formato: gif, jpeg, png. Tamaño: máximo 400 píxeles."
+      },
+      "agreement": {
+        "shownName": "Acepto plenamente todos los términos de <a href=\"/agreement/\" target=\"_blank\">el acuerdo de usuario</a> y el acuerdo de tratamiento de datos personales."
+      },
+      "contacts": {
+        "shownName": "Contactos"
+      },
+      "h1_3": {
+        "shownName": "Contactos"
+      },
+      "phone": {
+        "shownName": "Teléfono"
+      },
+      "google_id": {
+        "shownName": "Google"
+      },
+      "settings": {
+        "shownName": "Ajustes"
+      },
+      "h1_6": {
+        "shownName": "Ajustes"
+      }
+    }
+  }
+}

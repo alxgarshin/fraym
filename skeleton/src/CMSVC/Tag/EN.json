@@ -1,0 +1,21 @@
+{
+  "global": {
+    "title": "Editing tags"
+  },
+  "fraym_model": {
+    "object_name": "tag",
+    "object_messages": [
+      "Tag uploaded successfully.",
+      "Tags changed successfully",
+      "Tag deleted successfully."
+    ],
+    "elements": {
+      "name": {
+        "shownName": "Title"
+      },
+      "updated_at": {
+        "shownName": "Last change"
+      }
+    }
+  }
+}

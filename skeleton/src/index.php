@@ -135,6 +135,7 @@ if ($RESPONSE_DATA instanceof ArrayResponse) {
         /** Вносим блоки информации в заданный шаблон визуализации */
         $RESPONSE_TEMPLATE = MainTemplate::asHTML();
         $RESPONSE_TEMPLATE = preg_replace('#<!--pagetitle-->#', $PAGETITLE, $RESPONSE_TEMPLATE);
+        $RESPONSE_RESULT = preg_replace('#<!--maincontent-->#', DataHelper::pregQuoteReplaced($RESPONSE_DATA->getHtml()), $RESPONSE_TEMPLATE);
 
         /** Добавляем сообщения-нотификации */
         $messageArray = '<script>

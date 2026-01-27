@@ -1,0 +1,4 @@
+form#form_profile div[id^="field_photo"] div.uploaded_file a.edit_file,
+form#form_profile div[id^="field_photo"] div.uploaded_file a.trash {
+    display: none;
+}

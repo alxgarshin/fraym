@@ -1,0 +1,155 @@
+{
+  "global": {
+    "title": "Пользователи",
+    "name_hidden": "скрыто",
+    "online": "онлайн",
+    "offline": "оффлайн",
+    "was_online": "Заходил%s",
+    "was_registered": "Зарегистрирован%s",
+    "you_re_banned": "Ваш профиль забанен за нарушения. Если Вы считаете это ошибкой, обратитесь в <a href=\"\/help\/\">администрацию<\/a>."
+  },
+  "fraym_model": {
+    "elements": {
+      "through_social_network": {
+        "shownName": "Через социальную сеть"
+      },
+      "list_of_social_networks": {
+        "shownName": " ",
+        "defaultValue": "<div class=\"or_use_social_network_list\"><a href=\"\/vkauth\/\" title=\"войти через вКонтакте\" class=\"social_1\"><span class=\"sbi sbi-vk\"></span></a><a href=\"\/fbauth\/\" title=\"войти через Facebook\" class=\"social_2\"><span class=\"sbi sbi-fb\"></span></a></div>"
+      },
+      "or_by_inputting_data": {
+        "shownName": "Или заполнив данные"
+      },
+      "block_auto_redirect": {
+        "shownName": "Выключить автопереход на последнюю посещенную страницу"
+      },
+      "block_save_referer": {
+        "shownName": "Выключить \"Вернуться на предыдущую страницу\" по умолчанию"
+      },
+      "messaging_active": {
+        "shownName": "Включить уведомления в браузере"
+      },
+      "em_verified": {
+        "shownName": "Е-mail подтвержден",
+        "values": [
+          [
+            "",
+            "<span class=\"sbi sbi-times\"></span> <a action_request=\"user/reverify_em\">Выслать повторно ссылку для подтверждения</a>."
+          ],
+          [
+            "1",
+            "<span class=\"sbi sbi-check\"><\/span>"
+          ],
+          [
+            "0",
+            "<span class=\"sbi sbi-times\"></span> <a action_request=\"user/reverify_em\">Выслать повторно ссылку для подтверждения</a>."
+          ]
+        ]
+      },
+      "subs_objects": {
+        "shownName": "Присылать уведомления о",
+        "values": [
+          [
+            "{conversation}",
+            "личных сообщениях"
+          ]
+        ]
+      },
+      "subs_type": {
+        "shownName": "Присылать уведомления на email",
+        "values": [
+          [
+            "1",
+            "сразу"
+          ],
+          [
+            "2",
+            "раз в день"
+          ],
+          [
+            "10",
+            "никогда"
+          ]
+        ]
+      },
+      "bazecount": {
+        "shownName": "Количество записей",
+        "helpText": "сколько записей показывать на одной странице?"
+      },
+      "rights": {
+        "shownName": "Права",
+        "values": [
+          [
+            "admin",
+            "Вы администратор"
+          ],
+          [
+            "help",
+            "Служба поддержки: Вы получаете сообщения из раздела «Помощь»"
+          ],
+          [
+            "blocked_profile",
+            "Заблокировано изменение профиля"
+          ],
+          [
+            "banned",
+            "Пользователь забанен"
+          ]
+        ]
+      },
+      "updated_at": {
+        "shownName": "Последнее изменение"
+      },
+      "baseinfo": {
+        "shownName": "Основные данные"
+      },
+      "h1_1": {
+        "shownName": "Основные данные"
+      },
+      "sid": {
+        "shownName": "Ваш id"
+      },
+      "em": {
+        "shownName": "Email"
+      },
+      "password_hashed": {
+        "shownName": "Пароль",
+        "helpText": "не менее 3 и не более 20 символов."
+      },
+      "password_hashed2": {
+        "shownName": "Повторите пароль"
+      },
+      "h1_2": {
+        "shownName": "Доступ"
+      },
+      "full_name": {
+        "shownName": "Ф.И.О."
+      },
+      "avatar": {
+        "shownName": "Фотография",
+        "helpText": "Форматы: gif, jpeg, png. Размер: не более 400 пикселей."
+      },
+      "agreement": {
+        "shownName": "Подтверждаю своё согласие с <a href=\"/agreement/\" target=\"_blank\">пользовательским соглашением и на обработку персональных данных</a>"
+      },
+      "contacts": {
+        "shownName": "Контакты"
+      },
+      "h1_3": {
+        "shownName": "Контакты"
+      },
+      "phone": {
+        "shownName": "Контактный телефон"
+      },
+      "google_id": {
+        "shownName": "Google"
+      },
+      "settings": {
+        "shownName": "Настройки"
+      },
+      "h1_6": {
+        "shownName": "Настройки"
+      }
+    }
+  }
+}

@@ -25,7 +25,7 @@ namespace Fraym;
 use DateTime;
 use Exception;
 use Fraym\BaseObject\{BaseFixture, BaseMigration};
-use Fraym\Enum\OperandEnum;
+use Fraym\Enum\{DbTypeEnum, OperandEnum};
 use Fraym\Helper\TextHelper;
 use Fraym\Service\{CacheService, EnvService, SQLDatabaseService};
 use RecursiveDirectoryIterator;
@@ -49,18 +49,6 @@ class Console
             'database:migrate:up',
             'database:migrate:down',
         ];
-
-        /** Парсим основной .env-файл */
-        (new EnvService(INNER_PATH . '.env'))->load();
-
-        /** Парсим дополнительные .env-файлы */
-        if (file_exists(INNER_PATH . '.env.dev')) {
-            (new EnvService(INNER_PATH . '.env.dev'))->load();
-        } elseif (file_exists(INNER_PATH . '.env.stage')) {
-            (new EnvService(INNER_PATH . '.env.stage'))->load();
-        } elseif (file_exists(INNER_PATH . '.env.prod')) {
-            (new EnvService(INNER_PATH . '.env.prod'))->load();
-        }
 
         /** Разбираем параметры запуска скрипта */
         $CMSVCName = null;
@@ -114,6 +102,24 @@ class Console
         if (!$action) {
             $this->echoResult("Action was not provided.", 'red');
             exit;
+        } elseif ($action === 'install') {
+            $this->copyDirectory(__DIR__ . '/../skeleton', INNER_PATH);
+
+            $this->echoResult("Skeleton project install success.");
+
+            exit;
+        }
+
+        /** Парсим основной .env-файл */
+        (new EnvService(INNER_PATH . '.env'))->load();
+
+        /** Парсим дополнительные .env-файлы */
+        if (file_exists(INNER_PATH . '.env.dev')) {
+            (new EnvService(INNER_PATH . '.env.dev'))->load();
+        } elseif (file_exists(INNER_PATH . '.env.stage')) {
+            (new EnvService(INNER_PATH . '.env.stage'))->load();
+        } elseif (file_exists(INNER_PATH . '.env.prod')) {
+            (new EnvService(INNER_PATH . '.env.prod'))->load();
         }
 
         if (!defined('TEST')) {
@@ -125,26 +131,39 @@ class Console
         }
 
         /** Соединение с БД должно предполагать, что БД еще не существует (например, она удалена в результате drop до этого) */
-        $databaseNameCache = $_ENV['DATABASE_NAME'];
-        $_ENV['DATABASE_NAME'] = '';
+        $dbType = DbTypeEnum::init();
+        $isPg = $dbType === DbTypeEnum::POSTGRESQL;
+        $dbNameQuoted = $dbType->quoteIdentifier($_ENV['DATABASE_NAME']);
+        $userNameQuoted = $dbType->quoteIdentifier($_ENV['DATABASE_USER']);
 
-        define('MIGRATE_DB', SQLDatabaseService::getInstance());
+        $databaseNameCache = $_ENV['DATABASE_NAME'];
+        $_ENV['DATABASE_NAME'] = $dbType->getRootTableName();
 
         if (in_array($_ENV['APP_ENV'], ['DEV', 'TEST'])) {
             $databaseUser = $_ENV['DATABASE_USER'];
             $databasePassword = $_ENV['DATABASE_PASSWORD'];
-            $_ENV['DATABASE_USER'] = 'root';
+            $_ENV['DATABASE_USER'] = $dbType->getRootUser();
             $_ENV['DATABASE_PASSWORD'] = 'secret';
+
             define("ROOT_DB", SQLDatabaseService::forceCreate());
+
             $_ENV['DATABASE_NAME'] = $databaseNameCache;
             $_ENV['DATABASE_USER'] = $databaseUser;
-            unset($databaseUser);
             $_ENV['DATABASE_PASSWORD'] = $databasePassword;
+            unset($databaseUser);
             unset($databasePassword);
 
             if ($action === 'database:drop') {
                 /** Полный сброс базы данных в dev и test окружениях */
-                if (ROOT_DB->query("DROP DATABASE IF EXISTS `" . $_ENV['DATABASE_NAME'] . "`;", []) !== false) {
+                if ($isPg) {
+                    ROOT_DB->query("
+                        SELECT pg_terminate_backend(pid) 
+                        FROM pg_stat_activity 
+                        WHERE datname = '" . $_ENV['DATABASE_NAME'] . "' AND pid <> pg_backend_pid();
+                    ", []);
+                }
+
+                if (ROOT_DB->query("DROP DATABASE IF EXISTS " . $dbNameQuoted . ";", []) !== false) {
                     $this->echoResult("Database `" . $_ENV['DATABASE_NAME'] . "` dropped.");
                 } else {
                     $this->echoResult("Database `" . $_ENV['DATABASE_NAME'] . "` not dropped.", 'red');
@@ -153,18 +172,55 @@ class Console
                 exit;
             } elseif (str_starts_with($action, 'database:migrate')) {
                 /** Проверка на наличие и создание в случае необходимости базы данных */
-                $checkForDB = MIGRATE_DB->query("SHOW DATABASES LIKE '" . $_ENV['DATABASE_NAME'] . "';", [], true);
+                $dbExists = false;
 
-                if (!$checkForDB) {
-                    ROOT_DB->query(
-                        "CREATE DATABASE IF NOT EXISTS `" . $_ENV['DATABASE_NAME'] . "`;",
-                        [],
-                    );
+                if ($isPg) {
+                    $checkSql = "SELECT 1 FROM pg_database WHERE datname = '" . $_ENV['DATABASE_NAME'] . "'";
+                } else {
+                    $checkSql = "SHOW DATABASES LIKE '" . $_ENV['DATABASE_NAME'] . "'";
+                }
 
-                    ROOT_DB->query(
-                        "GRANT ALL PRIVILEGES ON `" . $_ENV['DATABASE_NAME'] . "`.* TO '" . $_ENV['DATABASE_USER'] . "'@'%' IDENTIFIED BY '" . $_ENV['DATABASE_PASSWORD'] . "';",
-                        [],
-                    );
+                $result = ROOT_DB->query($checkSql, [], true);
+                $dbExists = !empty($result);
+
+                if (!$dbExists) {
+                    $createSql = "CREATE DATABASE " . $dbNameQuoted;
+
+                    if ($isPg) {
+                        $userExists = ROOT_DB->query(
+                            "SELECT 1 FROM pg_roles WHERE rolname = '" . $_ENV['DATABASE_USER'] . "'",
+                            [],
+                            true,
+                        );
+
+                        if ($userExists) {
+                            ROOT_DB->query(
+                                "ALTER USER " . $userNameQuoted . " WITH PASSWORD '" . $_ENV['DATABASE_PASSWORD'] . "'",
+                                [],
+                            );
+                        } else {
+                            ROOT_DB->query(
+                                "CREATE USER " . $userNameQuoted . " WITH PASSWORD '" . $_ENV['DATABASE_PASSWORD'] . "'",
+                                [],
+                            );
+                        }
+
+                        $createSql .= " OWNER " . $userNameQuoted;
+                    }
+
+                    ROOT_DB->query($createSql, []);
+
+                    if ($isPg) {
+                        ROOT_DB->query(
+                            "GRANT ALL PRIVILEGES ON DATABASE " . $dbNameQuoted . " TO " . $userNameQuoted,
+                            [],
+                        );
+                    } else {
+                        ROOT_DB->query(
+                            "GRANT ALL PRIVILEGES ON " . $dbNameQuoted . ".* TO '" . $_ENV['DATABASE_USER'] . "'@'%' IDENTIFIED BY '" . $_ENV['DATABASE_PASSWORD'] . "';",
+                            [],
+                        );
+                    }
                 }
             }
         } elseif ($action === 'database:drop') {
@@ -172,28 +228,38 @@ class Console
         }
 
         if ($_ENV['APP_ENV'] === 'DEV') {
-            if ($action === 'install') {
-                $this->copyDirectory(__DIR__ . '/../skeleton', INNER_PATH);
+            $_ENV['DATABASE_NAME'] = $databaseNameCache;
+            unset($databaseNameCache);
 
-                $this->echoResult("Skeleton project install success.");
-            } elseif (str_starts_with($action, 'database:migrate:')) {
+            define('MIGRATE_DB', SQLDatabaseService::forceCreate());
+
+            if (str_starts_with($action, 'database:migrate')) {
                 define('CACHE', CacheService::getInstance());
 
-                $_ENV['DATABASE_NAME'] = $databaseNameCache;
-                unset($databaseNameCache);
+                if ($isPg) {
+                    MIGRATE_DB->query(
+                        'CREATE TABLE IF NOT EXISTS "migration" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "migration_id" varchar(100) NOT NULL,
+  "migrated_at" timestamp NOT NULL,
+  "migration_result" json
+)',
+                        [],
+                    );
+                } else {
+                    MIGRATE_DB->query("USE " . $dbNameQuoted . ";", []);
 
-                MIGRATE_DB->query("USE `" . $_ENV['DATABASE_NAME'] . "`;", []);
-
-                MIGRATE_DB->query(
-                    "CREATE TABLE IF NOT EXISTS `migration` (
+                    MIGRATE_DB->query(
+                        "CREATE TABLE IF NOT EXISTS `migration` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `migration_id` varchar(100) NOT NULL,
   `migrated_at` timestamp NOT NULL,
   `migration_result` json,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;",
-                    [],
-                );
+                        [],
+                    );
+                }
 
                 $appendedMigrations = [];
                 $appendedMigrationsData = MIGRATE_DB->select('migration', null, false, ['migration_id']);
@@ -466,15 +532,22 @@ class Fixture" . $migrationDate . " extends BaseFixture
                         " on database `" . $_ENV['DATABASE_NAME'] . "`.",
                 );
 
-                MIGRATE_DB->query("SET time_zone='+03:00';", []);
+                if (MIGRATE_DB->dbType === DbTypeEnum::POSTGRESQL) {
+                    MIGRATE_DB->query("SET TIME ZONE 'Europe/Moscow';", []);
+                } else {
+                    MIGRATE_DB->query("SET time_zone='+03:00';", []);
+                }
+
+                $migrationId = str_replace('.php', '', $migrationFile);
 
                 $migrationResultFullData = [
                     'direction' => $migrationDirection,
                     'status' => ($migrationDirection === 'up' ? "done" : "reversed"),
                     'result' => $migration->migrationResult,
                 ];
+
                 MIGRATE_DB->insert('migration', [
-                    'migration_id' => str_replace('.php', '', $migrationFile),
+                    'migration_id' => $migrationId,
                     'migrated_at' => new DateTime('now'),
                     'migration_result' => ['migration_result', $migrationResultFullData, [OperandEnum::JSON]],
                 ]);
@@ -482,15 +555,28 @@ class Fixture" . $migrationDate . " extends BaseFixture
                 if ($migrationDirection === 'up') {
                     /** Отрабатываем класс фикстуры, только если мы в dev или test окружении */
                     if (in_array($_ENV['APP_ENV'], ['DEV', 'TEST'])) {
-                        $migrationRecordId = MIGRATE_DB->lastInsertId();
-                        $fixtureResult = $this->uploadFixture($migration);
+                        $migrationRecordData = MIGRATE_DB->select(
+                            'migration',
+                            ['migration_id' => $migrationId],
+                            true,
+                        );
 
-                        if (!is_null($fixtureResult)) {
-                            $migrationResultFullData['fixtureResult'] = $fixtureResult;
-                            MIGRATE_DB->update(
-                                'migration',
-                                ['migration_result' => ['migration_result', $migrationResultFullData, [OperandEnum::JSON]]],
-                                ['id' => $migrationRecordId],
+                        if ($migrationRecordData) {
+                            $fixtureResult = $this->uploadFixture($migration);
+
+                            if (!is_null($fixtureResult)) {
+                                $migrationResultFullData['fixtureResult'] = $fixtureResult;
+                                MIGRATE_DB->update(
+                                    'migration',
+                                    ['migration_result' => ['migration_result', $migrationResultFullData, [OperandEnum::JSON]]],
+                                    ['id' => $migrationRecordData['id']],
+                                );
+                            }
+                        } else {
+                            $this->echoResult(
+                                "Migration " . $migrationFile . " was not done" .
+                                    " on database `" . $_ENV['DATABASE_NAME'] . "`.",
+                                'red',
                             );
                         }
                     }
@@ -533,16 +619,25 @@ class Fixture" . $migrationDate . " extends BaseFixture
         // Это нужно, чтобы мы успели создать папку до того, как начнем копировать в неё файлы.
         $iterator = new RecursiveIteratorIterator($dirIterator, RecursiveIteratorIterator::SELF_FIRST);
 
+        $destination = rtrim($destination, '/\\') . DIRECTORY_SEPARATOR;
+
         foreach ($iterator as $item) {
-            $target = $destination . $item->getSubPathName();
+            /** @disregard */
+            $target = $destination . $iterator->getSubPathName();
 
             if ($item->isDir()) {
                 if (!is_dir($target)) {
                     mkdir($target, 0755, true);
+                    $this->echoResult("Directory " . $target . " created.");
+                } else {
+                    $this->echoResult("Directory " . $target . " already exists.", 'yellow');
                 }
             } else {
                 if (!file_exists($target)) {
-                    copy($item, $target);
+                    copy($item->getPathname(), $target);
+                    $this->echoResult("File " . $target . " copied.");
+                } else {
+                    $this->echoResult("File " . $target . " already exists.", 'yellow');
                 }
             }
         }
@@ -552,6 +647,7 @@ class Fixture" . $migrationDate . " extends BaseFixture
     {
         $colors = [
             'green' => '42',
+            'yellow' => '43',
             'red' => '41',
         ];
         $color = $colors[$color] ?? $colors['green'];

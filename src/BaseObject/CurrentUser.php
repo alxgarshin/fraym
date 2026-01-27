@@ -18,7 +18,7 @@ use Fraym\Helper\{AuthHelper, CookieHelper, DataHelper, LocaleHelper, ResponseHe
 final class CurrentUser
 {
     /** Id пользователя */
-    private ?int $id = null;
+    private int|string|null $id = null;
 
     /** Sid пользователя */
     private ?int $sid = null;
@@ -220,19 +220,19 @@ final class CurrentUser
             ->setBlockAutoRedirect($userData['block_auto_redirect'] === '1');
     }
 
-    public function getId(): ?int
+    public function getId(): int|string|null
     {
         return $this->id;
     }
 
-    public function setId(?int $id): self
+    public function setId(int|string|null $id): self
     {
         $this->id = $id;
 
         return $this;
     }
 
-    public function id(): ?int
+    public function id(): int|string|null
     {
         return $this->id;
     }

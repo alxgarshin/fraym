@@ -16,7 +16,7 @@ class StartView extends BaseView
 
         $PAGETITLE = null;
 
-        $RESPONSE_DATA = $LOCALE['welcome'];
+        $RESPONSE_DATA = $LOCALE['welcome'] . '<br>' . (CURRENT_USER->isLogged() ? $LOCALE['logged_links'] : $LOCALE['not_logged_links']);
 
         return $this->asHtml($RESPONSE_DATA, $PAGETITLE);
     }

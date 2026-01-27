@@ -174,8 +174,12 @@ class Select extends BaseElement
         return null;
     }
 
-    public function set(int|string|null $fieldValue): static
+    public function set(int|string|null|bool $fieldValue): static
     {
+        if (is_bool($fieldValue)) {
+            $fieldValue = (int) $fieldValue;
+        }
+
         $this->fieldValue = $fieldValue;
 
         return $this;

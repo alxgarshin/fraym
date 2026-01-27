@@ -4,7 +4,7 @@ PHP framework that brings everything you need to develop a not-so-small web-proj
 #### Requirements
 
 - **PHP 8.4**
-- **MySQL 5.7** or **PostgreSQL 13**
+- **PostgreSQL 13** (or MySQL 5.7)
 
 ## Installation
 
@@ -20,4 +20,12 @@ After that just use:
 ./vendor/bin/console install
 ```
 
-And your project will be ready to go!
+Setup DB connection in `.env.dev.`
+
+And do a basic migration:
+
+```shell script
+docker compose exec app ./vendor/bin/console database:migrate --env=dev
+```
+
+Your project is ready to go!
