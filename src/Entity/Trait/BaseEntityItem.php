@@ -213,17 +213,14 @@ trait BaseEntityItem
                     }
                 }
 
-                $tabsKeyToName = [];
-
                 if (is_array($this->tabs) && count($this->tabs) > 0) {
                     $RESPONSE_DATA .= '<div class="fraymtabs">
 	<ul>
 		';
 
-                    foreach ($this->tabs as $tabkey => $tab) {
+                    foreach ($this->tabs as $tab) {
                         $RESPONSE_DATA .= '<li><a id="' . $tab->name . '">' . $tab->shownName . '</a></li>
 		';
-                        $tabsKeyToName[$tabkey] = $tab->name;
                     }
 
                     $RESPONSE_DATA .= '
