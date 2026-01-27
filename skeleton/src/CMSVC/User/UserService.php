@@ -873,6 +873,6 @@ class UserService extends BaseService
 
     public function checkRights(): string
     {
-        return 'id=' . CURRENT_USER->id();
+        return "id='" . CURRENT_USER->id() . "'";
     }
 }

@@ -176,9 +176,13 @@ final class SQLDatabaseService implements Database
         return [];
     }
 
-    /** Получение id последней добавленной записи. UUID генерятся на стороне бэкенда, а не в БД, поэтому эта команда вам не потребуется: у вас будет ваш новый uuid еще до insert'а */
+    /** Получение id последней добавленной записи */
     public function lastInsertId(?string $name = null): string|false
     {
+        if ($this->dbType === DbTypeEnum::POSTGRESQL) {
+            return $this->lastQuery['stmt']->fetchColumn();
+        }
+
         return $this->DB->lastInsertId($name);
     }
 
@@ -370,6 +374,7 @@ final class SQLDatabaseService implements Database
     public function insert(
         string $tableName,
         array $data,
+        string $returningIdFieldName = 'id',
     ): false|array {
         if (count($data) > 0) {
             $tableName = $this->dbType->quoteIdentifier($tableName);
@@ -390,6 +395,10 @@ final class SQLDatabaseService implements Database
             $paramsListSql = implode(", ", $keys);
             $dataSql = ":" . implode(", :", $keys);
             $query = "INSERT INTO " . $tableName . " (" . $paramsListSql . ") VALUES (" . $dataSql . ")";
+
+            if ($this->dbType === DbTypeEnum::POSTGRESQL) {
+                $query .= " RETURNING " . $returningIdFieldName;
+            }
 
             return $this->query(
                 query: $query,
@@ -644,7 +653,7 @@ final class SQLDatabaseService implements Database
         $objectsTree = [];
 
         if ($empty) {
-            $objectsTree[] = ['0', $LOCALE['top_level'], 0];
+            $objectsTree[] = [null, $LOCALE['top_level'], 0];
         }
 
         /** Защита от пустого IN без идентификаторов, прилетевшего в and */
@@ -737,9 +746,9 @@ final class SQLDatabaseService implements Database
                             }
                         }
                         $objectsTree = array_merge(
-                            array_slice($objectsTree, 0, $parentKey + 1 + $insertedRows),
+                            array_slice($objectsTree, 0, (int) $parentKey + 1 + $insertedRows),
                             $insertData,
-                            array_slice($objectsTree, $parentKey + 1 + $insertedRows),
+                            array_slice($objectsTree, (int) $parentKey + 1 + $insertedRows),
                         );
 
                         $insertedRows += count($insertData);

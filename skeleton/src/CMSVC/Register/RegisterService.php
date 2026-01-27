@@ -111,7 +111,7 @@ class RegisterService extends BaseService
 
     public function checkRightsRestrict(): string
     {
-        return 'id=' . CURRENT_USER->id();
+        return "id='" . CURRENT_USER->id() . "'";
     }
 
     public function postModelInit(BaseModel $model): BaseModel

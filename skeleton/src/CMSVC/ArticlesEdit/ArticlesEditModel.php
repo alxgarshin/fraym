@@ -17,7 +17,6 @@ class ArticlesEditModel extends BaseModel
 
     #[Attribute\Select(
         values: 'getParentValues',
-        obligatory: true,
     )]
     public Item\Select $parent;
 

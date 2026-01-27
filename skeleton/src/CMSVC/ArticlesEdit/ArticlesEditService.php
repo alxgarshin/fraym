@@ -54,7 +54,7 @@ class ArticlesEditService extends BaseService
             'article',
             'parent',
             null,
-            " AND content='{menu}'" . (DataHelper::getId() > 0 ? ' AND id!=' . DataHelper::getId() : ''),
+            " AND content='{menu}'" . (DataHelper::getId() > 0 ? " AND id!='" . DataHelper::getId() . "'" : ""),
             'code',
             1,
             'id',
