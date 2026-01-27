@@ -28,7 +28,7 @@ trait CreatorIdTrait
     #[Attribute\OnCreate(callback: 'getCreator')]
     public Item\Hidden $creator_id;
 
-    public function getCreator(): ?int
+    public function getCreator(): int|string|null
     {
         return CURRENT_USER->id();
     }
