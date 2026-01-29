@@ -14,7 +14,7 @@ declare(strict_types=1);
 /** Файл основных команд Fraym из командной строки.
  *
  * Основной синтаксис:
- * ./vendor/bin/console install
+ * ./vendor/bin/console install[:force]
  * ./vendor/bin/console make:cmsvc --cmsvc=TestObject
  * ./vendor/bin/console make:migration
  * ./vendor/bin/console database:[drop|migrate|migrate:[up|down]] --env=[dev|test|stage|prod] [--migration=20230627140700]
@@ -42,6 +42,7 @@ class Console
         /** Возможный набор действий */
         $allowedActions = [
             'install',
+            'install:force',
             'make:cmsvc',
             'make:migration',
             'database:drop',
@@ -102,8 +103,8 @@ class Console
         if (!$action) {
             $this->echoResult("Action was not provided.", 'red');
             exit;
-        } elseif ($action === 'install') {
-            $this->copyDirectory(__DIR__ . '/../skeleton', INNER_PATH);
+        } elseif (in_array($action, ['install', 'install:force'], true)) {
+            $this->copyDirectory(__DIR__ . '/../skeleton', INNER_PATH, $action === 'install:force');
 
             $this->echoResult("Skeleton project install success.");
 
@@ -609,7 +610,7 @@ class Fixture" . $migrationDate . " extends BaseFixture
         return null;
     }
 
-    private function copyDirectory(string $source, string $destination): void
+    private function copyDirectory(string $source, string $destination, bool $force = false): void
     {
         // Создаем итератор, который будет ходить по файлам
         // SKIP_DOTS пропускает виртуальные папки "." и ".."
@@ -637,7 +638,12 @@ class Fixture" . $migrationDate . " extends BaseFixture
                     copy($item->getPathname(), $target);
                     $this->echoResult("File " . $target . " copied.");
                 } else {
-                    $this->echoResult("File " . $target . " already exists.", 'yellow');
+                    if ($force) {
+                        copy($item->getPathname(), $target);
+                        $this->echoResult("File " . $target . " replaced.", 'yellow');
+                    } else {
+                        $this->echoResult("File " . $target . " already exists.", 'yellow');
+                    }
                 }
             }
         }
