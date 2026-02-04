@@ -50,7 +50,25 @@ const dataLoaded = {
 const fraymElementsMap = new Map();
 
 /** Хранит основной обсервер для listener'ов */
-let globalFraymListenersObserver;
+const globalFraymListenersObserver = new MutationObserver((mutations) => {
+    if (activeListeners.size === 0) return;
+
+    const nodesToProcess = [];
+
+    for (const mutation of mutations) {
+        if (mutation.addedNodes.length > 0) {
+            for (const node of mutation.addedNodes) {
+                if (node.nodeType === 1) {
+                    nodesToProcess.push(node);
+                }
+            }
+        }
+    }
+
+    if (nodesToProcess.length === 0) return;
+
+    processInBatches(nodesToProcess);
+});
 
 /** Хранит все listener'ы данной конкретной страницы
  * 
@@ -98,6 +116,31 @@ let touchendY = 0;
 let swipeTimeDiff = 0;
 let swipeTimeThreshold = 200;
 let swipeDiffThreshold = 130;
+
+/** Переменные для автоподгрузки svg из бэкграундов в DOM (для управления через css) */
+const sbiSelector = '.sbi:not(.loading):not(.loaded)';
+const sbiObserver = new MutationObserver((mutations) => {
+    const nodesToProcess = [];
+
+    for (const mutation of mutations) {
+        if (mutation.addedNodes.length > 0) {
+            for (const node of mutation.addedNodes) {
+                if (node.nodeType === 1) {
+                    if (node.matches(sbiSelector)) nodesToProcess.push(node);
+
+                    if (node.firstElementChild) {
+                        elAll(sbiSelector, node).forEach(el => nodesToProcess.push(el));
+                    }
+
+                }
+            }
+        }
+    }
+
+    if (nodesToProcess.length === 0) return;
+
+    loadSbiBackground(nodesToProcess);
+});
 
 ready(() => {
     /** Проверяем, поддерживает ли браузер изменение адреса */
@@ -198,6 +241,11 @@ async function fraymInit(withDocumentEvents, updateHash) {
     /** Фиксируем время начала отработки */
     startTime = new Date().getTime();
 
+    if (withDocumentEvents) {
+        /** Запуск глобального observer'а для всех событий */
+        globalFraymListenersObserver.observe(document.body, { childList: true, subtree: true });
+    }
+
     /** Очищаем из fraymElementsMap всё кроме ключа document, т.е. установленных перманентных элементов / листенеров */
     for (const [key, value] of fraymElementsMap.entries()) {
         if (key !== document && key !== window) {
@@ -269,20 +317,19 @@ async function fraymInit(withDocumentEvents, updateHash) {
     showExecutionTime('Tabs');
 
     if (withDocumentEvents) {
+        /** Всплывающие уведомления */
         fraymNotyInit();
 
         /** Всплывающие подсказки / тултипы */
-        _(document.body).observerDOMChange(() => {
-            _('[title]', { noCache: true }).each(function () {
-                const self = _(this, { noCache: true });
-                const title = self.attr('title');
+        _(document).on('mouseenter', '[title]:not([data-tooltip-text])', function () {
+            const self = _(this, { noCache: true });
+            const title = self.attr('title');
 
-                if (title) {
-                    self.attr('data-tooltip-text', title);
-                }
+            if (title) {
+                self.attr('data-tooltip-text', title);
+            }
 
-                self.attr('title', null).destroy();
-            }).destroy();
+            self.attr('title', null).destroy();
         });
 
         /** Блокировка дефолтного поведения при нажатии на кнопку */
@@ -1085,36 +1132,30 @@ async function fraymInit(withDocumentEvents, updateHash) {
         });
 
         /** Стрелочки направления сортировок Excel-подобной таблицы объектов */
-        _(document.body).observerDOMChange(() => {
-            _('.menu a:not(.mouseEventsAdded)').each(function () {
-                this.classList.add('mouseEventsAdded');
+        _(document).on('mouseenter', '.menu a', function () {
+            const self = _(this);
 
-                this.addEventListener('mouseenter', function () {
-                    const self = _(this);
+            if (!self.hasClass('arrowAppended')) {
+                if (!self.hasClass('arrow_up') && !self.hasClass('arrow_down')) {
+                    self.addClass('arrowAppended');
+                    self.addClass('arrow_down');
+                } else if (!self.hasClass('arrowChanged')) {
+                    self.addClass('arrowChanged');
+                    self.toggleClass('arrow_up').toggleClass('arrow_down');
+                }
+            }
+        });
 
-                    if (!self.hasClass('arrowAppended')) {
-                        if (!self.hasClass('arrow_up') && !self.hasClass('arrow_down')) {
-                            self.addClass('arrowAppended');
-                            self.addClass('arrow_down');
-                        } else if (!self.hasClass('arrowChanged')) {
-                            self.addClass('arrowChanged');
-                            self.toggleClass('arrow_up').toggleClass('arrow_down');
-                        }
-                    }
-                });
+        _(document).on('mouseleave', '.menu a', function () {
+            const self = _(this);
 
-                this.addEventListener('mouseleave', function () {
-                    const self = _(this);
-
-                    if (self.hasClass('arrowAppended')) {
-                        self.removeClass('arrowAppended');
-                        self.removeClass('arrow_down');
-                    } else if (self.hasClass('arrowChanged')) {
-                        self.removeClass('arrowChanged');
-                        self.toggleClass('arrow_up').toggleClass('arrow_down');
-                    }
-                });
-            });
+            if (self.hasClass('arrowAppended')) {
+                self.removeClass('arrowAppended');
+                self.removeClass('arrow_down');
+            } else if (self.hasClass('arrowChanged')) {
+                self.removeClass('arrowChanged');
+                self.toggleClass('arrow_up').toggleClass('arrow_down');
+            }
         });
 
         /** В типе cardtable у созданных cardtable_card автоматически исправляем названия, если они есть */
@@ -1166,24 +1207,7 @@ async function fraymInit(withDocumentEvents, updateHash) {
             });
 
         /** Автоподгрузка фоновых svg */
-        const sbiSelector = '.sbi:not(.loading):not(.loaded)';
-
-        const elements = elAll(sbiSelector);
-        if (elements.length) {
-            elements.forEach(el => loadSbiBackground(el));
-        }
-
-        const sbiObserver = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                mutation.addedNodes.forEach((node) => {
-                    if (node.nodeType === 1) {
-                        if (node.matches(sbiSelector)) loadSbiBackground(node);
-                        elAll(sbiSelector, node).forEach(el => loadSbiBackground(el));
-                    }
-                });
-            });
-        });
-
+        loadSbiBackground(elAll(sbiSelector));
         sbiObserver.observe(document.body, { childList: true, subtree: true });
 
         showExecutionTime('Document events end');
@@ -1495,7 +1519,6 @@ class FraymElement {
     constructor(element, options) {
         this.DOMElements = [];
         this.observer = null;
-        this.onDOMChange = [];
         this.element = element;
 
         try {
@@ -2046,34 +2069,6 @@ class FraymElement {
      * @return {FraymElement}
      */
     on(listeners, elementSelectorOrHandler, handler) {
-        if (globalFraymListenersObserver === undefined) {
-            globalFraymListenersObserver = new MutationObserver((mutations) => {
-                if (activeListeners.size === 0) return;
-
-                for (const mutation of mutations) {
-                    for (const node of mutation.addedNodes) {
-                        if (node.nodeType !== 1) continue;
-
-                        _each(activeListeners, (fraymElementListeners) => {
-                            _each(fraymElementListeners, (handlerHashesData, elementDOMName) => {
-                                _each(handlerHashesData, (data) => {
-                                    _each(data.listeners, listener => {
-                                        if (node.matches(elementDOMName)) {
-                                            node.addEventListener(listener, data.handler);
-                                        }
-
-                                        elAll(elementDOMName, node).forEach(child => child.addEventListener(listener, data.handler));
-                                    })
-                                })
-                            })
-                        })
-                    }
-                }
-            });
-
-            globalFraymListenersObserver.observe(document.body, { childList: true, subtree: true });
-        }
-
         if (listeners !== undefined) {
             if (handler === undefined) {
                 handler = elementSelectorOrHandler;
@@ -2157,37 +2152,6 @@ class FraymElement {
                 console.log(e);
             }
         });
-
-        return this;
-    }
-
-    /**
-     * @param {Function} callback
-     * 
-     * @return {FraymElement}
-     */
-    observerDOMChange(callback) {
-        const self = this.asDomElement();
-
-        if (self) {
-            _each(this.onDOMChange, savedCallback => {
-                if (savedCallback === callback) {
-                    return this;
-                }
-            });
-
-            this.onDOMChange.push(callback);
-
-            const observer = new MutationObserver(mutationsList => {
-                for (const mutation of mutationsList) {
-                    if (mutation.type === 'childList') {
-                        _each(this.onDOMChange, callback => callback());
-                    }
-                }
-            });
-
-            observer.observe(self, { childList: true, subtree: true });
-        }
 
         return this;
     }
@@ -2281,6 +2245,47 @@ class FraymElement {
         });
 
         return this;
+    }
+}
+
+/** Подключение листенеров пачками с паузами для прорисовки */
+function processInBatches(items, startIndex = 0) {
+    const BATCH_SIZE = 50;
+    const endIndex = Math.min(startIndex + BATCH_SIZE, items.length);
+
+    for (let i = startIndex; i < endIndex; i++) {
+        const node = items[i];
+
+        _each(activeListeners, (fraymElementListeners) => {
+            _each(fraymElementListeners, (handlerHashesData, elementDOMName) => {
+                let verifyElement = node.matches(elementDOMName);
+                let childElements = [];
+
+                if (node.childElementCount > 0) {
+                    childElements = elAll(elementDOMName, node);
+                }
+
+                if (verifyElement || childElements.length > 0) {
+                    _each(handlerHashesData, (data) => {
+                        _each(data.listeners, listener => {
+                            if (verifyElement) {
+                                node.addEventListener(listener, data.handler);
+                            }
+
+                            if (childElements.length > 0) {
+                                childElements.forEach(child => child.addEventListener(listener, data.handler));
+                            }
+                        });
+                    });
+                }
+            });
+        });
+    }
+
+    if (endIndex < items.length) {
+        setTimeout(() => {
+            processInBatches(items, endIndex);
+        }, 0);
     }
 }
 
@@ -2456,52 +2461,68 @@ function removeInvalidChars(field) {
 }
 
 /** Импортируем svg в код страницы, чтобы управлять ими через css */
-function loadSbiBackground(sbi) {
-    const imgURL = window.getComputedStyle(sbi).getPropertyValue('background-image')?.replace('url(', '').replace(')', '').replace(/"/gi, "");
-    const classList = [...sbi.classList].map(cls => `.${cls}`).join('') + ':not(.loading):not(.loaded)';
+function loadSbiBackground(sbiElements) {
+    const itemsToLoad = new Map();
 
-    if (
-        !sbi.classList.contains('loading')
-        && !sbi.classList.contains('loaded')
-        && imgURL !== undefined
-        && imgURL !== 'none'
-    ) {
-        const allSvgParents = _(classList, { noCache: true });
+    for (const el of sbiElements) {
+        if (el.classList.contains('loading') || el.classList.contains('loaded')) continue;
+
+        const style = window.getComputedStyle(el);
+        const bgImage = style.getPropertyValue('background-image');
+
+        if (bgImage && bgImage !== 'none') {
+            const url = bgImage.replace(/^url\(['"]?/, '').replace(/['"]?\)$/, '');
+
+            if (!itemsToLoad.has(url)) {
+                itemsToLoad.set(url, []);
+            }
+
+            let itemsToLoadByUrl = itemsToLoad.get(url);
+            itemsToLoadByUrl.push(el);
+        }
+    }
+
+    itemsToLoad.forEach((elements, url) => {
+        const allSvgParents = _(elements, { noCache: true });
 
         allSvgParents.addClass('loading');
 
-        fetchData(imgURL, { method: 'GET' }).then(function (data) {
-            if (allSvgParents.asDomElement()) {
-                const svg = _(elFromHTML(data), { noCache: true });
+        fetchData(url, { method: 'GET' }).then(function (data) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = data;
+            const rawSvg = tempDiv.querySelector('svg');
 
-                svg
-                    .attr('xmlns:a', null)
-                    .attr('preserveAspectRatio', 'xMidYMid meet')
-                    .attr('width', '100%')
-                    .attr('height', '100%');
+            if (!rawSvg) return;
 
-                if (!svg.attr('viewBox')) {
-                    svg.attr('viewBox', `0 0 100% 100%`);
-                }
-
-                const svgHtml = svg.asDomElement().outerHTML;
-
-                svg.destroy();
-
-                allSvgParents.each(function () {
-                    const svgHolder = _(this, { noCache: true });
-
-                    svgHolder.insert(svgHtml, 'end');
-                    svgHolder.asDomElement().style.backgroundImage = 'none';
-                    svgHolder.removeClass('loading').addClass('loaded');
-
-                    svgHolder.destroy();
-                })
+            rawSvg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+            rawSvg.setAttribute('width', '100%');
+            rawSvg.setAttribute('height', '100%');
+            rawSvg.removeAttribute('xmlns:a');
+            if (!rawSvg.hasAttribute('viewBox')) {
+                rawSvg.setAttribute('viewBox', '0 0 100 100');
             }
 
-            allSvgParents.destroy();
+            sbiObserver.disconnect();
+            globalFraymListenersObserver.disconnect();
+
+            for (let i = 0; i < elements.length; i++) {
+                const el = elements[i];
+
+                el.appendChild(rawSvg.cloneNode(true));
+
+                el.style.backgroundImage = 'none';
+                el.classList.remove('loading');
+                el.classList.add('loaded');
+            }
+
+            globalFraymListenersObserver.observe(document.body, { childList: true, subtree: true });
+            sbiObserver.observe(document.body, { childList: true, subtree: true });
+
+            tempDiv.remove();
         })
-    }
+
+        allSvgParents.destroy();
+    })
 }
 
 /** Исправление svg без viewBox */
