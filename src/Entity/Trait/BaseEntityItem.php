@@ -116,13 +116,13 @@ trait BaseEntityItem
             $groupJsonRowData = [];
             $elementsByGroups = [];
 
-            if ($act !== ActEnum::add) {
-                foreach ($modelElements as $element) {
-                    if ($element->getGroup()) {
-                        $groupFieldsPresent = true;
-                        $element->getAttribute()->groupNumber = 0;
-                        $elementsByGroups[$element->getGroup()][] = $element;
+            foreach ($modelElements as $element) {
+                if ($element->getGroup()) {
+                    $groupFieldsPresent = true;
+                    $element->getAttribute()->groupNumber = 0;
+                    $elementsByGroups[$element->getGroup()][] = $element;
 
+                    if ($act !== ActEnum::add) {
                         /** Замена табуляции */
                         $DATA_ITEM[$element->name] = preg_replace('/\t/', '\\t', $DATA_ITEM[$element->name] ?? '');
 
