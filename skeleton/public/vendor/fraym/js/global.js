@@ -3521,7 +3521,13 @@ function toggleDynamicFields(self) {
         })
 
         if (selfAffectsElem) {
-            let domElem = el(`[id^="field_${item.name}"]`) || el(item.name);
+            let domElem = el(`[id^="field_${item.name}"]`);
+
+            if (!domElem) {
+                try {
+                    domElem = el(item.name);
+                } catch (e) { }
+            }
 
             if (hideElem && domElem) {
                 const elem = _(domElem);
@@ -3537,7 +3543,7 @@ function toggleDynamicFields(self) {
                 })
                 doDropfieldRefresh = true;
                 _(`[id="selected_${item.name}"]`).trigger('refresh');
-            } else {
+            } else if (domElem) {
                 const parentField = self.closest('div.field');
 
                 parentField.asDomElement().after(domElem);
@@ -3579,7 +3585,13 @@ function initDynamicFields() {
 
                         _(curName).trigger('change');
                     } else {
-                        let domElem = el(`[id^="field_${item.name}"]`) || el(item.name);
+                        let domElem = el(`[id^="field_${item.name}"]`);
+
+                        if (!domElem) {
+                            try {
+                                domElem = el(item.name);
+                            } catch (e) { }
+                        }
 
                         if (domElem) {
                             const elem = _(domElem);
