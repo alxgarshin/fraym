@@ -199,9 +199,3 @@ CREATE TABLE `user__push_subscriptions` (
   UNIQUE KEY `uniq_user_device` (`user_id`,`device_id`),
   CONSTRAINT `user__push_subscriptions_user_id` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
-
-INSERT INTO tag (creator_id,parent,name,content,code,updated_at,created_at) VALUES
-    (1,NULL,'Tag',NULL,1,1213954236,1213954236);
-
-INSERT INTO `user` (sid,login,password_hashed,full_name,em,em_verified,bazecount,subs_type,subs_objects,rights,agreement,block_save_referer,block_auto_redirect,created_at,updated_at) VALUES
-    (1,'admin@fraym.loc','$argon2id$v=19$m=131072,t=3,p=1$RHlIYkZSNkhOcWhSMEJOdA$v4sEEExvnM+rIFE8WZIQa0n0lyCrn3bgDEAoWnJBFUs','Админ','admin@fraym.loc','1',50,1,'-{conversation}-','-admin-help-','1','0','0',1758395113,1758310785);
