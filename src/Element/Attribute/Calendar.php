@@ -32,7 +32,7 @@ class Calendar extends BaseElement implements HasDefaultValue
     public mixed $defaultValue {
         get => $this->_val;
         set {
-            if (!is_null($value) && !is_string($value) && !$value instanceof DateTimeImmutable) {
+            if (!is_null($value) && !is_string($value) && !is_int($value) && !$value instanceof DateTimeImmutable) {
                 throw new InvalidArgumentException('Wrong defaultValue type');
             }
 
@@ -40,7 +40,7 @@ class Calendar extends BaseElement implements HasDefaultValue
         }
     }
 
-    private null|string|DateTimeImmutable $_val = null;
+    private null|string|int|DateTimeImmutable $_val = null;
 
     public function __construct(
         mixed $defaultValue = null,

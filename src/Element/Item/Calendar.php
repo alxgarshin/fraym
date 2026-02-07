@@ -118,10 +118,10 @@ class Calendar extends BaseElement
         return $this->get()?->format('d.m.Y ' . $LOCALE_FRAYM['datetime']['at'] . ' H:i');
     }
 
-    public function set(null|DateTimeImmutable|string $fieldValue): static
+    public function set(null|DateTimeImmutable|string|int $fieldValue): static
     {
         if (!is_a($fieldValue, 'DateTimeImmutable') && !is_null($fieldValue)) {
-            $fieldValue = new DateTimeImmutable($fieldValue);
+            $fieldValue = DateHelper::setDateToUTC($fieldValue);
         }
 
         $this->fieldValue = $fieldValue;
