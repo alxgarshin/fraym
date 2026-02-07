@@ -46,6 +46,8 @@ class Calendar extends BaseElement implements HasDefaultValue
         mixed $defaultValue = null,
         /** Показывать простой календарь или дата+время? */
         public ?bool $showDatetime = null,
+        /** Записывать в базу в формате "timestamp" */
+        public ?bool $saveAsTimestamp = null,
         ?bool $obligatory = null,
         ?string $helpClass = null,
         ?int $group = null,

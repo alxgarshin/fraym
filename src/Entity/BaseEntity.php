@@ -1387,7 +1387,8 @@ abstract class BaseEntity
                 } elseif ($element instanceof Password) {
                     $value = $value !== null ? AuthHelper::hashPassword($value) : null;
                 } elseif ($element instanceof Calendar) {
-                    $value = is_null($value) ? null : date('Y-m-d H:i:s', (is_numeric($value) ? $value : strtotime($value)));
+                    $preppedValue = is_null($value) ? null : (is_numeric($value) ? $value : strtotime($value));
+                    $value = is_null($value) ? null : ($element->getAttribute()->saveAsTimestamp ? $preppedValue : date('Y-m-d H:i:s', $preppedValue));
                 } elseif ($element instanceof Checkbox) {
                     $value = $value === 'on' ? 1 : 0;
                 } elseif ($element instanceof Number) {
