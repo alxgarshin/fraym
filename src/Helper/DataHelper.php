@@ -67,7 +67,7 @@ abstract class DataHelper implements Helper
     /** Получение id вне зависимости от того запрос это на сохранение или просто вывод страницы */
     public static function getId(): null|int|string
     {
-        return ID[key(ID) ?? 0] ?? null;
+        return ID[key(ID ?? []) ?? 0] ?? null;
     }
 
     /** Поиск в $_REQUEST ключа массива данных, в которых присутствует указанный id */
