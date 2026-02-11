@@ -200,7 +200,7 @@ abstract class BaseEntity
         }
 
         /** Определяем последовательные номера всех блоков пришедших значений. Если используется $useFixedId = true, то берем данные из $_REQUEST[0] */
-        $dataStringsIds = $useFixedId ? [0] : array_keys(ID);
+        $dataStringsIds = $useFixedId ? [0] : array_keys(ID ?? []);
         $dataStringsIds = $dataStringsIds === [] ? [0] : $dataStringsIds;
 
         /** Предействие из сервиса, если есть */
