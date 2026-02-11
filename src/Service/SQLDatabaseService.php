@@ -683,6 +683,7 @@ final class SQLDatabaseService implements Database
             $query = "SELECT " . (str_contains($table, " AS t1") ? "t1." : "") . "* FROM " . $this->dbType->quoteIdentifier($clearedTableName) . (str_contains($table, " AS t1") ? " AS t1" : "") . $and . " ORDER BY " . $order;
 
             $fullDataArray = [];
+
             $data = $this->query(
                 query: $query,
                 data: [],
@@ -721,6 +722,7 @@ final class SQLDatabaseService implements Database
                     unset($fullDataArray[$key]);
                 }
             }
+
             $level++;
 
             /** Выстраиваем нужное дерево */
@@ -735,9 +737,9 @@ final class SQLDatabaseService implements Database
 
                         foreach ($fullDataArray as $key => $fullData) {
                             if ($fullData[$where] === $parentData[0]) {
-                                $insertData[$fullData[$id]] = [
-                                    $fullData[$id],
-                                    $fullData[$fieldName],
+                                $insertData[] = [
+                                    DataHelper::checkNumeric($fullData[$id]),
+                                    DataHelper::checkNumeric($fullData[$fieldName]),
                                     $level,
                                     ($nodata ? null : $fullData),
                                 ];
@@ -745,6 +747,7 @@ final class SQLDatabaseService implements Database
                                 $noObjectsFoundOnLevel = false;
                             }
                         }
+
                         $objectsTree = array_merge(
                             array_slice($objectsTree, 0, (int) $parentKey + 1 + $insertedRows),
                             $insertData,
@@ -796,18 +799,18 @@ final class SQLDatabaseService implements Database
                     }
 
                     /** Находим всех родителей */
-                    $parentId = (int) $objectsTreeItem[3][$fieldWithParentId];
+                    $parentId = $objectsTreeItem[3][$fieldWithParentId];
                     $keepItemsIds[] = $parentId;
                     $parentKey = $key;
 
-                    while ($parentId > 0) {
+                    while ($parentId) {
                         $parentKey--;
 
                         if ($objectsTree[$parentKey] ?? false) {
                             $previousItemData = $objectsTree[$parentKey];
 
                             if ($parentId === $previousItemData[0]) {
-                                $parentId = (int) $previousItemData[3][$fieldWithParentId];
+                                $parentId = $previousItemData[3][$fieldWithParentId] ?? null;
                                 $keepItemsIds[] = $parentId;
                             }
                         } else {
