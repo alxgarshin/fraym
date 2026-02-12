@@ -72,7 +72,7 @@ final class EntitySortingItem
             }
         },
 
-        /** Имя таблицы для поиска для варианта SubstituteDataTypeEnum::TABLE или SubstituteDataTypeEnum::TABLEANDSORT */
+        /** Имя таблицы для поиска при SubstituteDataTypeEnum::TABLE */
         public ?string $substituteDataTableName = null {
             get => $this->substituteDataTableName;
             set(?string $value) {
@@ -84,9 +84,7 @@ final class EntitySortingItem
             }
         },
 
-        /** Идентификатор таблицы, с которым будет производиться сравнение значения, в вариантах SubstituteDataTypeEnum::TABLE или
-         * SubstituteDataTypeEnum::TABLEANDSORT
-         */
+        /** Идентификатор таблицы, с которым будет производиться сравнение значения, при SubstituteDataTypeEnum::TABLE */
         public ?string $substituteDataTableId = null {
             get => $this->substituteDataTableId;
             set(?string $value) {
@@ -98,9 +96,7 @@ final class EntitySortingItem
             }
         },
 
-        /** Название ячейки таблицы, из которой будет взято значение для показа и сортировки, в вариантах SubstituteDataTypeEnum::TABLE или
-         * SubstituteDataTypeEnum::TABLEANDSORT
-         */
+        /** Название ячейки таблицы, из которой будет взято значение для показа и сортировки, при SubstituteDataTypeEnum::TABLE */
         public ?string $substituteDataTableField = null {
             get => $this->substituteDataTableField;
             set(?string $value) {

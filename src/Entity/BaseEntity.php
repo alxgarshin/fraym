@@ -985,7 +985,7 @@ abstract class BaseEntity
                         }
                     } else {
                         $RESPONSE_DATA .= $DATA_ITEM[$sortingItem->substituteDataTableName .
-                            TextHelper::mb_ucfirst($sortingItem->substituteDataTableField)];
+                            '__' . $sortingItem->substituteDataTableField];
                     }
                 } elseif ($sortingItem->substituteDataType === SubstituteDataTypeEnum::ARRAY) {
                     $rotatedArrayIndexes = $this->rotatedArrayIndexes;
@@ -1160,7 +1160,7 @@ abstract class BaseEntity
 
         foreach ($this->sortingData as $sortingItem) {
             if ($sortingItem->substituteDataType === SubstituteDataTypeEnum::TABLE) {
-                $itemsToFilter[] = $sortingItem->substituteDataTableName . TextHelper::mb_ucfirst($sortingItem->substituteDataTableField);
+                $itemsToFilter[] = $sortingItem->substituteDataTableName . '__' . $sortingItem->substituteDataTableField;
             }
         }
 
@@ -1221,7 +1221,7 @@ abstract class BaseEntity
                             "t" . $tablesUsedCount . "." . $sortingItem->substituteDataTableId;
                     } else {
                         $leftJoinedFieldsSql .= ", t" . $tablesUsedCount . "." . $sortingItem->substituteDataTableField . " AS "
-                            . $sortingItem->substituteDataTableName . TextHelper::mb_ucfirst($sortingItem->substituteDataTableField);
+                            . $sortingItem->substituteDataTableName . '__' . $sortingItem->substituteDataTableField;
                         $leftJoinedTablesSql .= " LEFT JOIN " .
                             $sortingItem->substituteDataTableName . " t" . $tablesUsedCount . " ON " .
                             "t1." . $sortingItem->tableFieldName . "=" .
