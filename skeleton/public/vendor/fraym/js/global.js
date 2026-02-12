@@ -331,7 +331,20 @@ async function fraymInit(withDocumentEvents, updateHash) {
             }
 
             self.attr('title', null).destroy();
-        });
+        })
+
+        /** Открытие календаря на полях datetime-local */
+        _(document).on('click', '[type="datetime-local"]', function () {
+            if (typeof this.showPicker === 'function') {
+                this.showPicker();
+            }
+        })
+
+        _(document).on('click', '[type="date"]', function () {
+            if (typeof this.showPicker === 'function') {
+                this.showPicker();
+            }
+        })
 
         /** Блокировка дефолтного поведения при нажатии на кнопку */
         _(document).on('click', 'button', function (e) {

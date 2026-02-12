@@ -683,6 +683,12 @@ div.fieldvalue>.inputradio+label {
     opacity: 1;
 }
 
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    display: none;
+    -webkit-appearance: none;
+}
+
 option[disabled] {
     color: var(--color-background-main) !important;
     background-color: var(--color-background-gray);
