@@ -221,6 +221,8 @@ abstract class BaseModel
 
                     if (is_string($values) && method_exists($service, $values)) {
                         $values = $service->{$values}();
+                    } elseif (is_string($values) && method_exists($this, $values)) {
+                        $values = $this->{$values}();
                     }
                 }
 
@@ -230,6 +232,8 @@ abstract class BaseModel
 
                 if (is_string($locked) && method_exists($service, $locked)) {
                     $locked =  $service->{$locked}();
+                } elseif (is_string($locked) && method_exists($this, $locked)) {
+                    $locked =  $this->{$locked}();
                 }
 
                 $property->getAttribute()->locked = $locked;
@@ -243,6 +247,8 @@ abstract class BaseModel
                     foreach ($multiselectCreatorAdditionalData as $multiselectCreatorAdditionalName => $multiselectCreatorAdditionalItem) {
                         if (is_string($multiselectCreatorAdditionalItem) && method_exists($service, $multiselectCreatorAdditionalItem)) {
                             $multiselectCreatorAdditionalData[$multiselectCreatorAdditionalName] = $service->{$multiselectCreatorAdditionalItem}();
+                        } elseif (is_string($multiselectCreatorAdditionalItem) && method_exists($this, $multiselectCreatorAdditionalItem)) {
+                            $multiselectCreatorAdditionalData[$multiselectCreatorAdditionalName] = $this->{$multiselectCreatorAdditionalItem}();
                         }
                     }
                     $property->getCreator()->setAdditional($multiselectCreatorAdditionalData);
@@ -254,6 +260,8 @@ abstract class BaseModel
 
                 if (is_string($images) && method_exists($service, $images)) {
                     $property->getAttribute()->images = $service->{$images}();
+                } elseif (is_string($images) && method_exists($this, $images)) {
+                    $property->getAttribute()->images = $this->{$images}();
                 }
             }
 
@@ -261,6 +269,8 @@ abstract class BaseModel
 
             if (is_string($context) && method_exists($service, $context)) {
                 $context = $service->{$context}();
+            } elseif (is_string($context) && method_exists($this, $context)) {
+                $context = $this->{$context}();
             } elseif (!is_array($context) || count($context) === 0) {
                 $objectName = ObjectsHelper::getClassShortNameFromCMSVCObject($this);
                 $propertiesWithListContext = $this->CMSVC->view->propertiesWithListContext;
@@ -278,6 +288,7 @@ abstract class BaseModel
                     $objectName . ':embedded',
                 ]);
             }
+
             $property->getAttribute()->context = $context;
 
             $property->create = $create;
