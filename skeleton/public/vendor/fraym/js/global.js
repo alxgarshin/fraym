@@ -838,10 +838,12 @@ async function fraymInit(withDocumentEvents, updateHash) {
             }
         });
 
-        _(document).on('submit', 'form', function () {
+        _(document).on('submit', 'form', function (e) {
             const self = _(this);
 
             if (self.attr('target') !== '_blank' && !blockDefaultSubmit) {
+                e.preventDefault();
+
                 const href = self.attr('action');
                 const checkActionRequest = self.hasAttr('action_request_form');
                 const noDynamicContent = self.hasAttr('no_dynamic_content');
@@ -1595,9 +1597,15 @@ class FraymElement {
 
     /** @return {FraymElement} */
     trigger(event) {
-        this.each(function () {
-            this.dispatchEvent(new CustomEvent(event, { bubbles: true }));
-        });
+        if (event === 'submit') {
+            this.each(function () {
+                this.requestSubmit();
+            });
+        } else {
+            this.each(function () {
+                this.dispatchEvent(new CustomEvent(event, { bubbles: true }));
+            });
+        }
 
         return this;
     }
