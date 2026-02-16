@@ -221,13 +221,15 @@ class MultiObjectsEntity extends BaseEntity
                 $RESPONSE_DATA .= '<div class="cardtable_card_num">№' . $lineNumber . '<span class="cardtable_card_num_name">' . ($DATA_ITEM['name'] ?? '') . '</span></div>';
             }
 
-            if ($modelRights->deleteRight && (is_null($modelRights->deleteRestrict) || in_array($DATA_ITEM['id'], $deleteRestrictIds))) {
-                $RESPONSE_DATA .= '<div class="td multi_objects_delete"><a class="trash careful" title="' .
-                    $GLOBAL_LOCALE['delete'] . ' ' . $this->getObjectName() . '" method="DELETE" href="/' . KIND . '/' . CMSVC . '/' . $DATA_ITEM['id'] .
-                    '/page=' . PAGE . '&sorting=' . SORTING . '">' .
-                    ($isExcel ? '' : '<span>' . $GLOBAL_LOCALE['delete'] . '</span>') . '</a></div>';
-            } elseif ($isExcel && !is_null($modelRights->deleteRestrict) && !in_array($DATA_ITEM['id'], $deleteRestrictIds)) {
-                $RESPONSE_DATA .= '<div class="td multi_objects_delete"></div>';
+            if ($modelRights->deleteRight) {
+                if (is_null($modelRights->deleteRestrict) || in_array($DATA_ITEM['id'], $deleteRestrictIds)) {
+                    $RESPONSE_DATA .= '<div class="td multi_objects_delete"><a class="trash careful" title="' .
+                        $GLOBAL_LOCALE['delete'] . ' ' . $this->getObjectName() . '" method="DELETE" href="/' . KIND . '/' . CMSVC . '/' . $DATA_ITEM['id'] .
+                        '/page=' . PAGE . '&sorting=' . SORTING . '">' .
+                        ($isExcel ? '' : '<span>' . $GLOBAL_LOCALE['delete'] . '</span>') . '</a></div>';
+                } elseif ($isExcel && !is_null($modelRights->deleteRestrict) && !in_array($DATA_ITEM['id'], $deleteRestrictIds)) {
+                    $RESPONSE_DATA .= '<div class="td multi_objects_delete"></div>';
+                }
             }
 
             if ($isExcel) {
