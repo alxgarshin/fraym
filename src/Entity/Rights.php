@@ -29,6 +29,114 @@ class Rights
         get => $this->entity->view->CMSVC->service;
     }
 
+    /** SQL-ограничение на просмотр данных */
+    public ?RightsRestrict $viewRestrict = null {
+        get {
+            $defaultValue = $this->viewRestrict;
+
+            if ($defaultValue instanceof RightsRestrict) {
+                $service = $this->service;
+
+                if (!$defaultValue->serviceCheck && $defaultValue->query && method_exists($service, $defaultValue->query)) {
+                    $serviceQuery = $service->{$defaultValue->query}();
+
+                    if (is_string($serviceQuery)) {
+                        $defaultValue->query = $serviceQuery;
+                    } else {
+                        $this->viewRestrict = $defaultValue = $serviceQuery;
+                    }
+                }
+
+                $defaultValue->serviceCheck = true;
+
+                if ($defaultValue->query === '') {
+                    $this->viewRestrict = $defaultValue = null;
+                }
+            }
+
+            return $defaultValue;
+        }
+        set(string|RightsRestrict|null $value) {
+            if (is_string($value)) {
+                $value = new RightsRestrict($value);
+            }
+
+            $this->viewRestrict = $value;
+        }
+    }
+
+    /** SQL-ограничение на изменение данных */
+    public ?RightsRestrict $changeRestrict = null {
+        get {
+            $defaultValue = $this->changeRestrict;
+
+            if ($defaultValue instanceof RightsRestrict) {
+                $service = $this->service;
+
+                if (!$defaultValue->serviceCheck && $defaultValue->query && method_exists($service, $defaultValue->query)) {
+                    $serviceQuery = $service->{$defaultValue->query}();
+
+                    if (is_string($serviceQuery)) {
+                        $defaultValue->query = $serviceQuery;
+                    } else {
+                        $this->changeRestrict = $defaultValue = $serviceQuery;
+                    }
+                }
+
+                $defaultValue->serviceCheck = true;
+
+                if ($defaultValue->query === '') {
+                    $this->changeRestrict = $defaultValue = null;
+                }
+            }
+
+            return $defaultValue;
+        }
+        set(string|RightsRestrict|null $value) {
+            if (is_string($value)) {
+                $value = new RightsRestrict($value);
+            }
+
+            $this->changeRestrict = $value;
+        }
+    }
+
+    /** SQL-ограничение на удаление данных */
+    public ?RightsRestrict $deleteRestrict = null {
+        get {
+            $defaultValue = $this->deleteRestrict;
+
+            if ($defaultValue instanceof RightsRestrict) {
+                $service = $this->service;
+
+                if (!$defaultValue->serviceCheck && $defaultValue->query && method_exists($service, $defaultValue->query)) {
+                    $serviceQuery = $service->{$defaultValue->query}();
+
+                    if (is_string($serviceQuery)) {
+                        $defaultValue->query = $serviceQuery;
+                    } else {
+                        $this->deleteRestrict = $defaultValue = $serviceQuery;
+                    }
+                }
+
+                $defaultValue->serviceCheck = true;
+
+                if ($defaultValue->query === '') {
+                    $this->deleteRestrict = $defaultValue = null;
+                }
+            }
+
+            return $defaultValue;
+        }
+        set(string|RightsRestrict|null $value) {
+            if (is_string($value)) {
+                $value = new RightsRestrict($value);
+            }
+
+            $this->deleteRestrict = $value;
+        }
+    }
+
     public function __construct(
         /** Право видеть данные: bool или название функции сервиса для проверки */
         public bool|string $viewRight {
@@ -97,62 +205,12 @@ class Rights
             }
             set => $this->deleteRight = $value;
         },
-
-        /** SQL-ограничение на просмотр данных */
-        public ?string $viewRestrict = null {
-            get {
-                $defaultValue = $this->viewRestrict;
-                $service = $this->service;
-
-                if (is_string($defaultValue) && method_exists($service, $defaultValue)) {
-                    $defaultValue = $service->{$defaultValue}();
-                }
-
-                if ($defaultValue === '') {
-                    $defaultValue = null;
-                }
-
-                return $defaultValue;
-            }
-            set => $this->viewRestrict = $value;
-        },
-
-        /** SQL-ограничение на изменение данных */
-        public ?string $changeRestrict = null {
-            get {
-                $defaultValue = $this->changeRestrict;
-                $service = $this->service;
-
-                if (is_string($defaultValue) && method_exists($service, $defaultValue)) {
-                    $defaultValue = $service->{$defaultValue}();
-                }
-
-                if ($defaultValue === '') {
-                    $defaultValue = null;
-                }
-
-                return $defaultValue;
-            }
-            set => $this->changeRestrict = $value;
-        },
-
-        /** SQL-ограничение на удаление данных */
-        public ?string $deleteRestrict = null {
-            get {
-                $defaultValue = $this->deleteRestrict;
-                $service = $this->service;
-
-                if (is_string($defaultValue) && method_exists($service, $defaultValue)) {
-                    $defaultValue = $service->{$defaultValue}();
-                }
-
-                if ($defaultValue === '') {
-                    $defaultValue = null;
-                }
-
-                return $defaultValue;
-            }
-            set => $this->deleteRestrict = $value;
-        },
-    ) {}
+        string|RightsRestrict|null $viewRestrict = null,
+        string|RightsRestrict|null $changeRestrict = null,
+        string|RightsRestrict|null $deleteRestrict = null,
+    ) {
+        $this->viewRestrict = $viewRestrict;
+        $this->changeRestrict = $changeRestrict;
+        $this->deleteRestrict = $deleteRestrict;
+    }
 }

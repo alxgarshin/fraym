@@ -190,7 +190,7 @@ class MultiObjectsEntity extends BaseEntity
         $changeRestrictIds = [];
 
         if (!is_null($modelRights->changeRestrict)) {
-            $changeRestrictIdsData = DB->query('SELECT id FROM ' . $this->table . ' WHERE ' . $modelRights->changeRestrict, []);
+            $changeRestrictIdsData = DB->query('SELECT id FROM ' . $this->table . ' WHERE ' . $modelRights->changeRestrict->query, $modelRights->changeRestrict->params);
 
             foreach ($changeRestrictIdsData as $changeRestrictIdsItem) {
                 $changeRestrictIds[] = $changeRestrictIdsItem['id'];
@@ -200,7 +200,7 @@ class MultiObjectsEntity extends BaseEntity
         $deleteRestrictIds = [];
 
         if (!is_null($modelRights->deleteRestrict)) {
-            $deleteRestrictIdsData = DB->query('SELECT id FROM ' . $this->table . ' WHERE ' . $modelRights->deleteRestrict, []);
+            $deleteRestrictIdsData = DB->query('SELECT id FROM ' . $this->table . ' WHERE ' . $modelRights->deleteRestrict->query, $modelRights->deleteRestrict->params);
 
             foreach ($deleteRestrictIdsData as $deleteRestrictIdsItem) {
                 $deleteRestrictIds[] = $deleteRestrictIdsItem['id'];
@@ -227,7 +227,7 @@ class MultiObjectsEntity extends BaseEntity
                         $GLOBAL_LOCALE['delete'] . ' ' . $this->getObjectName() . '" method="DELETE" href="/' . KIND . '/' . CMSVC . '/' . $DATA_ITEM['id'] .
                         '/page=' . PAGE . '&sorting=' . SORTING . '">' .
                         ($isExcel ? '' : '<span>' . $GLOBAL_LOCALE['delete'] . '</span>') . '</a></div>';
-                } elseif ($isExcel && !is_null($modelRights->deleteRestrict) && !in_array($DATA_ITEM['id'], $deleteRestrictIds)) {
+                } elseif ($isExcel && !in_array($DATA_ITEM['id'], $deleteRestrictIds)) {
                     $RESPONSE_DATA .= '<div class="td multi_objects_delete"></div>';
                 }
             }

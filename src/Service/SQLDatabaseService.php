@@ -647,6 +647,7 @@ final class SQLDatabaseService implements Database
         string $fieldName,
         int $maxlevel,
         bool $nodata = true,
+        array $andQueryParams = [],
     ): array {
         $LOCALE = LocaleHelper::getLocale(['fraym', 'basefunc']);
 
@@ -686,7 +687,7 @@ final class SQLDatabaseService implements Database
 
             $data = $this->query(
                 query: $query,
-                data: [],
+                data: $andQueryParams,
             );
 
             foreach ($data as $item) {
