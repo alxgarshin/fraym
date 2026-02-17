@@ -359,7 +359,7 @@ final class Filters
                             } elseif ($value[0] === 'not_set') {
                                 $blockSearchQuerySql .= " (t1." . $queryElementName . " IS NULL OR t1." . $queryElementName . "='')";
                             } else {
-                                $blockSearchQuerySql .= " t1." . $queryElementName . "=" . (is_numeric($value[0]) ? $value[0] : "'" . $value[0] . "'");
+                                $blockSearchQuerySql .= " (t1." . $queryElementName . "=" . (is_numeric($value[0]) ? $value[0] . " OR t1." . $queryElementName . "=" : "") . "'" . $value[0] . "')";
                             }
                         } elseif ($modelItem instanceof Item\Multiselect) {
                             if (!$firstSearchQuery) {
