@@ -31,6 +31,7 @@ final class SQLDatabaseService implements Database
         'stmt' => null,
         'query' => '',
         'data' => [],
+        'result' => null,
     ];
 
     private array $preparedQueriesCache = [];
@@ -164,13 +165,16 @@ final class SQLDatabaseService implements Database
 
             $this->execute($stmt, $preparedData);
 
+            $result = $oneResult ? $stmt->fetch() : $stmt->fetchAll();
+
             $this->lastQuery = [
                 'stmt' => $stmt,
                 'query' => $query,
                 'data' => $preparedData,
+                'result' => $result,
             ];
 
-            return $oneResult ? $stmt->fetch() : $stmt->fetchAll();
+            return $result;
         }
 
         return [];
@@ -180,7 +184,16 @@ final class SQLDatabaseService implements Database
     public function lastInsertId(?string $name = null): string|false
     {
         if ($this->dbType === DbTypeEnum::POSTGRESQL) {
-            return $this->lastQuery['stmt']->fetchColumn();
+            $result = $this->lastQuery['result'] ?? [];
+
+            if (empty($result)) {
+                return false;
+            }
+
+            $firstRow = $result[0] ?? $result;
+            $id = reset($firstRow);
+
+            return $id !== false ? (string) $id : false;
         }
 
         return $this->DB->lastInsertId($name);
