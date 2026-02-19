@@ -334,10 +334,12 @@ abstract class DataHelper implements Helper
             }
 
             if (!is_array($returnArray)) {
-                $returnArray = [(string) $returnArray];
+                $returnArray = [$returnArray];
             }
 
             foreach ($returnArray as $key => $value) {
+                $returnArray[$key] = $value = (string) $value;
+
                 if (trim($value) === '') {
                     unset($returnArray[$key]);
                 }
