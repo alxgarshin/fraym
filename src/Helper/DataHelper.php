@@ -24,6 +24,7 @@ use Fraym\Interface\{ElementItem, HasDefaultValue, Helper};
 use Fraym\Vendor\StripTags\StripTags;
 use Generator;
 use JsonException;
+use PHPUnit\Util\Json;
 
 abstract class DataHelper implements Helper
 {
@@ -319,38 +320,43 @@ abstract class DataHelper implements Helper
     /** Перевод значения multiselect в array */
     public static function multiselectToArray(?string $string): array
     {
-        if (!is_null($string)) {
-            if (str_starts_with($string, '-') && str_ends_with($string, '-')) {
-                $string = mb_substr($string, 1, mb_strlen($string) - 2);
-            }
-            $return_array = explode('-', $string);
+        $returnArray = [];
 
-            foreach ($return_array as $key => $value) {
+        if (!is_null($string)) {
+            try {
+                $returnArray = self::jsonFixedDecode($string, true);
+            } catch (Exception|JsonException $exception) {
+                if (str_starts_with($string, '-') && str_ends_with($string, '-')) {
+                    $string = mb_substr($string, 1, mb_strlen($string) - 2);
+                }
+
+                $returnArray = explode('-', $string);
+            }
+
+            foreach ($returnArray as $key => $value) {
                 if (trim($value) === '') {
-                    unset($return_array[$key]);
+                    unset($returnArray[$key]);
                 }
             }
-        } else {
-            $return_array = [];
         }
 
-        return $return_array;
+        return $returnArray;
     }
 
     /** Перевод array в значения multiselect */
     public static function arrayToMultiselect(array $array): string
     {
-        $value_array = [];
+        $valueArray = [];
 
         foreach ($array as $key => $value) {
             if ($value === 'on') {
-                $value_array[] = $key;
-            } else {
-                $value_array[] = $value;
+                $valueArray[] = $key;
+            } elseif ($value) {
+                $valueArray[] = $value;
             }
         }
 
-        return count($array) > 0 ? '-' . implode('-', $value_array) . '-' : '';
+        return self::jsonFixedEncode($valueArray);
     }
 
     /** Проверка число или строка и возврата в соответствующем типе */
