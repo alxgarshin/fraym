@@ -58,7 +58,41 @@ abstract class FileHelper implements Helper
         return false;
     }
 
-    /** Проверка существования картинки по указанному пути */
+    /** Проверяет, является ли URL внешней ссылкой на реальное изображение */
+    public function checkExternalImageExists(?string $url): bool
+    {
+        if (!$url || !filter_var($url, FILTER_VALIDATE_URL)) {
+            return false;
+        }
+
+        $urlHost = parse_url($url, PHP_URL_HOST);
+        $myHost = $_SERVER['HTTP_HOST'] ?? $_ENV['COOKIE_PATH'];
+
+        $urlHost = preg_replace('/^www\./', '', strtolower($urlHost));
+        $myHost  = preg_replace('/^www\./', '', strtolower($myHost));
+
+        if (!$urlHost || $urlHost === $myHost) {
+            return false;
+        }
+
+        $ch = curl_init($url);
+
+        curl_setopt($ch, CURLOPT_NOBODY, true);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+
+        curl_exec($ch);
+
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+
+        curl_close($ch);
+
+        return ($httpCode === 200 && strpos((string) $contentType, 'image/') === 0);
+    }
+
+    /** Беглая проверка существования картинки по указанному пути (рекомендуется использовать ТОЛЬКО для внутренних ресурсов) */
     public static function checkImageExists(?string $filePath): bool
     {
         if (!$filePath) {
