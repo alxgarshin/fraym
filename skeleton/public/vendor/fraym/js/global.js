@@ -852,9 +852,9 @@ async function fraymInit(withDocumentEvents, updateHash) {
         _(document).on('submit', 'form', function (e) {
             const self = _(this);
 
-            if (self.attr('target') !== '_blank' && !blockDefaultSubmit) {
-                e.preventDefault();
+            e.preventDefault();
 
+            if (self.attr('target') !== '_blank' && !blockDefaultSubmit) {
                 const href = self.attr('action');
                 const checkActionRequest = self.hasAttr('action_request_form');
                 const noDynamicContent = self.hasAttr('no_dynamic_content');
