@@ -59,7 +59,7 @@ abstract class FileHelper implements Helper
     }
 
     /** Проверяет, является ли URL внешней ссылкой на реальное изображение */
-    public function checkExternalImageExists(?string $url): bool
+    public static function checkExternalImageExists(?string $url): bool
     {
         if (!$url || !filter_var($url, FILTER_VALIDATE_URL)) {
             return false;
