@@ -18,14 +18,12 @@ use Fraym\Element\{Attribute as Attribute, Item as Item};
 use Fraym\Helper\DateHelper;
 
 /** Дата мягкого удаления объекта */
-/** @phpstan-ignore-next-line */
 trait DeletedAtTrait
 {
     #[Attribute\Timestamp(
         context: [
             ':list',
-            ':update',
-            ':delete',
+            ':view',
         ],
     )]
     public Item\Timestamp $deleted_at;
