@@ -8,7 +8,7 @@ use App\CMSVC\Error404\Error404Controller;
 use App\Template\MainTemplate;
 use Fraym\BaseObject\{BaseController, BaseHelper};
 use Fraym\Enum\ActionEnum;
-use Fraym\Helper\{CookieHelper, DataHelper, LocaleHelper, ResponseHelper, TextHelper};
+use Fraym\Helper\{AuthHelper, CookieHelper, DataHelper, LocaleHelper, ResponseHelper, TextHelper};
 use Fraym\Interface\Response;
 use Fraym\Response\{ArrayResponse, HtmlResponse};
 
@@ -99,7 +99,7 @@ if ($RESPONSE_DATA instanceof ArrayResponse) {
         }
         $RESPONSE_RESULT['executionTime'] = GLOBALTIMER->getTimerDiff();
     }
-    header('Access-Control-Allow-Origin: *');
+    ResponseHelper::setCorsHeaders();
     echo DataHelper::jsonFixedEncode($RESPONSE_RESULT);
 } elseif ($RESPONSE_DATA instanceof HtmlResponse) {
     /** Если предоставлено альтернативное название страницы, убеждаемся, что оно идет с большой буквы */
@@ -129,7 +129,7 @@ if ($RESPONSE_DATA instanceof ArrayResponse) {
                 'executionTime' => GLOBALTIMER->getTimerDiff(),
             ],
         );
-        header('Access-Control-Allow-Origin: *');
+        ResponseHelper::setCorsHeaders();
         echo $RESPONSE_RESULT;
     } else {
         /** Вносим блоки информации в заданный шаблон визуализации */
@@ -137,7 +137,7 @@ if ($RESPONSE_DATA instanceof ArrayResponse) {
         $RESPONSE_TEMPLATE = preg_replace('#<!--pagetitle-->#', $PAGETITLE, $RESPONSE_TEMPLATE);
         $RESPONSE_RESULT = preg_replace('#<!--maincontent-->#', DataHelper::pregQuoteReplaced($RESPONSE_DATA->getHtml()), $RESPONSE_TEMPLATE);
 
-        /** Добавляем сообщения-нотификации */
+        /** Добавляем сообщения-нотификации и CSRF-токен */
         $messageArray = '<script>
     window["messages"] = defaultFor(window["messages"], []);';
 
@@ -146,6 +146,11 @@ if ($RESPONSE_DATA instanceof ArrayResponse) {
                 $messageArray .= 'messages.push(Array("' . $message[0] . '","' . str_replace('"', '\"', $message[1]) . '"));';
             }
         }
+
+        if (CURRENT_USER->isLogged()) {
+            $messageArray .= 'window["csrfToken"] = "' . AuthHelper::generateCsrfToken() . '";';
+        }
+
         $messageArray .= '</script>';
         $RESPONSE_RESULT = preg_replace('#<!--messages-->#', $messageArray, $RESPONSE_RESULT);
 

@@ -11,9 +11,9 @@ use Fraym\Element\{Attribute, Item};
 #[Controller(NewsEditController::class)]
 class NewsEditModel extends BaseModel
 {
-    use IdTrait;
     use CreatedUpdatedAtTrait;
     use CreatorIdTrait;
+    use IdTrait;
 
     #[Attribute\Select(
         obligatory: true,
@@ -25,11 +25,6 @@ class NewsEditModel extends BaseModel
         useInFilters: true,
     )]
     public Item\Text $name;
-
-    #[Attribute\Hidden(
-        defaultValue: '15',
-    )]
-    public Item\Hidden $creator_id;
 
     #[Attribute\Checkbox(
         defaultValue: true,

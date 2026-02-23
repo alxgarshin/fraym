@@ -2939,6 +2939,10 @@ async function fetchData(url, options = {}, data = null) {
             headers.Authorization = 'Bearer ' + jwtToken;
         }
 
+        if (window['csrfToken']) {
+            headers['X-CSRF-Token'] = window['csrfToken'];
+        }
+
         let requestOptions;
         if (options.method === 'POST' || options.method === 'PUT') {
             data = new URLSearchParams(data);
@@ -3933,6 +3937,10 @@ function fraymFileUploadApply(element) {
 
                                 const request = new XMLHttpRequest();
                                 request.open('POST', `${uploadPath}?type=${uploadNum}`);
+
+                                if (window['csrfToken']) {
+                                    request.setRequestHeader('X-CSRF-Token', window['csrfToken']);
+                                }
 
                                 request.upload.onprogress = (e) => {
                                     progress(e.lengthComputable, e.loaded, e.total);

@@ -199,6 +199,14 @@ abstract class BaseEntity
             ResponseHelper::response401();
         }
 
+        /** Проверка CSRF-токена для cookie-авторизованных запросов */
+        if (
+            !REQUEST_TYPE->isApiRequest()
+            && !AuthHelper::validateCsrfToken($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '')
+        ) {
+            ResponseHelper::response403();
+        }
+
         /** Определяем последовательные номера всех блоков пришедших значений. Если используется $useFixedId = true, то берем данные из $_REQUEST[0] */
         $dataStringsIds = $useFixedId ? [0] : array_keys(ID ?? []);
         $dataStringsIds = $dataStringsIds === [] ? [0] : $dataStringsIds;

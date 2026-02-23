@@ -69,6 +69,35 @@ abstract class AuthHelper implements Helper
         return CookieHelper::getCookie('refreshToken');
     }
 
+    /** Генерация stateless CSRF-токена (меняется раз в сутки) */
+    public static function generateCsrfToken(): string
+    {
+        $nonce = (int) floor(time() / 86400);
+
+        return hash_hmac(
+            'SHA256',
+            CURRENT_USER->id() . ':' . CURRENT_USER->sid() . ':' . $nonce,
+            $_ENV['PROJECT_HASH_WORD'],
+        );
+    }
+
+    /** Валидация CSRF-токена (принимает сегодняшний и вчерашний — безшовный переход суток) */
+    public static function validateCsrfToken(string $token): bool
+    {
+        if (!CURRENT_USER->isLogged()) {
+            return true;
+        }
+
+        $nonce = (int) floor(time() / 86400);
+
+        $valid = [
+            hash_hmac('SHA256', CURRENT_USER->id() . ':' . CURRENT_USER->sid() . ':' . $nonce, $_ENV['PROJECT_HASH_WORD']),
+            hash_hmac('SHA256', CURRENT_USER->id() . ':' . CURRENT_USER->sid() . ':' . ($nonce - 1), $_ENV['PROJECT_HASH_WORD']),
+        ];
+
+        return in_array($token, $valid, true);
+    }
+
     /** Сброс cookie refreshToken */
     public static function removeRefreshTokenCookie(): void
     {

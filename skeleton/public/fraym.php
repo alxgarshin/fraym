@@ -18,6 +18,33 @@ foreach ([__DIR__ . '/../vendor/autoload.php'] as $file) {
     }
 }
 
+use Fraym\Exception\DatabaseConnectionException;
 use Fraym\Kernel;
 
-Kernel::init();
+set_exception_handler(static function (\Throwable $e): void {
+    error_log(get_class($e) . ': ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+    http_response_code(500);
+
+    if (($_SERVER['HTTP_FRAYM_REQUEST'] ?? '') === 'true' || ($_SERVER['HTTP_FRAYM_API_REQUEST'] ?? '') === 'true') {
+        header('Content-Type: application/json');
+        echo json_encode(['response' => 'error', 'response_text' => 'Internal server error']);
+    } else {
+        echo '<h1>500 Internal Server Error</h1>';
+    }
+});
+
+try {
+    Kernel::init();
+} catch (DatabaseConnectionException $e) {
+    error_log($e->getMessage());
+    http_response_code(503);
+
+    if (($_SERVER['HTTP_FRAYM_REQUEST'] ?? '') === 'true' || ($_SERVER['HTTP_FRAYM_API_REQUEST'] ?? '') === 'true') {
+        header('Content-Type: application/json');
+        echo json_encode(['response' => 'error', 'response_text' => 'Database unavailable']);
+    } else {
+        echo '<h1>503 Service Unavailable</h1><p>Database connection error.</p>';
+    }
+
+    exit;
+}

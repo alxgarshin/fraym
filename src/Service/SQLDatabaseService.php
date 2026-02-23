@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Fraym\Service;
 
 use Fraym\Enum\{DbTypeEnum, OperandEnum};
+use Fraym\Exception\{DatabaseConnectionException, DatabaseQueryException};
 use Fraym\Helper\{DataHelper, LocaleHelper};
 use Fraym\Interface\Database;
 use Generator;
@@ -52,8 +53,11 @@ final class SQLDatabaseService implements Database
                 $_ENV['DATABASE_PASSWORD'],
             );
         } catch (PDOException $e) {
-            error_log("PDO initialize error: " . $e->getMessage());
-            exit;
+            throw new DatabaseConnectionException(
+                "PDO initialize error: " . $e->getMessage(),
+                (int) $e->getCode(),
+                $e,
+            );
         }
 
         $this->DB->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
@@ -92,12 +96,14 @@ final class SQLDatabaseService implements Database
         } catch (PDOException $e) {
             ob_start();
             debug_print_backtrace();
-            error_log(
+            $backtrace = ob_get_clean();
+            throw new DatabaseQueryException(
                 'PDO prepare error: ' . $query .
                     ' | Error: ' . $e->getMessage() .
-                    ' | Backtrace: ' . ob_get_clean(),
+                    ' | Backtrace: ' . $backtrace,
+                (int) $e->getCode(),
+                $e,
             );
-            exit;
         }
     }
 
@@ -111,13 +117,15 @@ final class SQLDatabaseService implements Database
 
             ob_start();
             debug_print_backtrace();
-            error_log(
+            $backtrace = ob_get_clean();
+            throw new DatabaseQueryException(
                 'PDO execute error: ' . $statement->queryString .
                     ' | Error: ' . $e->getMessage() .
                     ' | Used data: ' . print_r($preparedData, true) .
-                    ' | Backtrace: ' . ob_get_clean(),
+                    ' | Backtrace: ' . $backtrace,
+                (int) $e->getCode(),
+                $e,
             );
-            exit;
         }
     }
 

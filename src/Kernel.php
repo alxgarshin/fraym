@@ -76,16 +76,19 @@ class Kernel
         set_time_limit(60);
 
         /** Инициализируем кэш */
+        Container::bind('cache', CacheService::getInstance());
         /** @var CacheService */
-        define('CACHE', CacheService::getInstance());
+        define('CACHE', Container::make('cache'));
 
         /** Подключаемся к базе данных */
+        Container::bind('db', SQLDatabaseService::getInstance());
         /** @var SQLDatabaseService */
-        define('DB', SQLDatabaseService::getInstance());
+        define('DB', Container::make('db'));
 
         /** Инициализируем пользователя */
+        Container::bind('current_user', CurrentUser::getInstance());
         /** @var CurrentUser */
-        define('CURRENT_USER', CurrentUser::getInstance());
+        define('CURRENT_USER', Container::make('current_user'));
         CURRENT_USER->auth();
 
         /** Перепроверяем настройки локали и меняем их, если нужно */

@@ -25,6 +25,38 @@ abstract class ResponseHelper implements Helper
         exit;
     }
 
+    /** Ответ 403: доступ запрещён (CSRF) */
+    public static function response403(): void
+    {
+        header("HTTP/1.1 403 Forbidden");
+        exit;
+    }
+
+    /** Установка CORS-заголовков на основе ALLOWED_ORIGINS из .env */
+    public static function setCorsHeaders(): void
+    {
+        $allowedOrigins = array_filter(
+            array_map('trim', explode(',', $_ENV['ALLOWED_ORIGINS'] ?? '')),
+        );
+
+        if (empty($allowedOrigins)) {
+            return;
+        }
+
+        if (in_array('*', $allowedOrigins, true)) {
+            header('Access-Control-Allow-Origin: *');
+
+            return;
+        }
+
+        $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+
+        if ($origin !== '' && in_array($origin, $allowedOrigins, true)) {
+            header('Access-Control-Allow-Origin: ' . $origin);
+            header('Vary: Origin');
+        }
+    }
+
     /** Формирование ответа браузеру после динамического запроса */
     public static function response(
         array $messages,
@@ -45,7 +77,7 @@ abstract class ResponseHelper implements Helper
             }
             $response['redirect'] = $redirectPath;
             $response['executionTime'] = GLOBALTIMER->getTimerDiff();
-            header('Access-Control-Allow-Origin: *');
+            self::setCorsHeaders();
             print DataHelper::jsonFixedEncode($response);
             exit;
         } else {
@@ -68,7 +100,7 @@ abstract class ResponseHelper implements Helper
         array $fields = [],
     ): void {
         $response = self::response([[$messageType, $message]], null, $fields);
-        header('Access-Control-Allow-Origin: *');
+        self::setCorsHeaders();
         print DataHelper::jsonFixedEncode($response->getData());
         exit;
     }

@@ -81,40 +81,51 @@ abstract class BaseModel
             $this->CMSVC->model = $this::class;
         }
 
-        $properties = $reflection->getProperties();
+        static $propertyCache = [];
+        $cacheKey = static::class;
 
-        foreach ($properties as $propertyData) {
-            $item = $propertyData->getAttributes(Attribute\BaseElement::class, ReflectionAttribute::IS_INSTANCEOF);
+        if (!isset($propertyCache[$cacheKey])) {
+            $cached = [];
 
-            if ($item[0] ?? false) {
-                $className = str_replace('\Attribute\\', '\Item\\', $item[0]->name);
-                $attribute = $propertyData->getAttributes(Attribute\BaseElement::class, ReflectionAttribute::IS_INSTANCEOF)[0]->newInstance();
+            foreach ($reflection->getProperties() as $propertyData) {
+                $item = $propertyData->getAttributes(Attribute\BaseElement::class, ReflectionAttribute::IS_INSTANCEOF);
 
-                $create = null;
-                $createInstance = $propertyData->getAttributes(Attribute\OnCreate::class, ReflectionAttribute::IS_INSTANCEOF);
+                if ($item[0] ?? false) {
+                    $className = str_replace('\Attribute\\', '\Item\\', $item[0]->name);
+                    $attribute = $item[0]->newInstance();
 
-                if ($createInstance[0] ?? false) {
-                    $create = $createInstance[0]->newInstance();
+                    $create = null;
+                    $createInstance = $propertyData->getAttributes(Attribute\OnCreate::class, ReflectionAttribute::IS_INSTANCEOF);
+
+                    if ($createInstance[0] ?? false) {
+                        $create = $createInstance[0]->newInstance();
+                    }
+
+                    $change = null;
+                    $changeInstance = $propertyData->getAttributes(Attribute\OnChange::class, ReflectionAttribute::IS_INSTANCEOF);
+
+                    if ($changeInstance[0] ?? false) {
+                        $change = $changeInstance[0]->newInstance();
+                    }
+
+                    $cached[] = [$propertyData->name, $className, $attribute, $create, $change];
+                } elseif (!in_array($propertyData->name, ['entity', 'elementsList', 'modelData', 'CMSVC'])) {
+                    throw new RuntimeException('Property ' . $propertyData->name . ' in model ' . $this::class . ' does not have a BaseElement attribute set.');
                 }
-
-                $change = null;
-                $changeInstance = $propertyData->getAttributes(Attribute\OnChange::class, ReflectionAttribute::IS_INSTANCEOF);
-
-                if ($changeInstance[0] ?? false) {
-                    $change = $changeInstance[0]->newInstance();
-                }
-
-                $this->initElement(
-                    $propertyData->name,
-                    $className,
-                    $attribute,
-                    $create,
-                    $change,
-                    $alternativeEntity,
-                );
-            } elseif (!in_array($propertyData->name, ['entity', 'elementsList', 'modelData', 'CMSVC'])) {
-                throw new RuntimeException('Property ' . $propertyData->name . ' in model ' . $this::class . ' does not have a BaseElement attribute set.');
             }
+
+            $propertyCache[$cacheKey] = $cached;
+        }
+
+        foreach ($propertyCache[$cacheKey] as [$name, $className, $attribute, $create, $change]) {
+            $this->initElement(
+                $name,
+                $className,
+                clone $attribute,
+                $create !== null ? clone $create : null,
+                $change !== null ? clone $change : null,
+                $alternativeEntity,
+            );
         }
 
         $this->initDependencyInjections();
