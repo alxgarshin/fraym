@@ -242,9 +242,14 @@
     "few_seconds": "moments ago",
     "seconds": "seconds",
     "before": "ago",
-    "at": "",
+    "at": "at",
     "from": "from",
-    "to": "to"
+    "to": "to",
+    "formats": {
+      "datetime": "d.m.Y \\a\\t H:i",
+      "date": "d.m.Y",
+      "time": "H:i"
+    }
   },
   "file": {
     "size_not_counted": "Can't get size",

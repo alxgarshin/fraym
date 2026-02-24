@@ -244,7 +244,12 @@
     "before": "назад",
     "at": "в",
     "from": "с",
-    "to": "по"
+    "to": "по",
+    "formats": {
+      "datetime": "d.m.Y в H:i",
+      "date": "d.m.Y",
+      "time": "H:i"
+    }
   },
   "file": {
     "size_not_counted": "Размер неизвестен",

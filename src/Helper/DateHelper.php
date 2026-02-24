@@ -51,7 +51,7 @@ abstract class DateHelper implements Helper
 
         $timestamp = is_string($timestamp) ? (int) trim($timestamp) : $timestamp;
 
-        return self::setDateToUTC($timestamp)?->format('d.m.Y ' . $LOCALE_FRAYM['datetime']['at'] . ' H:i');
+        return self::setDateToUTC($timestamp)?->format($LOCALE_FRAYM['datetime']['formats']['datetime']);
     }
 
     /** Вывод даты новости */

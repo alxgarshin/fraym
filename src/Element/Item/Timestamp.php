@@ -106,7 +106,7 @@ class Timestamp extends BaseElement
     {
         $LOCALE_FRAYM = LocaleHelper::getLocale(['fraym']);
 
-        return $this->get()?->format('d.m.Y ' . $LOCALE_FRAYM['datetime']['at'] . ' H:i');
+        return $this->get()?->format($LOCALE_FRAYM['datetime']['formats']['datetime']);
     }
 
     public function set(null|DateTimeImmutable|int $fieldValue): static
