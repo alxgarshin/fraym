@@ -112,7 +112,7 @@ abstract class BaseModel
                     }
 
                     $cached[] = [$propertyData->name, $className, $attribute, $create, $change];
-                } elseif (!in_array($propertyData->name, ['entity', 'elementsList', 'modelData', 'CMSVC'])) {
+                } elseif (!in_array($propertyData->name, ['entity', 'elementsList', 'modelData', 'CMSVC', 'isConstructing'])) {
                     throw new RuntimeException('Property ' . $propertyData->name . ' in model ' . $this::class . ' does not have a BaseElement attribute set.');
                 }
             }
