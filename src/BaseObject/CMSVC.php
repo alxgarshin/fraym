@@ -239,7 +239,10 @@ final class CMSVC
                 }
                 $id = 'mockModel_' . $highestKey;
             }
-            CACHE->setToCache('_MODELINSTANCES', $id, $modelInstance, $modelClass);
+
+            if (!$model->isConstructing) {
+                CACHE->setToCache('_MODELINSTANCES', $id, $modelInstance, $modelClass);
+            }
         }
 
         return $modelInstance;

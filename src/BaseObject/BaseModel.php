@@ -45,6 +45,8 @@ abstract class BaseModel
         get => $this->CMSVC->view?->entity;
     }
 
+    public bool $isConstructing = false;
+
     public function __clone()
     {
         foreach ($this->elementsList as $element) {
@@ -55,6 +57,7 @@ abstract class BaseModel
 
     public function construct(?CMSVC $CMSVC = null, ?BaseEntity $alternativeEntity = null): static
     {
+        $this->isConstructing = true;
         $reflection = new ReflectionObject($this);
 
         if (is_null($CMSVC)) {
@@ -129,6 +132,8 @@ abstract class BaseModel
         }
 
         $this->initDependencyInjections();
+
+        $this->isConstructing = false;
 
         return $this;
     }

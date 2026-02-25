@@ -829,6 +829,7 @@ div.field_group_separator {
 input[type=text].obligatory,
 input[type=password].obligatory,
 input[type=date].obligatory,
+input[type=datetime-local].obligatory,
 textarea.obligatory {
     padding-right: 1.5em;
     background: url(../design/asterix.svg) right .5em center no-repeat var(--color-background-main);
