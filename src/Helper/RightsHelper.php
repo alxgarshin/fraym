@@ -80,22 +80,9 @@ abstract class RightsHelper implements Helper
                 }
                 $types = $type;
 
-                if ($_ENV['DATABASE_TYPE'] === "postgre") {
-                    $count_fields = 0;
-                    $order_by = 'CASE';
-
-                    foreach ($type as $value) {
-                        $count_fields++;
-                        $order_by .= " WHEN type='" . $value . "' THEN " . $count_fields;
-                    }
-                    $order_by .= " ELSE " . ($count_fields + 1) . " END";
-
-                    $postgre_injection = "(" . $order_by . ") as order_type, ";
-
-                    $order_by = " ORDER BY " . $order_by . ", " . (!is_null($obj_id_from) ? 'obj_id_from' : 'obj_id_to');
-                } else {
-                    $order_by = " ORDER BY FIELD (type, '" . implode("', '", $type) . "')";
-                }
+                $tieBreakField = !is_null($obj_id_from) ? 'obj_id_from' : 'obj_id_to';
+                ['selectExtra' => $postgre_injection, 'orderBy' => $order_by] =
+                    DB->dialect->orderByCustomValuesSql('type', $type, $tieBreakField);
             } else {
                 $type = DataHelper::addBraces($type);
                 $types[] = $type;

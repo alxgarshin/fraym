@@ -152,8 +152,8 @@ final class Filters
         $searchQuerySql = is_null($entity->view->viewRights->viewRestrict) ? " WHERE" : "";
         $searchQueryParams = [];
 
-        /** Какой символ отправлять в функцию запроса к БД при поиске в групповых полях на разных типах базы? */
-        $groupFieldsQuerySign = $_ENV['DATABASE_TYPE'] === 'mysql' ? "\\\"" : "do_not_change_this_quote";
+        /** Символ-обёртка значения в LIKE-паттерне при поиске внутри JSON-групп */
+        $groupFieldsQuerySign = DB->dialect->getGroupFieldQuerySign();
 
         $firstSearchQuery = true;
         [$regexpWord, $antiRegexpWord] = DB->dbType->getRegexpWords();

@@ -17,9 +17,11 @@ fraym/
 │   ├── Element/
 │   │   ├── Attribute/            # PHP 8 Attributes (метаданные полей)
 │   │   └── Item/                 # Runtime-экземпляры полей (get/set/asHTML/asArray)
+│   ├── DatabaseDialect/          # MySQLDialect, PostgreSQLDialect (Strategy Pattern)
 │   ├── Enum/                     # ActionEnum, RequestTypeEnum, DbTypeEnum, ...
 │   ├── Exception/                # DatabaseException, DatabaseConnectionException, DatabaseQueryException
 │   ├── Helper/                   # AuthHelper, ResponseHelper, CookieHelper, DataHelper, ...
+│   ├── Interface/                # Database, DatabaseDialect, ...
 │   └── Service/                  # SQLDatabaseService, CacheService, EnvService, ...
 └── skeleton/                     # Эталонный проект на базе фреймворка
     ├── public/
@@ -303,6 +305,75 @@ DatabaseException (RuntimeException)
 ├── DatabaseConnectionException   # ошибка соединения → поймать → HTTP 503
 └── DatabaseQueryException        # ошибка prepare/execute → глобальный handler → HTTP 500
 ```
+
+---
+
+## MySQL / PostgreSQL совместимость — DatabaseDialect
+
+Весь диалект-специфичный SQL инкапсулирован в **Strategy Pattern**: `src/Interface/DatabaseDialect.php` + два класса в `src/DatabaseDialect/`. Клиентский код использует `DB->dialect->method()` — **никаких** `if DATABASE_TYPE` за пределами трёх легитимных мест.
+
+### Использование в коде
+
+```php
+// Правильно — через диалект:
+$sign = DB->dialect->getNullSafeEqualOperator();           // '<=>' или '='
+$query .= DB->dialect->getInsertReturningClause('id');    // ' RETURNING id' или ''
+$sign = DB->dialect->getGroupFieldQuerySign();             // '\"' или '"'
+
+// Получить ORDER BY для пользовательских значений:
+['selectExtra' => $extra, 'orderBy' => $orderBy] =
+    DB->dialect->orderByCustomValuesSql('type', $types, 'tie_field');
+// MySQL → FIELD(type, ...) / PostgreSQL → CASE WHEN ... END
+```
+
+### Интерфейс DatabaseDialect — все 17 методов
+
+| Метод | Назначение |
+|---|---|
+| `getDsnOptions()` | DSN-суффикс (`;charset=utf8mb4` / `''`) |
+| `getNullSafeEqualOperator()` | `<=>` / `=` для NULL-safe WHERE |
+| `getInsertReturningClause(field)` | `RETURNING field` / `''` после INSERT |
+| `extractLastInsertId(result)` | ID из RETURNING-результата; `null` = использовать PDO::lastInsertId() |
+| `getGroupFieldQuerySign()` | `\"` / `"` для LIKE-поиска в JSON-группах |
+| `terminateConnectionsSql(db)` | `pg_terminate_backend(...)` / `null` |
+| `checkDatabaseExistsSql(db)` | `SHOW DATABASES LIKE` / `SELECT FROM pg_database` |
+| `useDatabaseSql(db)` | `USE db;` / `null` |
+| `checkUserExistsSql(user)` | `mysql.user` / `pg_roles` |
+| `createUserSql(...)` | `CREATE USER` синтаксис для каждой СУБД |
+| `alterUserSql(...)` | `ALTER USER` синтаксис для каждой СУБД |
+| `createDatabaseOwnerSuffix(user)` | `''` / ` OWNER user` |
+| `grantPrivilegesSql(...)` | `GRANT ALL ON db.*` / `GRANT ALL ON DATABASE db` |
+| `afterGrantSql()` | `FLUSH PRIVILEGES` / `null` |
+| `createMigrationTableSql()` | DDL таблицы migration (AUTO_INCREMENT vs UUID) |
+| `setTimezoneSql()` | `SET time_zone='+03:00'` / `SET TIME ZONE 'Europe/Moscow'` |
+| `orderByCustomValuesSql(field, values, tie)` | `FIELD(...)` / `CASE WHEN ... END` |
+
+### Легитимные остатки DATABASE_TYPE (не трогать)
+
+| Место | Причина |
+|---|---|
+| `DbTypeEnum.php` | Инициализация enum через `tryFrom($_ENV['DATABASE_TYPE'])` |
+| `SQLDatabaseService.php` | PDO DSN-префикс: `pgsql:host=...` / `mysql:host=...` |
+| `SqlTrait.php` | Выбор файла миграции: `.mysql.sql` vs `.sql` |
+
+### DbTypeEnum — отдельный слой (не дублировать в диалекте)
+
+`DbTypeEnum::quoteIdentifier()` и `DbTypeEnum::getRegexpWords()` уже инкапсулированы в enum и вызываются через `DB->dbType->...`. Это слой работы с идентификаторами — он не пересекается с `DatabaseDialect`.
+
+### Файлы миграций — соглашение по именованию
+
+```
+src/Migrations/Sql/
+├── SqlMigrationXXXXX.sql          # PostgreSQL DDL (основной)
+└── SqlMigrationXXXXX.mysql.sql    # MySQL DDL (опциональный, если DDL различается)
+```
+
+`SqlTrait::getSql()` автоматически выбирает `.mysql.sql` при `DATABASE_TYPE=mysql`
+(если файл существует), иначе fallback на `.sql`.
+
+**При создании новой миграции с DDL:** создавать оба файла. MySQL DDL использует
+`int AUTO_INCREMENT`, backtick-идентификаторы, `ENGINE=InnoDB`. PostgreSQL — UUID,
+`gen_random_uuid()`, двойные кавычки.
 
 ---
 

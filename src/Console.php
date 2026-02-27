@@ -133,7 +133,6 @@ class Console
 
         /** Соединение с БД должно предполагать, что БД еще не существует (например, она удалена в результате drop до этого) */
         $dbType = DbTypeEnum::init();
-        $isPg = $dbType === DbTypeEnum::POSTGRESQL;
         $dbNameQuoted = $dbType->quoteIdentifier($_ENV['DATABASE_NAME']);
         $userNameQuoted = $dbType->quoteIdentifier($_ENV['DATABASE_USER']);
 
@@ -156,12 +155,10 @@ class Console
 
             if ($action === 'database:drop') {
                 /** Полный сброс базы данных в dev и test окружениях */
-                if ($isPg) {
-                    ROOT_DB->query("
-                        SELECT pg_terminate_backend(pid) 
-                        FROM pg_stat_activity 
-                        WHERE datname = '" . $_ENV['DATABASE_NAME'] . "' AND pid <> pg_backend_pid();
-                    ", []);
+                $terminateSql = ROOT_DB->dialect->terminateConnectionsSql($_ENV['DATABASE_NAME']);
+
+                if ($terminateSql !== null) {
+                    ROOT_DB->query($terminateSql, []);
                 }
 
                 if (ROOT_DB->query("DROP DATABASE IF EXISTS " . $dbNameQuoted . ";", []) !== false) {
@@ -173,54 +170,49 @@ class Console
                 exit;
             } elseif (str_starts_with($action, 'database:migrate')) {
                 /** Проверка на наличие и создание в случае необходимости базы данных */
-                $dbExists = false;
-
-                if ($isPg) {
-                    $checkSql = "SELECT 1 FROM pg_database WHERE datname = '" . $_ENV['DATABASE_NAME'] . "'";
-                } else {
-                    $checkSql = "SHOW DATABASES LIKE '" . $_ENV['DATABASE_NAME'] . "'";
-                }
-
-                $result = ROOT_DB->query($checkSql, [], true);
+                $result = ROOT_DB->query(
+                    ROOT_DB->dialect->checkDatabaseExistsSql($_ENV['DATABASE_NAME']),
+                    [],
+                    true,
+                );
                 $dbExists = !empty($result);
 
                 if (!$dbExists) {
-                    $createSql = "CREATE DATABASE " . $dbNameQuoted;
+                    /** Создаём/обновляем пользователя */
+                    $userExists = ROOT_DB->query(
+                        ROOT_DB->dialect->checkUserExistsSql($_ENV['DATABASE_USER']),
+                        [],
+                        true,
+                    );
 
-                    if ($isPg) {
-                        $userExists = ROOT_DB->query(
-                            "SELECT 1 FROM pg_roles WHERE rolname = '" . $_ENV['DATABASE_USER'] . "'",
-                            [],
-                            true,
-                        );
-
-                        if ($userExists) {
-                            ROOT_DB->query(
-                                "ALTER USER " . $userNameQuoted . " WITH PASSWORD '" . $_ENV['DATABASE_PASSWORD'] . "'",
-                                [],
-                            );
-                        } else {
-                            ROOT_DB->query(
-                                "CREATE USER " . $userNameQuoted . " WITH PASSWORD '" . $_ENV['DATABASE_PASSWORD'] . "'",
-                                [],
-                            );
-                        }
-
-                        $createSql .= " OWNER " . $userNameQuoted;
-                    }
-
-                    ROOT_DB->query($createSql, []);
-
-                    if ($isPg) {
+                    if ($userExists) {
                         ROOT_DB->query(
-                            "GRANT ALL PRIVILEGES ON DATABASE " . $dbNameQuoted . " TO " . $userNameQuoted,
+                            ROOT_DB->dialect->alterUserSql($userNameQuoted, $_ENV['DATABASE_USER'], $_ENV['DATABASE_PASSWORD']),
                             [],
                         );
                     } else {
                         ROOT_DB->query(
-                            "GRANT ALL PRIVILEGES ON " . $dbNameQuoted . ".* TO '" . $_ENV['DATABASE_USER'] . "'@'%' IDENTIFIED BY '" . $_ENV['DATABASE_PASSWORD'] . "';",
+                            ROOT_DB->dialect->createUserSql($userNameQuoted, $_ENV['DATABASE_USER'], $_ENV['DATABASE_PASSWORD']),
                             [],
                         );
+                    }
+
+                    /** Создаём базу данных */
+                    ROOT_DB->query(
+                        'CREATE DATABASE ' . $dbNameQuoted . ROOT_DB->dialect->createDatabaseOwnerSuffix($userNameQuoted),
+                        [],
+                    );
+
+                    /** Выдаём привилегии */
+                    ROOT_DB->query(
+                        ROOT_DB->dialect->grantPrivilegesSql($dbNameQuoted, $userNameQuoted, $_ENV['DATABASE_USER']),
+                        [],
+                    );
+
+                    $afterGrant = ROOT_DB->dialect->afterGrantSql();
+
+                    if ($afterGrant !== null) {
+                        ROOT_DB->query($afterGrant, []);
                     }
                 }
             }
@@ -237,30 +229,13 @@ class Console
             if (str_starts_with($action, 'database:migrate')) {
                 define('CACHE', CacheService::getInstance());
 
-                if ($isPg) {
-                    MIGRATE_DB->query(
-                        'CREATE TABLE IF NOT EXISTS "migration" (
-  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  "migration_id" varchar(100) NOT NULL,
-  "migrated_at" timestamp NOT NULL,
-  "migration_result" json
-)',
-                        [],
-                    );
-                } else {
-                    MIGRATE_DB->query("USE " . $dbNameQuoted . ";", []);
+                $useSql = MIGRATE_DB->dialect->useDatabaseSql($dbNameQuoted);
 
-                    MIGRATE_DB->query(
-                        "CREATE TABLE IF NOT EXISTS `migration` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `migration_id` varchar(100) NOT NULL,
-  `migrated_at` timestamp NOT NULL,
-  `migration_result` json,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;",
-                        [],
-                    );
+                if ($useSql !== null) {
+                    MIGRATE_DB->query($useSql, []);
                 }
+
+                MIGRATE_DB->query(MIGRATE_DB->dialect->createMigrationTableSql(), []);
 
                 $appendedMigrations = [];
                 $appendedMigrationsData = MIGRATE_DB->select('migration', null, false, ['migration_id']);
@@ -533,11 +508,7 @@ class Fixture" . $migrationDate . " extends BaseFixture
                         " on database `" . $_ENV['DATABASE_NAME'] . "`.",
                 );
 
-                if (MIGRATE_DB->dbType === DbTypeEnum::POSTGRESQL) {
-                    MIGRATE_DB->query("SET TIME ZONE 'Europe/Moscow';", []);
-                } else {
-                    MIGRATE_DB->query("SET time_zone='+03:00';", []);
-                }
+                MIGRATE_DB->query(MIGRATE_DB->dialect->setTimezoneSql(), []);
 
                 $migrationId = str_replace('.php', '', $migrationFile);
 

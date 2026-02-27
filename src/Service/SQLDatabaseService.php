@@ -13,10 +13,11 @@ declare(strict_types=1);
 
 namespace Fraym\Service;
 
+use Fraym\DatabaseDialect\{MySQLDialect, PostgreSQLDialect};
 use Fraym\Enum\{DbTypeEnum, OperandEnum};
 use Fraym\Exception\{DatabaseConnectionException, DatabaseQueryException};
 use Fraym\Helper\{DataHelper, LocaleHelper};
-use Fraym\Interface\Database;
+use Fraym\Interface\{Database, DatabaseDialect};
 use Generator;
 use PDO;
 use PDOException;
@@ -25,6 +26,9 @@ use PDOStatement;
 final class SQLDatabaseService implements Database
 {
     public DbTypeEnum $dbType;
+
+    /** Диалект текущей СУБД — инкапсулирует все SQL-конструкции, специфичные для движка */
+    public readonly DatabaseDialect $dialect;
 
     private PDO $DB;
 
@@ -42,13 +46,18 @@ final class SQLDatabaseService implements Database
     {
         $this->dbType = DbTypeEnum::init();
 
+        $this->dialect = match ($this->dbType) {
+            DbTypeEnum::MYSQL      => new MySQLDialect(),
+            DbTypeEnum::POSTGRESQL => new PostgreSQLDialect(),
+        };
+
         try {
             $this->DB = new PDO(
                 $_ENV['DATABASE_TYPE'] . ':' .
                     ($_ENV['DATABASE_NAME'] !== '' ? 'dbname=' . $_ENV['DATABASE_NAME'] . ';' : '') .
                     'host=' . $_ENV['DATABASE_HOST'] .
                     ';port=' . $_ENV['DATABASE_PORT'] .
-                    ($_ENV['DATABASE_TYPE'] === "mysql" ? ';charset=utf8mb4' : ''),
+                    $this->dialect->getDsnOptions(),
                 $_ENV['DATABASE_USER'],
                 $_ENV['DATABASE_PASSWORD'],
             );
@@ -191,20 +200,10 @@ final class SQLDatabaseService implements Database
     /** Получение id последней добавленной записи */
     public function lastInsertId(?string $name = null): string|false
     {
-        if ($this->dbType === DbTypeEnum::POSTGRESQL) {
-            $result = $this->lastQuery['result'] ?? [];
+        $id = $this->dialect->extractLastInsertId($this->lastQuery['result'] ?? false);
 
-            if (empty($result)) {
-                return false;
-            }
-
-            $firstRow = $result[0] ?? $result;
-            $id = reset($firstRow);
-
-            return $id !== false ? (string) $id : false;
-        }
-
-        return $this->DB->lastInsertId($name);
+        /** null означает: диалект не поддерживает RETURNING, использовать PDO::lastInsertId() */
+        return $id !== null ? $id : $this->DB->lastInsertId($name);
     }
 
     /** Получение количества строк, задетых последней операцией в базе данных */
@@ -227,7 +226,7 @@ final class SQLDatabaseService implements Database
             foreach ($criteria as $key => $value) {
                 if (!is_null($value) && (!is_int($key) || !is_null($value[1] ?? null))) {
                     $useNoValue = false;
-                    $equalSign = $_ENV['DATABASE_TYPE'] === 'mysql' ? "<=>" : "=";
+                    $equalSign = $this->dialect->getNullSafeEqualOperator();
                     $dbColumn = (is_array($value) && is_int($key)) ? $value[0] : $key;
 
                     if (is_array($value) && is_int($key) && !is_null($value[2] ?? null)) {
@@ -415,11 +414,8 @@ final class SQLDatabaseService implements Database
 
             $paramsListSql = implode(", ", $keys);
             $dataSql = ":" . implode(", :", $keys);
-            $query = "INSERT INTO " . $tableName . " (" . $paramsListSql . ") VALUES (" . $dataSql . ")";
-
-            if ($this->dbType === DbTypeEnum::POSTGRESQL) {
-                $query .= " RETURNING " . $returningIdFieldName;
-            }
+            $query = "INSERT INTO " . $tableName . " (" . $paramsListSql . ") VALUES (" . $dataSql . ")" .
+                $this->dialect->getInsertReturningClause($returningIdFieldName);
 
             return $this->query(
                 query: $query,

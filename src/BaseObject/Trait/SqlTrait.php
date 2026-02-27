@@ -22,8 +22,15 @@ trait SqlTrait
     public function getSql(?string $sqlPath = null): ?string
     {
         if ($sqlPath === null) {
-            $sqlPath = INNER_PATH . 'src/Migrations/Sql/Sql' .
-                ObjectsHelper::getClassShortName($this::class, ($this instanceof BaseMigration ? 'Migration' : 'Fixture')) . '.sql';
+            $baseName = INNER_PATH . 'src/Migrations/Sql/Sql' .
+                ObjectsHelper::getClassShortName($this::class, ($this instanceof BaseMigration ? 'Migration' : 'Fixture'));
+
+            /** Для MySQL сначала ищем файл с суффиксом .mysql.sql, затем fallback на .sql */
+            $mysqlPath = $baseName . '.mysql.sql';
+
+            $sqlPath = ($_ENV['DATABASE_TYPE'] === 'mysql' && file_exists($mysqlPath))
+                ? $mysqlPath
+                : $baseName . '.sql';
         }
 
         if (file_exists($sqlPath)) {
