@@ -47,10 +47,12 @@ class Rights
                     }
                 }
 
-                $defaultValue->serviceCheck = true;
+                if (!is_null($defaultValue)) {
+                    $defaultValue->serviceCheck = true;
 
-                if ($defaultValue->query === '') {
-                    $this->viewRestrict = $defaultValue = null;
+                    if ($defaultValue->query === '') {
+                        $this->viewRestrict = $defaultValue = null;
+                    }
                 }
             }
 
@@ -83,10 +85,12 @@ class Rights
                     }
                 }
 
-                $defaultValue->serviceCheck = true;
+                if (!is_null($defaultValue)) {
+                    $defaultValue->serviceCheck = true;
 
-                if ($defaultValue->query === '') {
-                    $this->changeRestrict = $defaultValue = null;
+                    if ($defaultValue->query === '') {
+                        $this->changeRestrict = $defaultValue = null;
+                    }
                 }
             }
 
@@ -119,10 +123,12 @@ class Rights
                     }
                 }
 
-                $defaultValue->serviceCheck = true;
+                if (!is_null($defaultValue)) {
+                    $defaultValue->serviceCheck = true;
 
-                if ($defaultValue->query === '') {
-                    $this->deleteRestrict = $defaultValue = null;
+                    if ($defaultValue->query === '') {
+                        $this->deleteRestrict = $defaultValue = null;
+                    }
                 }
             }
 
