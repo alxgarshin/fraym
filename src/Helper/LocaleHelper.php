@@ -38,16 +38,16 @@ abstract class LocaleHelper implements Helper
     /** Получение локали */
     public static function getLocale(?array $entityPathInLocale = null, ?string $locale = null): ?array
     {
-        $locale = $locale ? '_LOCALE_' . $locale : '_LOCALE';
+        $localeKey = $locale ? '_LOCALE_' . $locale : '_LOCALE';
 
-        $temp = CACHE->getFromCache($locale, 0);
+        $temp = CACHE->getFromCache($localeKey, 0);
 
         if (!is_null($entityPathInLocale)) {
             $entityPathInLocale[0] = TextHelper::camelCaseToSnakeCase($entityPathInLocale[0]);
 
             if (!isset($temp[$entityPathInLocale[0]])) {
                 self::loadLocale($entityPathInLocale[0], $locale);
-                $temp = CACHE->getFromCache($locale, 0);
+                $temp = CACHE->getFromCache($localeKey, 0);
             }
 
             foreach ($entityPathInLocale as $key) {
@@ -173,7 +173,7 @@ abstract class LocaleHelper implements Helper
 
         $fileLocale = $locale ?? CookieHelper::getCookie('locale');
 
-        $locale = $locale ? '_LOCALE_' . $locale : '_LOCALE';
+        $localeKey = $locale ? '_LOCALE_' . $locale : '_LOCALE';
 
         if ($entityName === 'fraym') {
             $filePath = __DIR__ . "/../Locale/{$fileLocale}.json";
@@ -187,11 +187,11 @@ abstract class LocaleHelper implements Helper
 
         if (!is_null($data)) {
             CACHE->setToCache(
-                $locale,
+                $localeKey,
                 0,
                 array_merge(
                     [$entityName => $data],
-                    CACHE->getFromCache($locale, 0),
+                    CACHE->getFromCache($localeKey, 0),
                 ),
             );
         }
