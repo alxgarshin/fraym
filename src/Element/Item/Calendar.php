@@ -14,10 +14,9 @@ declare(strict_types=1);
 namespace Fraym\Element\Item;
 
 use DateTimeImmutable;
-use DateTimeInterface;
 use Fraym\Element\Attribute as Attribute;
 use Fraym\Element\Item\Trait\CloneTrait;
-use Fraym\Helper\{DateHelper, LocaleHelper};
+use Fraym\Helper\{DateHelper};
 use Fraym\Interface\ElementAttribute;
 
 /** Календарь в формате "дата" или "дата+время" */
@@ -95,36 +94,35 @@ class Calendar extends BaseElement
     {
         if (!isset($this->fieldValue)) {
             $pureValue = $this->model?->getModelDataFieldValue($this->name);
-            $this->fieldValue = DateHelper::setDateToUTC($pureValue);
+            $this->fieldValue = DateHelper::convertToDateTime($pureValue);
         }
 
         return $this->fieldValue ?? $this->getDefaultValue();
     }
 
+    public function getAsTimeStamp(): ?int
+    {
+        return DateHelper::timestamp($this->get());
+    }
+
     public function getAsAtom(): ?string
     {
-        return $this->get()?->format(DateTimeInterface::ATOM);
+        return DateHelper::atom($this->get());
     }
 
     public function getAsUsualDate(): ?string
     {
-        return $this->get()?->format('d.m.Y');
+        return DateHelper::date($this->get());
     }
 
     public function getAsUsualDateTime(): ?string
     {
-        $LOCALE_FRAYM = LocaleHelper::getLocale(['fraym']);
-
-        return $this->get()?->format($LOCALE_FRAYM['datetime']['formats']['datetime']);
+        return DateHelper::dateTime($this->get());
     }
 
     public function set(null|DateTimeImmutable|string|int $fieldValue): static
     {
-        if (!is_a($fieldValue, 'DateTimeImmutable') && !is_null($fieldValue)) {
-            $fieldValue = DateHelper::setDateToUTC($fieldValue);
-        }
-
-        $this->fieldValue = $fieldValue;
+        $this->fieldValue = DateHelper::convertToDateTime($fieldValue);
 
         return $this;
     }

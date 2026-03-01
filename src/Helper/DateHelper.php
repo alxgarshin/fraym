@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace Fraym\Helper;
 
 use DateTimeImmutable;
+use DateTimeInterface;
+use DateTimeZone;
 use Fraym\Interface\Helper;
 
 abstract class DateHelper implements Helper
@@ -25,33 +27,102 @@ abstract class DateHelper implements Helper
     }
 
     /** Преобразование даты из строки в DateTimeImmutable */
-    public static function setDateToUTC(DateTimeImmutable|int|string|null $dateTime): ?DateTimeImmutable
-    {
+    public static function convertToDateTime(
+        DateTimeImmutable|int|string|null $dateTime,
+        DateTimeZone|string|null $dateTimeZone = null,
+    ): ?DateTimeImmutable {
+        if (is_null($dateTime)) {
+            return null;
+        }
+
+        if (is_string($dateTime)) {
+            $dateTime = trim($dateTime);
+        }
+
+        if (is_string($dateTimeZone)) {
+            $dateTimeZone = trim($dateTimeZone);
+        }
+
         if (is_numeric($dateTime)) {
             $dateTimeFixed = new DateTimeImmutable();
             $dateTimeFixed = $dateTimeFixed->setTimestamp((int) $dateTime);
             $dateTime = $dateTimeFixed;
         } elseif (is_string($dateTime)) {
-            $dateTime = trim($dateTime) ? new DateTimeImmutable($dateTime) : null;
+            $dateTime = $dateTime ? new DateTimeImmutable($dateTime) : null;
         }
 
-        //$dateTime?->setTimeZone(new DateTimeZone('UTC'));
+        if ($dateTime && $dateTimeZone) {
+            $dateTimeZone = $dateTimeZone instanceof DateTimeZone ? $dateTimeZone : new DateTimeZone($dateTimeZone);
+            $dateTime = $dateTime->setTimeZone($dateTimeZone);
+        }
 
         return $dateTime;
     }
 
-    /** Самый простой из возможных выводов даты и времени */
-    public static function basicShowDateTime(int|string|null $timestamp): ?string
-    {
-        if (is_null($timestamp) || $timestamp === '') {
+    /** Получение стандартной для локали строки даты */
+    public static function date(
+        DateTimeImmutable|int|string|null $dateTime,
+        DateTimeZone|string|null $dateTimeZone = null,
+    ): ?string {
+        $dateTime = self::convertToDateTime($dateTime, $dateTimeZone);
+
+        if ($dateTime === null) {
             return null;
         }
 
         $LOCALE_FRAYM = LocaleHelper::getLocale(['fraym']);
 
-        $timestamp = is_string($timestamp) ? (int) trim($timestamp) : $timestamp;
+        return $dateTime->format($LOCALE_FRAYM['datetime']['formats']['date']);
+    }
 
-        return self::setDateToUTC($timestamp)?->format($LOCALE_FRAYM['datetime']['formats']['datetime']);
+    /** Получение стандартной для локали строки даты и времени */
+    public static function dateTime(
+        DateTimeImmutable|int|string|null $dateTime,
+        DateTimeZone|string|null $dateTimeZone = null,
+    ): ?string {
+        $dateTime = self::convertToDateTime($dateTime, $dateTimeZone);
+
+        if ($dateTime === null) {
+            return null;
+        }
+
+        $LOCALE_FRAYM = LocaleHelper::getLocale(['fraym']);
+
+        return $dateTime->format($LOCALE_FRAYM['datetime']['formats']['datetime']);
+    }
+
+    /** Получение строки даты и времени в формате ATOM */
+    public static function atom(
+        DateTimeImmutable|int|string|null $dateTime,
+        DateTimeZone|string|null $dateTimeZone = null,
+    ): ?string {
+        $dateTime = self::convertToDateTime($dateTime, $dateTimeZone);
+
+        if ($dateTime === null) {
+            return null;
+        }
+
+        return $dateTime->format(DateTimeInterface::ATOM);
+    }
+
+    /** Получение строки даты и времени в формате timestamp */
+    public static function timestamp(
+        DateTimeImmutable|int|string|null $dateTime,
+        DateTimeZone|string|null $dateTimeZone = null,
+    ): ?int {
+        $dateTime = self::convertToDateTime($dateTime, $dateTimeZone);
+
+        if ($dateTime === null) {
+            return null;
+        }
+
+        return $dateTime->getTimestamp();
+    }
+
+    /** Самый простой из возможных выводов даты и времени */
+    public static function basicShowDateTime(int|string|null $timestamp): ?string
+    {
+        return self::dateTime($timestamp);
     }
 
     /** Вывод даты новости */
