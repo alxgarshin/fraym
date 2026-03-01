@@ -36,16 +36,18 @@ abstract class LocaleHelper implements Helper
     }
 
     /** Получение локали */
-    public static function getLocale(?array $entityPathInLocale = null): ?array
+    public static function getLocale(?array $entityPathInLocale = null, ?string $locale = null): ?array
     {
-        $temp = CACHE->getFromCache('_LOCALE', 0);
+        $locale = $locale ? '_LOCALE_' . $locale : '_LOCALE';
+
+        $temp = CACHE->getFromCache($locale, 0);
 
         if (!is_null($entityPathInLocale)) {
             $entityPathInLocale[0] = TextHelper::camelCaseToSnakeCase($entityPathInLocale[0]);
 
             if (!isset($temp[$entityPathInLocale[0]])) {
-                self::loadLocale($entityPathInLocale[0]);
-                $temp = CACHE->getFromCache('_LOCALE', 0);
+                self::loadLocale($entityPathInLocale[0], $locale);
+                $temp = CACHE->getFromCache($locale, 0);
             }
 
             foreach ($entityPathInLocale as $key) {
@@ -161,28 +163,35 @@ abstract class LocaleHelper implements Helper
     }
 
     /** Подгрузка файла локали */
-    private static function loadLocale(string $entityName): void
+    private static function loadLocale(string $entityName, ?string $locale = null): void
     {
-        if (!CookieHelper::getCookie('locale')) {
-            CookieHelper::batchSetCookie(['locale' => 'RU']);
+        if (!$locale) {
+            if (!CookieHelper::getCookie('locale')) {
+                CookieHelper::batchSetCookie(['locale' => 'RU']);
+            }
         }
 
+        $fileLocale = $locale ?? CookieHelper::getCookie('locale');
+
+        $locale = $locale ? '_LOCALE_' . $locale : '_LOCALE';
+
         if ($entityName === 'fraym') {
-            $filePath = __DIR__ . '/../Locale/' . CookieHelper::getCookie('locale') . '.json';
+            $filePath = __DIR__ . "/../Locale/{$fileLocale}.json";
         } elseif ($entityName === 'global') {
-            $filePath = INNER_PATH . 'src/CMSVC/' . CookieHelper::getCookie('locale') . '.json';
+            $filePath = INNER_PATH . "src/CMSVC/{$fileLocale}.json";
         } else {
-            $filePath = INNER_PATH . 'src/CMSVC/' . TextHelper::snakeCaseToCamelCase($entityName) . '/' . CookieHelper::getCookie('locale') . '.json';
+            $filePath = INNER_PATH . 'src/CMSVC/' . TextHelper::snakeCaseToCamelCase($entityName) . '/' . $fileLocale . '.json';
         }
+
         $data = DataHelper::getJsonFile($filePath);
 
         if (!is_null($data)) {
             CACHE->setToCache(
-                '_LOCALE',
+                $locale,
                 0,
                 array_merge(
                     [$entityName => $data],
-                    CACHE->getFromCache('_LOCALE', 0),
+                    CACHE->getFromCache($locale, 0),
                 ),
             );
         }
