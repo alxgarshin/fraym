@@ -191,7 +191,7 @@ abstract class LocaleHelper implements Helper
                 0,
                 array_merge(
                     [$entityName => $data],
-                    CACHE->getFromCache($localeKey, 0),
+                    CACHE->getFromCache($localeKey, 0) ?? [],
                 ),
             );
         }
