@@ -1,6 +1,6 @@
 ## Workflow Orchestration
 
-### 1. Plan Node Default
+### 1. Plan Mode Default
 - Enter plan mode for ANY non-trivial task (3+ steps or architectural decisions)
 - If something goes sideways, STOP and re-plan immediately – don't keep pushing
 - Use plan mode for verification steps, not just building
@@ -40,6 +40,7 @@
 ### 7. Session Resume Protocol
 - At session start: check `tasks/todo.md` for in-progress work
 - Read `CLAUDE_PROJECT.md` for current project context before doing anything
+- Read `CLAUDE_PROJECT_FRONTEND.md` for current project context before doing anything with frontend
 - Don't ask the user "what were we doing?" — figure it out from the files
 
 ### 8. Scope Guard
@@ -55,6 +56,7 @@
 ### 10. Lessons vs Project Knowledge Criteria
 - `tasks/lessons.md`: patterns of YOUR mistakes (process, assumptions, errors)
 - `CLAUDE_PROJECT.md`: stable project knowledge (architecture, gotchas, decisions)
+- `CLAUDE_PROJECT_FRONTEND.md`: stable project knowledge of frontend (architecture, gotchas, decisions)
 - Neither: one-off implementation details that won't recur
 
 ---
@@ -67,14 +69,14 @@
 4. **Explain Changes**: High-level summary at each step
 5. **Document Results**: Add review section to `tasks/todo.md`
 6. **Capture Lessons**: Update `tasks/lessons.md` after corrections
-7. **Update Project Knowledge**: After completing a task, review `CLAUDE_PROJECT.md` and update or add any significant knowledge about the project (architectural decisions, non-obvious patterns, recurring gotchas, domain rules). Do NOT include one-off details or trivial implementation specifics.
+7. **Update Project Knowledge**: After completing a task, review `CLAUDE_PROJECT.md` and `CLAUDE_PROJECT_FRONTEND.md` and update or add any significant knowledge about the project (architectural decisions, non-obvious patterns, recurring gotchas, domain rules). Do NOT include one-off details or trivial implementation specifics.
 
 ---
 
 ## Project Context
 
-- Always consult `CLAUDE_PROJECT.md` for project-specific knowledge: architecture, domain rules, established patterns, and key decisions made during development.
-- Treat `CLAUDE_PROJECT.md` as the authoritative source of project truth — if it contradicts your assumptions, trust `CLAUDE_PROJECT.md`.
+- Always consult `CLAUDE_PROJECT.md` and `CLAUDE_PROJECT_FRONTEND.md` for project-specific knowledge: architecture, domain rules, established patterns, and key decisions made during development.
+- Treat `CLAUDE_PROJECT.md` and `CLAUDE_PROJECT_FRONTEND.md` as the authoritative source of project truth — if it contradicts your assumptions, trust `CLAUDE_PROJECT.md` and `CLAUDE_PROJECT_FRONTEND.md`.
 
 ---
 

@@ -377,69 +377,21 @@ src/Migrations/Sql/
 
 ---
 
-## Фронтенд-рантайм: skeleton/public/vendor/fraym/js/global.js
+## Фронтенд-рантайм
 
-### Ключевые глобальные переменные
-```js
-jwtToken               // JWT-токен авторизации (обновляется автоматически)
-LOCALE                 // загруженные локали (объект, ключи из JSON)
-fraymElementsMap       // Map<DOMElement, FraymElement> — все активные элементы
-activeListeners        // Map<FraymElement, handlers>
-dataLoaded             // { css, js, libraries, functions } — реестр загрузки
-window['csrfToken']    // CSRF-токен (инжектируется PHP только для залогиненных)
-window['messages']     // очередь нотификаций (инжектируется PHP)
-```
+> Подробная документация — в `CLAUDE_PROJECT_FRONTEND.md`.
 
-### fetchData(url, options, data) — базовая HTTP-функция
-Все запросы фреймворка идут через неё. Автоматически добавляет:
-- `Fraym-Request: true`
-- `Authorization: Bearer {jwtToken}` (если есть)
-- `X-CSRF-Token: {csrfToken}` (если `window['csrfToken']` задан)
+Fraym SPA построен на собственном JS-рантайме (`public/vendor/fraym/js/global.js`) без React/Vue/Angular.
 
-`window.fetch` обёрнут в Proxy: автоматически обновляет JWT через refresh endpoint при 401.
+**Ключевые механизмы:**
+- `_()` — jQuery-подобный враппер с кэшированием (FraymElement)
+- `updateState(href)` — SPA-навигация: заменяет `div.maincontent_data`, вызывает `fraymInit(false)`
+- `actionRequest(params, target)` — паттерн для submit-действий (не навигационных), dispatch через `actionRequestCallbacks.success/error[action]`
+- `fraymInit(withDocumentEvents)` — реинициализация компонентов; `true` только при первом запуске
+- Lazy-загрузка по модулям: `cmsvc/js.php` → `dataLoaded.js[kind]`, `cmsvc/css.php` → CSS раздела
+- `window.fetch` Proxy: автообновление JWT; `fetchData` добавляет `Fraym-Request: true` + CSRF-токен
 
-### actionRequest(params, target) — обработка форм
-Используется для submit действий (не навигационных). Строит URL из `params.action`,
-вызывает `fetchData`, dispatch результата в `actionRequestCallbacks.success/error[action]`.
-
-### updateState(href) — SPA-навигация
-Перехватывает клики по локальным ссылкам. Загружает HTML через `fetchData` с заголовком
-`Fraym-Request: true`, заменяет `div.maincontent_data`, вызывает `fraymInit(false)`.
-
-### fraymInit(withDocumentEvents) — реинициализация элементов
-Запускается после каждой смены контента. Инициализирует все поля, listeners, компоненты.
-`withDocumentEvents: true` только при первом запуске (устанавливает MutationObserver).
-
-### Lazy-загрузка JS/CSS по модулям
-```
-/vendor/fraym/cmsvc/{kind}.js   → php: cmsvc/js.php  → src/CMSVC/{Kind}/js.js
-/vendor/fraym/cmsvc/{kind}.css  → php: cmsvc/css.php → src/CMSVC/{Kind}/css.css
-```
-JS-модуль оборачивается в `dataLoaded.js[kind] = function(withDocumentEvents) { ... }`.
-JS-компоненты (переиспользуемые) — `dataLoaded.libraries[component]`.
-
-### Загрузка файлов
-**FilePond** (`js/filepond/`): drag-and-drop загрузчик, `filepondObjs` Map для управления.
-`XMLHttpRequest` для аплоада. CSRF-токен передаётся через `setRequestHeader`.
-
-### Встроенные UI-компоненты
-- **Modal** (`js/modal/`) — `fraymmodal-window`, history-aware
-- **Tabs** (`js/tabs/`) — переключение вкладок со swipe на touch-устройствах
-- **Noty** (`js/noty/`) — нотификации (success/error/info)
-- **Quill** (`js/quill/`) — WYSIWYG редактор
-- **Autocomplete** (`js/autocomplete/`) — автодополнение для полей
-- **Audioplayer** (`js/audioplayer/`) — аудиоплеер
-- **Styler** (`js/styler/`) — визуальный редактор стилей
-- **Dragdrop** (`js/dragdrop/`) — drag-and-drop сортировка
-- **SBI** — SVG Background Inline: `.sbi`-элементы автоматически инлайнятся из `/vendor/fraym/design/*.svg`
-
-### Локали фронтенда
-```
-skeleton/public/vendor/fraym/locale/{RU|EN|ES}/locale.json   # фреймворк
-skeleton/src/CMSVC/{Kind}/{RU|EN|ES}.json                    # модуль
-skeleton/src/CMSVC/{RU|EN|ES}.json                           # глобальные
-```
-Загружаются через `<a class="localeUrl" href="...">`, объединяются в `LOCALE`.
+**Встроенные UI-компоненты:** Modal, Tabs, Noty, Quill (WYSIWYG), FilePond (upload), Autocomplete, Dragdrop, Audioplayer, Styler, SBI (SVG inline).
 
 ---
 
