@@ -49,6 +49,46 @@ fraym/
 
 ---
 
+## CLI-инструмент (Console)
+
+`src/Console.php` — встроенный CLI. Точка входа: `./vendor/bin/console`.
+
+### Команды
+
+| Команда | Описание |
+|---------|---------|
+| `install` | Копирует skeleton-проект в текущую директорию (не перезаписывает существующие файлы) |
+| `install:force` | То же, но перезаписывает существующие файлы |
+| `make:cmsvc --cmsvc=ObjectName` | Генерирует полный CMSVC-модуль: Controller, Model, Service, View, JS, CSS, EN.json, RU.json |
+| `make:migration` | Генерирует скелет Migration + Fixture + SQL-файл с timestamp-именем |
+| `database:migrate` | Применяет все непримененные миграции (up) |
+| `database:migrate:up` | То же |
+| `database:migrate:down --migration=XXXXXXXX` | Откатывает конкретную миграцию |
+| `database:migrate --migration=XXXXXXXX` | Применяет конкретную миграцию |
+| `database:drop` | Удаляет БД (только `APP_ENV=DEV` или `TEST`) |
+
+### Флаги
+
+| Флаг | Описание |
+|------|---------|
+| `--cmsvc=ObjectName` | Имя модуля (camelCase или snake_case — конвертируется автоматически) |
+| `--migration=20230627140700` | Имя миграции (с или без `Migration` префикса, с или без `.php`) |
+| `--env=test` | Использует `.env.test` для подключения к тестовой БД |
+
+### Поведение
+- `make:cmsvc` не перезаписывает существующие файлы — безопасно запускать повторно
+- `database:migrate` в DEV/TEST окружении: автоматически создаёт БД и пользователя, если они не существуют
+- `database:drop` — только DEV/TEST. В stage/prod — запрещено
+- Fixtures запускаются автоматически после `up`-миграции в DEV/TEST окружении
+- Для работы с БД Console использует `MIGRATE_DB` (отдельное соединение от `DB`)
+
+### Цветной вывод
+- Зелёный — успех
+- Жёлтый — предупреждение (файл уже существует)
+- Красный — ошибка
+
+---
+
 ## Bootstrap-цепочка
 
 ```
@@ -75,9 +115,9 @@ HTTP-запрос
 
 | Константа       | Тип                    | Источник                                  |
 |-----------------|------------------------|-------------------------------------------|
-| `DB`            | `SQLDatabaseService`   | `Container::make('db')`                   |
-| `CACHE`         | `CacheService`         | `Container::make('cache')`                |
-| `CURRENT_USER`  | `CurrentUser`          | `Container::make('current_user')`         |
+| `DB`            | `DatabaseProxy`        | делегирует в `Container::make('db')`      |
+| `CACHE`         | `CacheProxy`           | делегирует в `Container::make('cache')`   |
+| `CURRENT_USER`  | `CurrentUserProxy`     | делегирует в `Container::make('current_user')` |
 | `ACTION`        | `?ActionEnum`          | `$_REQUEST['action']`                     |
 | `KIND`          | `string`               | `$_REQUEST['kind']` или `STARTING_KIND`   |
 | `CMSVC`         | `string`               | `$_REQUEST['cmsvc']` или `KIND`           |
@@ -86,11 +126,39 @@ HTTP-запрос
 | `ABSOLUTE_PATH` | `string`               | `$_ENV['ABSOLUTE_PATH']`                  |
 | `GLOBALTIMER`   | `GlobalTimerService`   | —                                         |
 
+### Proxy-паттерн для констант (src/Proxy/)
+
+Константы `DB`, `CACHE`, `CURRENT_USER` — это прокси-объекты, а не сами сервисы.
+Прокси делегирует каждый вызов в `Container::make(id)` в момент вызова.
+
+**Это позволяет:**
+- Подменять реализацию в тестах: `Container::bind('db', $mockDb)` — и `DB->select()` пойдёт в mock
+- Поддерживать persistent workers: `Container::reset()` + `Container::bind(...)` пересоздают сервис, прокси-константа остаётся прежней
+- Весь вызывающий код (`DB->select(...)`) не меняется
+
+```php
+// Тест с моком:
+Container::bind('db', $mockDb);
+DB->select(...);  // → $mockDb->select(...)
+
+// Persistent worker между запросами:
+Container::reset();
+Container::bind('db', SQLDatabaseService::forceCreate());
+Container::bind('current_user', CurrentUser::forceCreate());
+Container::bind('cache', CacheService::forceCreate());
+// DB / CURRENT_USER / CACHE константы всё ещё работают через прокси
+```
+
+**Интерфейсы:**
+- `src/Interface/Database.php` — реализуют `SQLDatabaseService` и `DatabaseProxy`
+- `src/Interface/Cache.php` — реализуют `CacheService` и `CacheProxy`
+- `src/Interface/CurrentUser.php` — реализуют `CurrentUser` и `CurrentUserProxy`
+
 ### Container (src/Container.php)
 ```php
-Container::bind('db', $instance);   // регистрация (до define)
+Container::bind('db', $instance);   // регистрация
 Container::make('db');              // получение
-Container::reset();                 // сброс (для persistent workers / тестов)
+Container::reset();                 // сброс всех биндингов
 ```
 
 ---
@@ -423,6 +491,366 @@ class FooModel extends BaseModel {
 
 ---
 
+## BaseController — жизненный цикл
+
+`Response()` — точка входа обработки запроса:
+1. Если ACTION — встроенное (create/change/delete/setFilters/clearFilters) → `fraymAction()` или фильтры
+2. Если ACTION — строка метода контроллера → `$this->{ACTION}()`
+3. Иначе → `$this->Default()`
+
+**Атрибуты доступа:**
+```php
+#[IsAccessible]  // требует авторизации; проверяется через checkIfIsAccessible()
+#[IsAdmin]       // проверяется через checkIfHasToBeAndIsAdmin()
+```
+
+**Роутинг в skeleton/src/index.php — критичный порядок:**
+```
+1. new {Kind}Controller()
+2. construct(CMSVCinit: false)    // только конструктор — без загрузки моделей/БД
+3. checkIfIsAccessible()          // проверяем права ДО инициализации CMSVC
+4. $controller->CMSVC->init()    // только теперь: загружаем модель/сервис/вьюшку
+5. Response() / {ACTION}()
+```
+
+**BaseHelper:** контроллеры, наследующие `BaseHelper` (статические утилиты), не требуют CMSVC и всегда доступны без авторизации.
+
+---
+
+## BaseService — lifecycle hooks
+
+Callback-атрибуты читаются из рефлексии и хранятся как строки имён методов сервиса:
+
+```php
+#[PreCreate(callback: 'beforeSave')]
+#[PostCreate(callback: 'afterSave')]
+#[PreChange(callback: 'beforeUpdate')]
+#[PostChange(callback: 'afterUpdate')]
+#[PreDelete(callback: 'beforeDelete')]
+#[PostDelete(callback: 'afterDelete')]
+class NewsEditService extends BaseService { ... }
+```
+
+Вызываются внутри `fraymAction()`: `$service->{$service->preCreate}()`.
+
+**Ключевые методы сервиса:**
+
+| Метод | Описание |
+|-------|---------|
+| `get(id, criteria, order, refresh, strict)` | Одна модель; `strict=true` → исключение если не ровно одна запись |
+| `getAll(criteria, refresh, order, limit, offset)` | Возвращает **Generator** — ленивая итерация |
+| `arrayToModel(data, refresh)` | Массив БД → модель; вызывает `detectModelTemplateBasedOnData()` |
+| `postModelInit(model)` | Хук после полной инициализации модели |
+| `preLoadModel()` | Вызывается контроллером перед fraymAction — для подмены модели |
+
+`getAll()` возвращает Generator. Нельзя итерировать дважды. Каждый элемент создаётся через `clone $templateModel`.
+
+---
+
+## fraymAction — структура данных
+
+`$_REQUEST` содержит **массивы** — одна операция может обрабатывать несколько строк одновременно:
+```
+$_REQUEST['name'][0] = "John"   $_REQUEST['id'][0] = 1
+$_REQUEST['name'][1] = "Jane"   $_REQUEST['id'][1] = 2
+```
+
+`fraymAction()` итерирует строки. Ошибки собираются в `troubledStrings` (индекс строки) и `troubledElements` (имя элемента) — возвращаются в JSON-ответе, UI подсвечивает поля.
+
+**OnCreate/OnChange трансформируют значения** перед сохранением через метод сервиса/модели, указанный в атрибуте.
+
+---
+
+## BaseModel — дополнительные возможности
+
+**`getValues()` в Select/Multiselect может быть строкой имени метода:**
+```php
+#[Attribute\Select(values: 'getStatusOptions')]
+public Item\Select $status;
+// → автоматически вызывается $service->getStatusOptions() или $this->getStatusOptions()
+```
+
+**Управление элементами:**
+```php
+$model->getElement('name');
+$model->removeElement('name');
+$model->changeElementsOrder('name', 'beforeElement');
+```
+
+---
+
+## SQLDatabaseService — полный API
+
+### query() — универсальный исполнитель
+```php
+DB->query(
+    '?string $query',
+    array $data,      // array<int, array{0: string, 1: mixed, 2?: ?array<OperandEnum>}>
+    bool $oneResult = false,
+): false|array
+```
+
+`$data` — массив триплетов `[fieldName, value, ?[OperandEnum]]`. Если `value` — массив и нет `OperandEnum::JSON`, автоматически разворачивается в `IN (:name0, :name1, ...)`.
+
+### constructWhere() — форматы criteria
+
+```php
+// Ассоциативный ключ → null-safe equal (<=>)
+['field' => 'value']
+
+// Ассоциативный ключ + массив значений → IN
+['field' => ['a', 'b', 'c']]
+
+// Индексированный без операнда → null-safe equal
+[['field', 'value']]
+
+// Индексированный с операндом
+[['field', '%val%', [OperandEnum::LIKE]]]
+[['field', 5,      [OperandEnum::LESS]]]
+[['field', null,   [OperandEnum::IS_NULL]]]   // без :param placeholder
+[['field', null,   [OperandEnum::NOT_NULL]]]
+[['field', 'val',  [OperandEnum::LOWER]]]     // LOWER(field) <=> :field
+
+// Одно поле дважды — авто-суффикс _0, _1
+[['created_at', '2024-01-01', [OperandEnum::MORE]], ['created_at', '2024-12-31', [OperandEnum::LESS]]]
+```
+
+**OperandEnum:** `LIKE`, `NOT_LIKE`, `LESS`, `MORE`, `LESS_OR_EQUAL`, `MORE_OR_EQUAL`, `NOT_EQUAL`, `IS_NULL`, `NOT_NULL`, `JSON`, `LOWER`, `UPPER`.
+
+### select()
+```php
+DB->select(
+    tableName: 'news',
+    criteria: ['deleted_at' => null, ['status', 'active']],
+    oneResult: false,
+    order: ['created_at DESC', 'id ASC'],  // массив строк, соединяются через ", "
+    limit: 10,
+    offset: 0,
+    onlyCount: false,
+    fieldsSet: ['id', 'title'],            // null → SELECT *
+);
+```
+
+### insert() / update() / delete()
+```php
+// insert — data: ['field' => value] или [['field', value, ?params]]
+DB->insert('news', ['title' => 'Text', 'author_id' => $id]);
+DB->lastInsertId();  // корректно работает для PostgreSQL (RETURNING) и MySQL
+
+// update
+DB->update('news', ['title' => 'New'], criteria: ['id' => $id]);
+
+// delete
+DB->delete('news', criteria: ['id' => $id]);
+```
+
+### Прочие полезные методы
+
+| Метод | Назначение |
+|-------|-----------|
+| `findObjectById(objId, objType, refresh, bySid)` | Одна запись по id; CACHE-aware |
+| `findObjectsByIds(objIds, objType, refresh)` | Generator; частичный hit из CACHE |
+| `selectCount()` | COUNT(*) по **последнему** запросу (повторно использует lastQuery['data']) |
+| `count(tableName, criteria)` | Простой COUNT с criteria |
+| `getArrayOfItems(fromClause, id, fields, nodata)` | Generator `[id => [id, label, level, ?data]]`; `fromClause` — строка после FROM |
+| `getArrayOfItemsAsArray(...)` | То же, но `iterator_to_array` |
+| `getTreeOfItems(...)` | Строит плоский массив иерархии с полем `level` |
+| `chopOffTreeOfItemsBranches(...)` | Обрезает дерево — оставляет только нужные ветки с родителями |
+| `beginTransaction()` / `commit()` / `rollBack()` | Транзакции |
+| `exec(SQL)` | Сырое исполнение без prepare (только для миграций) |
+
+Prepared statements кэшируются по SHA-хэшу запроса в `$preparedQueriesCache`.
+
+---
+
+## CacheService — структура
+
+In-memory кэш **только на время одного запроса**. Структура:
+
+```php
+$_CACHE = [
+    '_LOCALE'                    => ['id' => [0 => [...]]],
+    '_CMSVC'                     => ['id' => ['objectName' => $cmsvcInstance]],
+    'App\CMSVC\Foo\FooModel'     => ['id' => [$modelId => $model]],
+];
+// Доступ:
+CACHE->getFromCache('App\CMSVC\Foo\FooModel', $id);
+CACHE->setToCache('App\CMSVC\Foo\FooModel', $id, $model);
+```
+
+---
+
+## CurrentUser — аутентификация и права
+
+**`auth()`** — главный метод (вызывается в Kernel):
+1. `Authorization: Bearer {jwt}` → проверяет JWT (exp + подпись)
+2. Cookie `refreshToken` → обновляет JWT, выставляет новый cookie
+3. `$_REQUEST['password']` → форм-логин
+
+**Переключение профиля администратором:** если `$_REQUEST['adm_user']` или cookie `admUser` != 0, текущие данные админа сохраняются через `setAdminData()`, затем загружаются данные целевого пользователя.
+
+**Ключевые методы:** `id()`, `sid()`, `isLogged()`, `isAdmin(strict=false)`, `isBanned()`, `checkAllRights($right_id)`, `getAllRights()`, `authLogout()`.
+
+---
+
+## LocaleHelper — структура файлов и API
+
+### Маппинг первого аргумента → файл
+
+| Первый ключ | Файл |
+|------------|------|
+| `'fraym'` | `src/Locale/{locale}.json` — строки фреймворка |
+| `'global'` | `src/CMSVC/{locale}.json` — глобальные строки проекта (плоский JSON) |
+| `'{module}'` | `src/CMSVC/{Module}/{locale}.json` — строки конкретного раздела |
+
+Ключ автоматически конвертируется `camelCase → snake_case`. Данные кэшируются в `_LOCALE`.
+
+### Структура JSON для модульных файлов (`src/CMSVC/{Module}/RU.json`)
+```json
+{
+    "global": { "title": "...", "messages": { ... } },
+    "fraym_model": {
+        "object_name": "новость",
+        "object_messages": ["Добавлена.", "Изменена.", "Удалена."],
+        "elements": {
+            "name": { "shownName": "Название", "helpText": "...", "values": [[...]] }
+        }
+    }
+}
+```
+
+### Примеры вызовов
+```php
+LocaleHelper::getLocale(['fraym', 'fraymActions']);           // строки fraymAction
+LocaleHelper::getLocale(['fraym', 'decline']);                // склонения
+LocaleHelper::getLocale(['global']);                          // весь глобальный JSON
+LocaleHelper::getLocale(['newsEdit', 'fraymModel', 'elements', 'name']); // метаданные поля
+// getElementText() удобный враппер для последнего паттерна:
+LocaleHelper::getElementText($entity, $element, LocalableFieldsEnum::shownName);
+```
+
+---
+
+## Validation — server-side
+
+Валидаторы навешиваются на элементы через атрибуты. Список:
+
+| Валидатор | Назначение |
+|-----------|-----------|
+| `ObligatoryValidator` | Обязательное поле |
+| `EmailValidator` | Формат email |
+| `LoginValidator` | Уникальность логина |
+| `MinMaxCharValidator` | Длина строки |
+| `RepeatPasswordValidator` | Совпадение паролей |
+| `FilesValidator` | Расширения и размер файлов |
+| `TimestampValidator` | Формат даты |
+
+Ошибки собираются в `$entity->validationErrors` → `fraymAction()` формирует `troubledElements`/`troubledStrings` → возвращаются в JSON-ответе → UI подсвечивает поля.
+
+---
+
+## RightsHelper — система прав
+
+```php
+RightsHelper::findByRights(
+    type: 'admin',        // строка или массив типов
+    obj_type_to: '{user}',
+    obj_id_to: $userId,
+    obj_type_from: '{user}',
+    obj_id_from: null,    // null → CURRENT_USER->id()
+    limit: 1,
+);
+// → массив ids из таблицы rights, или null
+```
+
+Встроенные типы: `banned`, `admin`. Остальные — бизнес-логика проекта.
+
+---
+
+## DataHelper — важные методы
+
+| Метод | Назначение |
+|-------|-----------|
+| `virtualStructure(array)` | array → JSON для virtualField |
+| `unmakeVirtual(json)` | Распаковка виртуального поля |
+| `activityLog(fullLog)` | Логирование в Fiber (асинхронно) |
+| `adminEcho(str)` | Вывод только для админа в test mode |
+| `getRandomStringBin2hex(length)` | Криптографичный случайный токен |
+| `base64UrlEncode(str)` | Base64 для JWT (без padding) |
+| `inArrayAll(needles, haystack)` | Проверка — все элементы присутствуют |
+| `inArrayAny(needles, haystack)` | Проверка — хотя бы один элемент |
+| `checkNumeric(data)` | Конвертация строк в числа где возможно |
+| `getActDefault(entity)` | ActEnum (list vs edit) по наличию ID |
+| `getId()` | `ID[key(ID)]` — первый ID из глобального массива |
+
+---
+
+## Migration — механизм
+
+```php
+// src/BaseObject/BaseMigration.php
+abstract class BaseMigration {
+    use SqlTrait;                   // getSql() + executeSql()
+    abstract public function up(): bool;
+    abstract public function down(): bool;
+    public function getFixture(): ?BaseFixture { ... }  // ищет FixtureXXX автоматически
+}
+```
+
+`MIGRATE_DB` — отдельная константа PDO-соединения для миграций (отдельное от `DB`). Fixtures загружаются после миграции автоматически.
+
+---
+
+## CatalogEntity / CatalogItemEntity
+
+Для иерархических структур (раздел → элементы раздела):
+
+```php
+class CatalogEntity extends BaseEntity {
+    public CatalogItemEntity $catalogItemEntity;  // дочерняя сущность
+}
+class CatalogItemEntity extends BaseEntity {
+    public CatalogEntity $catalogEntity;
+    public string $tableFieldWithParentId;       // обычно 'parent_id'
+    public string $tableFieldToDetectType;
+}
+```
+
+`service->detectModelTemplateBasedOnData($data)` — определяет, каталог это или элемент каталога, на основе данных строки БД.
+
+---
+
+## TableEntity / MultiObjectsEntity
+
+**TableEntity** — обычная таблица с переходом на карточку сущности.
+
+**MultiObjectsEntity** — множество объектов на одной странице. `subType` из `MultiObjectsEntitySubTypeEnum`: Excel или Cards. Все поля выводятся в контексте `:list`.
+
+---
+
+## EnvService — особенности парсинга
+
+```
+VAR=true              → bool true
+VAR=false             → bool false
+VAR={"key":"val"}     → ассоциативный массив (JSON autodetect по первому символу)
+VAR[0]=item1          → $_ENV['VAR'][0] = 'item1'  (массив через индексы)
+# комментарий         → игнорируется
+```
+
+---
+
+## ResponseHelper — дополнительные методы
+
+```php
+ResponseHelper::redirectConstruct($checkStandard, $deleteId); // вычисляет путь редиректа после fraymAction
+ResponseHelper::success($message);   // сохранить в cookie → показать при следующем запросе
+ResponseHelper::error($message);     // аналогично
+ResponseHelper::info($message);      // аналогично
+```
+
+---
+
 ## Ключевые env-переменные
 
 | Переменная         | Описание                                          |
@@ -434,3 +862,4 @@ class FooModel extends BaseModel {
 | `DATABASE_TYPE`    | `pgsql` или `mysql`                               |
 | `TIMEZONE`         | PHP timezone                                      |
 | `DESIGN_PATH`      | Субпапка дизайна (CSS/шаблоны проекта)            |
+| `COOKIE_PATH`      | Domain для cookie (используется в CookieHelper)   |

@@ -327,7 +327,7 @@ abstract class DataHelper implements Helper
         if (!is_null($string)) {
             try {
                 $returnArray = self::jsonFixedDecode($string, true);
-            } catch (Exception | JsonException $exception) {
+            } catch (Exception|JsonException $exception) {
                 if (str_starts_with($string, '-') && str_ends_with($string, '-')) {
                     $string = mb_substr($string, 1, mb_strlen($string) - 2);
                 }

@@ -14,8 +14,9 @@ declare(strict_types=1);
 namespace Fraym\BaseObject;
 
 use Fraym\Helper\{AuthHelper, CookieHelper, DataHelper, LocaleHelper, ResponseHelper};
+use Fraym\Interface\CurrentUser as CurrentUserInterface;
 
-final class CurrentUser
+final class CurrentUser implements CurrentUserInterface
 {
     /** Id пользователя */
     private int|string|null $id = null;
@@ -225,7 +226,7 @@ final class CurrentUser
         return $this->id;
     }
 
-    public function setId(int|string|null $id): self
+    public function setId(int|string|null $id): static
     {
         $this->id = $id;
 
@@ -242,7 +243,7 @@ final class CurrentUser
         return $this->sid;
     }
 
-    public function setSid(?int $sid): self
+    public function setSid(?int $sid): static
     {
         $this->sid = $sid;
 
@@ -259,7 +260,7 @@ final class CurrentUser
         return $this->allRights;
     }
 
-    public function setAllRights(string|array|null $allRights): self
+    public function setAllRights(string|array|null $allRights): static
     {
         $allRights = is_string($allRights) ? DataHelper::multiselectToArray($allRights) : $allRights;
         $allRights = is_null($allRights) ? [] : $allRights;
@@ -273,7 +274,7 @@ final class CurrentUser
         return $this->bazeCount;
     }
 
-    public function setBazeCount(int $bazeCount): self
+    public function setBazeCount(int $bazeCount): static
     {
         $this->bazeCount = $bazeCount;
 
@@ -285,7 +286,7 @@ final class CurrentUser
         return $this->blockSaveReferer;
     }
 
-    public function setBlockSaveReferer(bool $blockSaveReferer): self
+    public function setBlockSaveReferer(bool $blockSaveReferer): static
     {
         $this->blockSaveReferer = $blockSaveReferer;
 
@@ -297,7 +298,7 @@ final class CurrentUser
         return $this->blockAutoRedirect;
     }
 
-    public function setBlockAutoRedirect(bool $blockAutoRedirect): self
+    public function setBlockAutoRedirect(bool $blockAutoRedirect): static
     {
         $this->blockAutoRedirect = $blockAutoRedirect;
 
@@ -309,7 +310,7 @@ final class CurrentUser
         return $this->adminData;
     }
 
-    public function setAdminData(array $adminData): self
+    public function setAdminData(array $adminData): static
     {
         $this->adminData = $adminData;
 

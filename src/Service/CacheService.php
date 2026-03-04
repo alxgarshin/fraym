@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Fraym\Service;
 
-final class CacheService
+use Fraym\Interface\Cache;
+
+final class CacheService implements Cache
 {
     //TODO: привести в соответствие с https://github.com/php-fig/cache
 

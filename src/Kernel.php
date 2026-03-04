@@ -16,6 +16,7 @@ namespace Fraym;
 use Fraym\BaseObject\CurrentUser;
 use Fraym\Enum\{ActEnum, ActionEnum, RequestTypeEnum};
 use Fraym\Helper\{CookieHelper, DataHelper, LocaleHelper};
+use Fraym\Proxy\{CacheProxy, CurrentUserProxy, DatabaseProxy};
 use Fraym\Service\{CacheService, EnvService, GlobalTimerService, SQLDatabaseService};
 
 class Kernel
@@ -76,19 +77,19 @@ class Kernel
         set_time_limit(60);
 
         /** Инициализируем кэш */
-        Container::bind('cache', CacheService::getInstance());
-        /** @var CacheService */
-        define('CACHE', Container::make('cache'));
+        Container::bind('cache', CacheService::forceCreate());
+        /** @var CacheProxy */
+        define('CACHE', new CacheProxy());
 
         /** Подключаемся к базе данных */
-        Container::bind('db', SQLDatabaseService::getInstance());
-        /** @var SQLDatabaseService */
-        define('DB', Container::make('db'));
+        Container::bind('db', SQLDatabaseService::forceCreate());
+        /** @var DatabaseProxy */
+        define('DB', new DatabaseProxy());
 
         /** Инициализируем пользователя */
-        Container::bind('current_user', CurrentUser::getInstance());
-        /** @var CurrentUser */
-        define('CURRENT_USER', Container::make('current_user'));
+        Container::bind('current_user', CurrentUser::forceCreate());
+        /** @var CurrentUserProxy */
+        define('CURRENT_USER', new CurrentUserProxy());
         CURRENT_USER->auth();
 
         /** Перепроверяем настройки локали и меняем их, если нужно */

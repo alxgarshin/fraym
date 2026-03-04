@@ -147,7 +147,7 @@ updateState(newHref)
 2. Если изменился только hash → переключает вкладку/модал без загрузки страницы
 3. Если изменился path → `fetchData(url, {json: true})` с `Fraym-Request: true`
 4. Сервер возвращает `{html, pageTitle, messages, executionTime}`
-5. Заменяет `div.maincontent_data` новым HTML (+ выполняет `<script>` теги через `eval()`)
+5. Заменяет `div.maincontent_data` новым HTML (+ выполняет `<script>` теги через `document.createElement('script')` → `appendChild` → `remove()`)
 6. `history.pushState()` → меняет URL
 7. Обновляет `<title>` и og-мета-теги
 8. Вызывает `fraymInit(false, true)` для реинициализации
@@ -646,3 +646,117 @@ defaultFor(value, defaultValue)      // безопасное чтение с fal
 6. **`defaultFor(window['var'], default)`** — при SPA-навигации window-переменные из предыдущей страницы могут сохраняться; `defaultFor` не перезаписывает уже установленное значение.
 
 7. **CSS модулей загружается динамически** — `loadJsCssForCMSVC()` вызывает `cssLoad()`, которая добавляет `<link>` в `<head>` при каждом SPA-переходе (с проверкой `dataLoaded.css[name]` — дважды не добавляется). CSS модуля доступен сразу после перехода в раздел.
+
+---
+
+## .careful — подтверждение перед действием
+
+Класс `.careful` на ссылке, кнопке или `[action_request]` показывает диалог подтверждения через `fraymNotyPrompt` перед выполнением действия.
+
+```html
+<a href="/admin/delete/123" class="careful">Удалить</a>
+<a action_request="/news/action=delete" obj_id="42" class="careful"
+   text="Вы уверены?" ok_text="Удалить" cancel_text="Отмена">Удалить</a>
+```
+
+Атрибуты: `text` — текст вопроса, `ok_text` / `cancel_text` — текст кнопок. Работает с `href`, `action_request` и `form submit`. Кастомная логика — через функцию `customCarefulHandler(element)`.
+
+---
+
+## fetchData() — детальная спецификация
+
+```javascript
+async function fetchData(url, options = {}, data = null)
+// options: { method: 'POST'|'GET'|'PUT'|'DELETE', json: bool, headers: {} }
+// data: FormData | null
+```
+
+Автоматически добавляет: `Fraym-Request: true`, `Authorization: Bearer {jwtToken}`, `X-CSRF-Token: {csrfToken}`. При `json: true` → `await response.json()`, иначе `await response.text()`. При сетевой ошибке возвращает `Response` с `status: 0` (не бросает исключение).
+
+---
+
+## window.fetch Proxy — автообновление JWT
+
+Глобальный Proxy перехватывает **все** `fetch`-вызовы к локальному origin:
+- Если JWT отсутствует — делает GET на `/login/action=refresh_token`, ждёт строку токена
+- Несколько одновременных запросов ждут одного refresh через Promise (`jwtTokenRefreshing`)
+- Добавляет `Authorization: Bearer {jwtToken}` ко всем локальным запросам
+
+---
+
+## actionRequest() — полная спецификация
+
+```javascript
+actionRequest({
+    action: '/path/to/kind/action=actionName',  // парсится: kind + action
+    obj_id: 42,
+    dynamicForm: true,   // если true — конвертирует форму в FormData, показывает loader
+}, targetElement);
+```
+
+Регистрация коллбеков:
+```javascript
+_arSuccess('actionName', function(jsonData, params, target) { ... });
+_arError('actionName', function(jsonData, params, target) { ... });
+actionRequestSupressErrorForActions.push('actionName'); // отключить авто-noty при ошибке
+```
+
+Формат ответа сервера: `{"response": "success"|"error", "response_text": "...", "response_data": "...", "redirect": "/..."}`.
+
+---
+
+## MutationObserver — batch processing
+
+При добавлении DOM-узлов `globalFraymListenersObserver` применяет event listeners к новым элементам батчами по **50 узлов** через `setTimeout(fn, 0)` — чтобы не блокировать рендеринг.
+
+---
+
+## FraymStyler — стилизация file input
+
+Инициализируется автоматически для `input[type="file"]`. Заменяет стандартный input на custom UI с `.inputfile__name` и `.inputfile__browse`. CSS-классы: `.changed` (файл выбран), `.focused`, `.disabled`.
+
+---
+
+## FraymAudioPlayer — аудиоплеер
+
+Преобразует `<audio>` тег в кастомный плеер. UI: play/pause, прогресс-бар (loaded + played), время, регулятор громкости. Поддержка touch-событий. Класс `.novolume` если браузер не поддерживает управление громкостью.
+
+---
+
+## Dropfield — множественный выбор
+
+Кастомный компонент для множественного выбора (альтернатива multiselect):
+
+```html
+<div class="dropfield">  <!-- видимые опции --></div>
+<div class="dropfield2">  <!-- чекбоксы + поиск + "выбрать все" --></div>
+```
+
+Поиск с debounce, создание новых опций, Select all / Deselect all. Обновление: `df.trigger('refresh')`.
+
+---
+
+## Keyboard shortcuts
+
+| Клавиша | Контекст | Действие |
+|---------|----------|---------|
+| `Enter` | `input[type="text"]` | Клик по ближайшей `.main` кнопке |
+| `Ctrl+Enter` | `textarea` | То же |
+| `Tab` | Элементы с `tabIndex` | Переход по атрибуту `tabIndex` |
+| `Enter` | `.dropfield2_search` | Создание новой опции |
+
+---
+
+## Swipe gestures (FraymTabs)
+
+Параметры определения свайпа: расстояние > **130px**, время < **200ms**, горизонтальное направление. На мобиле после смены вкладки автоскролл панели навигации к активной вкладке.
+
+---
+
+## no_dynamic_content
+
+```html
+<a href="/file.pdf" class="no_dynamic_content">Скачать</a>
+<form no_dynamic_content>...</form>          <!-- form.submit() вместо AJAX -->
+<form action_request_form no_dynamic_content> <!-- actionRequest, но без SPA-обновления UI -->
+```
