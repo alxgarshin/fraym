@@ -650,8 +650,9 @@ DB->delete('news', criteria: ['id' => $id]);
 
 | Метод | Назначение |
 |-------|-----------|
-| `findObjectById(objId, objType, refresh, bySid)` | Одна запись по id; CACHE-aware |
+| `findObjectById(objId, objType, refresh, bySid)` | Одна запись по id; CACHE-aware; `bySid` — искать по полю `sid` вместо `id` |
 | `findObjectsByIds(objIds, objType, refresh)` | Generator; частичный hit из CACHE |
+| `rowCount()` | Количество строк, затронутых последней операцией (INSERT/UPDATE/DELETE) |
 | `selectCount()` | COUNT(*) по **последнему** запросу (повторно использует lastQuery['data']) |
 | `count(tableName, criteria)` | Простой COUNT с criteria |
 | `getArrayOfItems(fromClause, id, fields, nodata)` | Generator `[id => [id, label, level, ?data]]`; `fromClause` — строка после FROM |
@@ -662,6 +663,8 @@ DB->delete('news', criteria: ['id' => $id]);
 | `exec(SQL)` | Сырое исполнение без prepare (только для миграций) |
 
 Prepared statements кэшируются по SHA-хэшу запроса в `$preparedQueriesCache`.
+
+> **Приватные методы сервиса (не входят в интерфейс/прокси):** `prepare`, `constructWhere`, `execute` — внутренние детали реализации.
 
 ---
 

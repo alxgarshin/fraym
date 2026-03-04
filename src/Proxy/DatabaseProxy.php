@@ -16,7 +16,6 @@ namespace Fraym\Proxy;
 use Fraym\Container;
 use Fraym\Interface\Database;
 use Generator;
-use PDOStatement;
 
 /**
  * Прокси-объект для константы DB.
@@ -29,11 +28,6 @@ final class DatabaseProxy implements Database
     public function __get(string $name): mixed
     {
         return Container::make('db')->$name;
-    }
-
-    public function prepare(string $query): PDOStatement|bool
-    {
-        return Container::make('db')->prepare($query);
     }
 
     public function query(
@@ -102,6 +96,11 @@ final class DatabaseProxy implements Database
         return Container::make('db')->exec($SQL);
     }
 
+    public function rowCount(): int
+    {
+        return Container::make('db')->rowCount();
+    }
+
     public function beginTransaction(): bool
     {
         return Container::make('db')->beginTransaction();
@@ -115,6 +114,23 @@ final class DatabaseProxy implements Database
     public function rollBack(): bool
     {
         return Container::make('db')->rollBack();
+    }
+
+    public function findObjectById(
+        string|int $objId,
+        string $objType,
+        bool $refresh = false,
+        bool $bySid = false,
+    ): ?array {
+        return Container::make('db')->findObjectById($objId, $objType, $refresh, $bySid);
+    }
+
+    public function findObjectsByIds(
+        array $objIds,
+        string $objType,
+        bool $refresh = false,
+    ): ?Generator {
+        return Container::make('db')->findObjectsByIds($objIds, $objType, $refresh);
     }
 
     public function getArrayOfItemsAsArray(

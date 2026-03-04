@@ -17,9 +17,6 @@ use Generator;
 
 interface Database
 {
-    /** Подготовка запроса */
-    public function prepare(string $query);
-
     /** Исполнение запроса
      *
      * @param array<int, array{0: string, 1: mixed, 2: ?array}> $data
@@ -79,6 +76,9 @@ interface Database
     /** Исполнение скрипта данных без дополнительной фильтрации: использовать крайне осторожно */
     public function exec(string $SQL): true;
 
+    /** Получение количества строк, задетых последней операцией в базе данных */
+    public function rowCount(): int;
+
     public function beginTransaction(): bool;
 
     /** Коммит транзакции */
@@ -86,6 +86,21 @@ interface Database
 
     /** Откат транзакции */
     public function rollBack(): bool;
+
+    /** Получение объекта на основе его id */
+    public function findObjectById(
+        string|int $objId,
+        string $objType,
+        bool $refresh = false,
+        bool $bySid = false,
+    ): ?array;
+
+    /** Получение объектов на основе их id */
+    public function findObjectsByIds(
+        array $objIds,
+        string $objType,
+        bool $refresh = false,
+    ): ?Generator;
 
     /** Превращение в массив генератора соотношений данных из БД (id к name, например) */
     public function getArrayOfItemsAsArray(

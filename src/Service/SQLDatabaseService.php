@@ -89,55 +89,6 @@ final class SQLDatabaseService implements Database
         return new self();
     }
 
-    /** Подготовка запроса */
-    public function prepare(string $query): PDOStatement|bool
-    {
-        $queryHash = DataHelper::hashData($query);
-
-        if (isset($this->preparedQueriesCache[$queryHash])) {
-            return $this->preparedQueriesCache[$queryHash];
-        }
-
-        try {
-            $this->preparedQueriesCache[$queryHash] = $this->DB->prepare($query);
-
-            return $this->preparedQueriesCache[$queryHash];
-        } catch (PDOException $e) {
-            ob_start();
-            debug_print_backtrace();
-            $backtrace = ob_get_clean();
-            throw new DatabaseQueryException(
-                'PDO prepare error: ' . $query .
-                    ' | Error: ' . $e->getMessage() .
-                    ' | Backtrace: ' . $backtrace,
-                (int) $e->getCode(),
-                $e,
-            );
-        }
-    }
-
-    /** Исполнение PDO-запроса */
-    public function execute(PDOStatement $statement, array $preparedData): void
-    {
-        try {
-            $statement->execute($preparedData);
-        } catch (PDOException $e) {
-            $this->lastQuery = [];
-
-            ob_start();
-            debug_print_backtrace();
-            $backtrace = ob_get_clean();
-            throw new DatabaseQueryException(
-                'PDO execute error: ' . $statement->queryString .
-                    ' | Error: ' . $e->getMessage() .
-                    ' | Used data: ' . print_r($preparedData, true) .
-                    ' | Backtrace: ' . $backtrace,
-                (int) $e->getCode(),
-                $e,
-            );
-        }
-    }
-
     /** Исполнение запроса
      *
      * @param array<int, array{0: string, 1: mixed, 2?: ?array}> $data
@@ -210,90 +161,6 @@ final class SQLDatabaseService implements Database
     public function rowCount(): int
     {
         return $this->lastQuery['stmt']->rowCount();
-    }
-
-    /** Построение where-части запроса
-     * @return array{0: string, 1: array}
-     */
-    public function constructWhere(?array $criteria): array
-    {
-        $whereQuery = "";
-        $whereParams = [];
-
-        if ($criteria !== null) {
-            $nameUsedInVariablesCount = [];
-
-            foreach ($criteria as $key => $value) {
-                if (!is_null($value) && (!is_int($key) || !is_null($value[1] ?? null))) {
-                    $useNoValue = false;
-                    $equalSign = $this->dialect->getNullSafeEqualOperator();
-                    $dbColumn = (is_array($value) && is_int($key)) ? $value[0] : $key;
-
-                    if (is_array($value) && is_int($key) && !is_null($value[2] ?? null)) {
-                        if (!is_array($value[2])) {
-                            $value[2] = [$value[2]];
-                        }
-
-                        if (in_array(OperandEnum::LIKE, $value[2])) {
-                            $equalSign = " LIKE ";
-                        } elseif (in_array(OperandEnum::NOT_LIKE, $value[2])) {
-                            $equalSign = " NOT LIKE ";
-                        } elseif (in_array(OperandEnum::LESS, $value[2])) {
-                            $equalSign = "<";
-                        } elseif (in_array(OperandEnum::MORE, $value[2])) {
-                            $equalSign = ">";
-                        } elseif (in_array(OperandEnum::LESS_OR_EQUAL, $value[2])) {
-                            $equalSign = "<=";
-                        } elseif (in_array(OperandEnum::MORE_OR_EQUAL, $value[2])) {
-                            $equalSign = ">=";
-                        } elseif (in_array(OperandEnum::NOT_EQUAL, $value[2])) {
-                            $equalSign = "!=";
-                        } elseif (in_array(OperandEnum::IS_NULL, $value[2])) {
-                            $equalSign = " IS NULL";
-                            $useNoValue = true;
-                        } elseif (in_array(OperandEnum::NOT_NULL, $value[2])) {
-                            $equalSign = " IS NOT NULL";
-                            $useNoValue = true;
-                        }
-
-                        if (in_array(OperandEnum::LOWER, $value[2])) {
-                            $dbColumn = "LOWER(" . $dbColumn . ")";
-                        } elseif (in_array(OperandEnum::UPPER, $value[2])) {
-                            $dbColumn = "UPPER(" . $dbColumn . ")";
-                        }
-                    } elseif (is_array($value) && ((($value[1] ?? false) && is_array($value[1])) || !is_int($key))) {
-                        $equalSign = " IN (";
-                    }
-
-                    if (is_array($value) && is_int($key)) {
-                        if (($nameUsedInVariablesCount[$value[0]] ?? false) === false) {
-                            $nameUsedInVariablesCount[$value[0]] = -1;
-                        }
-                        $nameUsedInVariablesCount[$value[0]]++;
-                        $value[0] .= "_" . $nameUsedInVariablesCount[$value[0]];
-
-                        $whereQuery .= ($whereQuery !== "" ? " AND " : "") . $dbColumn . $equalSign . ($useNoValue ? "" : ":" . $value[0]);
-                        $whereParams[] = $value;
-                    } else {
-                        if (($nameUsedInVariablesCount[$key] ?? false) === false) {
-                            $nameUsedInVariablesCount[$key] = -1;
-                        }
-                        $nameUsedInVariablesCount[$key]++;
-                        $key .= "_" . $nameUsedInVariablesCount[$key];
-
-                        $whereQuery .= ($whereQuery !== "" ? " AND " : "") . $dbColumn . $equalSign . ($useNoValue ? "" : ":" . $key);
-                        $whereParams[] = [$key, $value];
-                    }
-                    $whereQuery .= ($equalSign === " IN (" ? ")" : "");
-                }
-            }
-
-            if ($whereQuery !== "") {
-                $whereQuery = " WHERE " . $whereQuery;
-            }
-        }
-
-        return [$whereQuery, $whereParams];
     }
 
     /** Получение данных из таблицы */
@@ -787,8 +654,7 @@ final class SQLDatabaseService implements Database
         return $objectsTree;
     }
 
-    /** Удаление объектов из созданного дерева, чтобы остались только отобранные id и их parent'ы до верхнего уровня. При этом у каталоговых сущностей
-     * оставляем их наследников также. */
+    /** Удаление объектов из созданного дерева, чтобы остались только отобранные id и их parent'ы до верхнего уровня. При этом у каталоговых сущностей оставляем их наследников также. */
     public function chopOffTreeOfItemsBranches(
         array $objectsTree,
         array $listOfIds,
@@ -850,5 +716,138 @@ final class SQLDatabaseService implements Database
         }
 
         return $objectsTree;
+    }
+
+    /** Подготовка запроса */
+    private function prepare(string $query): PDOStatement|bool
+    {
+        $queryHash = DataHelper::hashData($query);
+
+        if (isset($this->preparedQueriesCache[$queryHash])) {
+            return $this->preparedQueriesCache[$queryHash];
+        }
+
+        try {
+            $this->preparedQueriesCache[$queryHash] = $this->DB->prepare($query);
+
+            return $this->preparedQueriesCache[$queryHash];
+        } catch (PDOException $e) {
+            ob_start();
+            debug_print_backtrace();
+            $backtrace = ob_get_clean();
+            throw new DatabaseQueryException(
+                'PDO prepare error: ' . $query .
+                    ' | Error: ' . $e->getMessage() .
+                    ' | Backtrace: ' . $backtrace,
+                (int) $e->getCode(),
+                $e,
+            );
+        }
+    }
+
+    /** Построение where-части запроса
+     * @return array{0: string, 1: array}
+     */
+    private function constructWhere(?array $criteria): array
+    {
+        $whereQuery = "";
+        $whereParams = [];
+
+        if ($criteria !== null) {
+            $nameUsedInVariablesCount = [];
+
+            foreach ($criteria as $key => $value) {
+                if (!is_null($value) && (!is_int($key) || !is_null($value[1] ?? null))) {
+                    $useNoValue = false;
+                    $equalSign = $this->dialect->getNullSafeEqualOperator();
+                    $dbColumn = (is_array($value) && is_int($key)) ? $value[0] : $key;
+
+                    if (is_array($value) && is_int($key) && !is_null($value[2] ?? null)) {
+                        if (!is_array($value[2])) {
+                            $value[2] = [$value[2]];
+                        }
+
+                        if (in_array(OperandEnum::LIKE, $value[2])) {
+                            $equalSign = " LIKE ";
+                        } elseif (in_array(OperandEnum::NOT_LIKE, $value[2])) {
+                            $equalSign = " NOT LIKE ";
+                        } elseif (in_array(OperandEnum::LESS, $value[2])) {
+                            $equalSign = "<";
+                        } elseif (in_array(OperandEnum::MORE, $value[2])) {
+                            $equalSign = ">";
+                        } elseif (in_array(OperandEnum::LESS_OR_EQUAL, $value[2])) {
+                            $equalSign = "<=";
+                        } elseif (in_array(OperandEnum::MORE_OR_EQUAL, $value[2])) {
+                            $equalSign = ">=";
+                        } elseif (in_array(OperandEnum::NOT_EQUAL, $value[2])) {
+                            $equalSign = "!=";
+                        } elseif (in_array(OperandEnum::IS_NULL, $value[2])) {
+                            $equalSign = " IS NULL";
+                            $useNoValue = true;
+                        } elseif (in_array(OperandEnum::NOT_NULL, $value[2])) {
+                            $equalSign = " IS NOT NULL";
+                            $useNoValue = true;
+                        }
+
+                        if (in_array(OperandEnum::LOWER, $value[2])) {
+                            $dbColumn = "LOWER(" . $dbColumn . ")";
+                        } elseif (in_array(OperandEnum::UPPER, $value[2])) {
+                            $dbColumn = "UPPER(" . $dbColumn . ")";
+                        }
+                    } elseif (is_array($value) && ((($value[1] ?? false) && is_array($value[1])) || !is_int($key))) {
+                        $equalSign = " IN (";
+                    }
+
+                    if (is_array($value) && is_int($key)) {
+                        if (($nameUsedInVariablesCount[$value[0]] ?? false) === false) {
+                            $nameUsedInVariablesCount[$value[0]] = -1;
+                        }
+                        $nameUsedInVariablesCount[$value[0]]++;
+                        $value[0] .= "_" . $nameUsedInVariablesCount[$value[0]];
+
+                        $whereQuery .= ($whereQuery !== "" ? " AND " : "") . $dbColumn . $equalSign . ($useNoValue ? "" : ":" . $value[0]);
+                        $whereParams[] = $value;
+                    } else {
+                        if (($nameUsedInVariablesCount[$key] ?? false) === false) {
+                            $nameUsedInVariablesCount[$key] = -1;
+                        }
+                        $nameUsedInVariablesCount[$key]++;
+                        $key .= "_" . $nameUsedInVariablesCount[$key];
+
+                        $whereQuery .= ($whereQuery !== "" ? " AND " : "") . $dbColumn . $equalSign . ($useNoValue ? "" : ":" . $key);
+                        $whereParams[] = [$key, $value];
+                    }
+                    $whereQuery .= ($equalSign === " IN (" ? ")" : "");
+                }
+            }
+
+            if ($whereQuery !== "") {
+                $whereQuery = " WHERE " . $whereQuery;
+            }
+        }
+
+        return [$whereQuery, $whereParams];
+    }
+
+    /** Исполнение PDO-запроса */
+    private function execute(PDOStatement $statement, array $preparedData): void
+    {
+        try {
+            $statement->execute($preparedData);
+        } catch (PDOException $e) {
+            $this->lastQuery = [];
+
+            ob_start();
+            debug_print_backtrace();
+            $backtrace = ob_get_clean();
+            throw new DatabaseQueryException(
+                'PDO execute error: ' . $statement->queryString .
+                    ' | Error: ' . $e->getMessage() .
+                    ' | Used data: ' . print_r($preparedData, true) .
+                    ' | Backtrace: ' . $backtrace,
+                (int) $e->getCode(),
+                $e,
+            );
+        }
     }
 }
