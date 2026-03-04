@@ -634,7 +634,9 @@ DB->select(
 ### insert() / update() / delete()
 ```php
 // insert — data: ['field' => value] или [['field', value, ?params]]
+// returningIdFieldName — имя PK-поля (по умолчанию 'id'); используется в RETURNING-clause (PostgreSQL)
 DB->insert('news', ['title' => 'Text', 'author_id' => $id]);
+DB->insert('news', ['title' => 'Text'], returningIdFieldName: 'uuid');
 DB->lastInsertId();  // корректно работает для PostgreSQL (RETURNING) и MySQL
 
 // update
@@ -654,7 +656,7 @@ DB->delete('news', criteria: ['id' => $id]);
 | `count(tableName, criteria)` | Простой COUNT с criteria |
 | `getArrayOfItems(fromClause, id, fields, nodata)` | Generator `[id => [id, label, level, ?data]]`; `fromClause` — строка после FROM |
 | `getArrayOfItemsAsArray(...)` | То же, но `iterator_to_array` |
-| `getTreeOfItems(...)` | Строит плоский массив иерархии с полем `level` |
+| `getTreeOfItems(empty, table, where, whereequal, and, order, level, id, fieldName, maxlevel, nodata, andQueryParams)` | Строит плоский массив иерархии с полем `level`; `whereequal` — `string\|int\|null`; `andQueryParams` — PDO-параметры для `$and`-условия |
 | `chopOffTreeOfItemsBranches(...)` | Обрезает дерево — оставляет только нужные ветки с родителями |
 | `beginTransaction()` / `commit()` / `rollBack()` | Транзакции |
 | `exec(SQL)` | Сырое исполнение без prepare (только для миграций) |

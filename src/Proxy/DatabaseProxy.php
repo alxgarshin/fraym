@@ -44,7 +44,7 @@ final class DatabaseProxy implements Database
         return Container::make('db')->query($query, $data, $oneResult);
     }
 
-    public function lastInsertId(?string $name = null): int|string|false
+    public function lastInsertId(?string $name = null): string|false
     {
         return Container::make('db')->lastInsertId($name);
     }
@@ -69,15 +69,17 @@ final class DatabaseProxy implements Database
         ?int $limit = null,
         ?int $offset = null,
         bool $onlyCount = false,
+        ?array $fieldsSet = null,
     ): false|array {
-        return Container::make('db')->select($tableName, $criteria, $oneResult, $order, $limit, $offset, $onlyCount);
+        return Container::make('db')->select($tableName, $criteria, $oneResult, $order, $limit, $offset, $onlyCount, $fieldsSet);
     }
 
     public function insert(
         string $tableName,
         array $data,
+        string $returningIdFieldName = 'id',
     ): false|array {
-        return Container::make('db')->insert($tableName, $data);
+        return Container::make('db')->insert($tableName, $data, $returningIdFieldName);
     }
 
     public function update(
@@ -137,7 +139,7 @@ final class DatabaseProxy implements Database
         bool $empty,
         string $table,
         string $where,
-        string|int $whereequal,
+        string|int|null $whereequal,
         ?string $and,
         ?string $order,
         int $level,
@@ -145,8 +147,9 @@ final class DatabaseProxy implements Database
         string $fieldName,
         int $maxlevel,
         bool $nodata = true,
+        array $andQueryParams = [],
     ): array {
-        return Container::make('db')->getTreeOfItems($empty, $table, $where, $whereequal, $and, $order, $level, $id, $fieldName, $maxlevel, $nodata);
+        return Container::make('db')->getTreeOfItems($empty, $table, $where, $whereequal, $and, $order, $level, $id, $fieldName, $maxlevel, $nodata, $andQueryParams);
     }
 
     public function chopOffTreeOfItemsBranches(

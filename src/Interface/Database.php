@@ -33,7 +33,7 @@ interface Database
     ): false|array;
 
     /** Получение id последней добавленной записи */
-    public function lastInsertId(?string $name = null): int|string|false;
+    public function lastInsertId(?string $name = null): string|false;
 
     /** Получение количества объектов таблицы из последнего PDOStatement'а */
     public function selectCount(): int;
@@ -53,12 +53,14 @@ interface Database
         ?int $limit = null,
         ?int $offset = null,
         bool $onlyCount = false,
+        ?array $fieldsSet = null,
     ): false|array;
 
     /** Вставка данных в таблицу */
     public function insert(
         string $tableName,
         array $data,
+        string $returningIdFieldName = 'id',
     ): false|array;
 
     /** Изменение данных в таблице */
@@ -106,7 +108,7 @@ interface Database
         bool $empty,
         string $table,
         string $where,
-        string|int $whereequal,
+        string|int|null $whereequal,
         ?string $and,
         ?string $order,
         int $level,
@@ -114,6 +116,7 @@ interface Database
         string $fieldName,
         int $maxlevel,
         bool $nodata = true,
+        array $andQueryParams = [],
     ): array;
 
     /** Удаление объектов из созданного дерева, чтобы остались только отобранные id и их parent'ы до верхнего уровня. При этом у каталоговых сущностей
