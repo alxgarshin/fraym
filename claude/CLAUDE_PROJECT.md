@@ -224,7 +224,31 @@ $itemClass = str_replace('\Attribute\\', '\Item\\', $attributeClass);
 ```
 
 Доступные типы: `Text`, `Textarea`, `Number`, `Email`, `Password`, `Login`, `Hidden`,
-`Checkbox`, `Select`, `Multiselect`, `File`, `Wysiwyg`, `Timestamp`, `H1`, `Tab`.
+`Checkbox`, `Select`, `Multiselect`, `File`, `Wysiwyg`, `Timestamp`, `Calendar`, `H1`, `Tab`.
+
+### Calendar vs Timestamp — ключевые различия
+
+| | `Calendar` | `Timestamp` |
+|---|---|---|
+| Назначение | Пользовательский ввод даты | Системная отметка времени (OnCreate/OnChange) |
+| HTML | `<input type="date">` или `<input type="datetime-local">` | `<input type="hidden">` |
+| `getDefaultValue()` | `?DateTimeImmutable` (из `Attribute::defaultValue`, может быть `null`) | `DateTimeImmutable` — всегда текущее время |
+| `set()` типы | `null\|DateTimeImmutable\|string\|int` | `null\|DateTimeImmutable\|int` (без `string`) |
+| Attribute-флаги | `showDatetime`, `saveAsTimestamp` | `showInObjects` — показывать в колонке MultiObjects |
+
+### Timezone API (Calendar и Timestamp)
+
+Все методы работы с датой принимают опциональный `DateTimeZone|string|null $dateTimeZone`:
+
+```php
+$item->get($dateTimeZone)              // ?DateTimeImmutable в нужной TZ
+$item->set($value, $dateTimeZone)      // сохранить с учётом TZ
+$item->getDefaultValue($dateTimeZone)  // значение по умолчанию в нужной TZ
+$item->getAsTimeStamp($dateTimeZone)   // Unix timestamp
+$item->getAsAtom($dateTimeZone)        // ISO 8601 (Atom)
+$item->getAsUsualDate($dateTimeZone)   // 'd.m.Y'
+$item->getAsUsualDateTime($dateTimeZone) // 'd.m.Y H:i'
+```
 
 ### Объявление полей в модели
 ```php

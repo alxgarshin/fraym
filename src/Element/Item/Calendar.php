@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Fraym\Element\Item;
 
 use DateTimeImmutable;
+use DateTimeZone;
 use Fraym\Element\Attribute as Attribute;
 use Fraym\Element\Item\Trait\CloneTrait;
 use Fraym\Helper\{DateHelper};
@@ -79,50 +80,54 @@ class Calendar extends BaseElement
         return $this;
     }
 
-    public function getDefaultValue(): ?DateTimeImmutable
+    public function getDefaultValue(DateTimeZone|string|null $dateTimeZone = null): ?DateTimeImmutable
     {
         $defaultValue = $this->checkDefaultValueInServiceFunctions($this->attribute->defaultValue);
 
         if (!is_a($defaultValue, 'DateTimeImmutable') && !is_null($defaultValue)) {
             $defaultValue = new DateTimeImmutable($defaultValue);
+
+            if ($dateTimeZone) {
+                $defaultValue = $defaultValue->setTimezone($dateTimeZone instanceof DateTimeZone ? $dateTimeZone : new DateTimeZone($dateTimeZone));
+            }
         }
 
         return $defaultValue;
     }
 
-    public function get(): ?DateTimeImmutable
+    public function get(DateTimeZone|string|null $dateTimeZone = null): ?DateTimeImmutable
     {
         if (!isset($this->fieldValue)) {
             $pureValue = $this->model?->getModelDataFieldValue($this->name);
-            $this->fieldValue = DateHelper::convertToDateTime($pureValue);
+            $this->fieldValue = DateHelper::convertToDateTime($pureValue, $dateTimeZone);
         }
 
-        return $this->fieldValue ?? $this->getDefaultValue();
+        return $this->fieldValue ?? $this->getDefaultValue($dateTimeZone);
     }
 
-    public function getAsTimeStamp(): ?int
+    public function getAsTimeStamp(DateTimeZone|string|null $dateTimeZone = null): ?int
     {
-        return DateHelper::timestamp($this->get());
+        return DateHelper::timestamp($this->get($dateTimeZone));
     }
 
-    public function getAsAtom(): ?string
+    public function getAsAtom(DateTimeZone|string|null $dateTimeZone = null): ?string
     {
-        return DateHelper::atom($this->get());
+        return DateHelper::atom($this->get($dateTimeZone));
     }
 
-    public function getAsUsualDate(): ?string
+    public function getAsUsualDate(DateTimeZone|string|null $dateTimeZone = null): ?string
     {
-        return DateHelper::date($this->get());
+        return DateHelper::date($this->get($dateTimeZone));
     }
 
-    public function getAsUsualDateTime(): ?string
+    public function getAsUsualDateTime(DateTimeZone|string|null $dateTimeZone = null): ?string
     {
-        return DateHelper::dateTime($this->get());
+        return DateHelper::dateTime($this->get($dateTimeZone));
     }
 
-    public function set(null|DateTimeImmutable|string|int $fieldValue): static
+    public function set(null|DateTimeImmutable|string|int $fieldValue, DateTimeZone|string|null $dateTimeZone = null): static
     {
-        $this->fieldValue = DateHelper::convertToDateTime($fieldValue);
+        $this->fieldValue = DateHelper::convertToDateTime($fieldValue, $dateTimeZone);
 
         return $this;
     }
