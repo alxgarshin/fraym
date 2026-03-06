@@ -833,7 +833,23 @@ final class SQLDatabaseService implements Database
     private function execute(PDOStatement $statement, array $preparedData): void
     {
         try {
-            $statement->execute($preparedData);
+            foreach ($preparedData as $key => $value) {
+                $paramKey = is_int($key) ? $key + 1 : $key;
+
+                if (is_null($value)) {
+                    $type = PDO::PARAM_NULL;
+                } elseif (is_bool($value)) {
+                    $type = PDO::PARAM_BOOL;
+                } elseif (is_int($value)) {
+                    $type = PDO::PARAM_INT;
+                } else {
+                    $type = PDO::PARAM_STR;
+                }
+
+                $statement->bindValue($paramKey, $value, $type);
+            }
+
+            $statement->execute();
         } catch (PDOException $e) {
             $this->lastQuery = [];
 
