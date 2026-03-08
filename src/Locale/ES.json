@@ -86,15 +86,15 @@
       "wrong_format_in_field": "Formato incorrecto en el campo «%s»."
     },
     "select": {
-      "choose": "– Choose –",
+      "choose": "– Elegir –",
       "for_search_input_text_here": "Introduce el texto aquí hasta buscar"
     },
     "helper": {
-      "choose": "– Choose –",
+      "choose": "– Elegir –",
       "search_text": "Introduce el texto aquí hasta buscar"
     },
     "multiselect": {
-      "choose": "– Choose –",
+      "choose": "– Elegir –",
       "do_not_choose": "no elegir",
       "add": "añadir",
       "for_search_or_create_input_text_here": "Introduce el texto aquí hasta añadir o buscar",
