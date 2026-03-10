@@ -111,4 +111,10 @@ final class MySQLDialect implements DatabaseDialect
             'orderBy' => " ORDER BY FIELD (" . $field . ", '" . implode("', '", $values) . "')",
         ];
     }
+
+    /** Для checkbox в MySQL используется Enum('0', '1') */
+    public function checkboxDbValue(bool $value): string
+    {
+        return $value ? '1' : '0';
+    }
 }

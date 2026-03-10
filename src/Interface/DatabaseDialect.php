@@ -25,8 +25,6 @@ namespace Fraym\Interface;
  */
 interface DatabaseDialect
 {
-    // ── SQLDatabaseService ───────────────────────────────────────────────────
-
     /** Дополнительные опции строки DSN-подключения (например, charset для MySQL) */
     public function getDsnOptions(): string;
 
@@ -44,12 +42,8 @@ interface DatabaseDialect
      */
     public function extractLastInsertId(array|false $queryResult): string|false|null;
 
-    // ── Filters ──────────────────────────────────────────────────────────────
-
     /** Символ-обёртка значения в LIKE-паттерне при поиске внутри JSON-групп */
     public function getGroupFieldQuerySign(): string;
-
-    // ── Console / DDL ────────────────────────────────────────────────────────
 
     /**
      * SQL для принудительного отключения всех соединений к БД перед её удалением.
@@ -108,4 +102,7 @@ interface DatabaseDialect
      *                                                     orderBy     — полная фраза ORDER BY
      */
     public function orderByCustomValuesSql(string $field, array $values, string $tieBreakField): array;
+
+    /** Значение checkbox-поля в БД */
+    public function checkboxDbValue(bool $value): bool|int|string;
 }

@@ -1400,7 +1400,7 @@ abstract class BaseEntity
                     $preppedValue = is_null($value) ? null : (is_numeric($value) ? $value : strtotime($value));
                     $value = is_null($value) ? null : ($element->getAttribute()->saveAsTimestamp ? $preppedValue : date('Y-m-d H:i:s', $preppedValue));
                 } elseif ($element instanceof Checkbox) {
-                    $value = $value === 'on' ? 1 : 0;
+                    $value = DB->dialect->checkboxDbValue($value === 'on');
                 } elseif ($element instanceof Number) {
                     if (!is_numeric($value)) {
                         $value = 0;

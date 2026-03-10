@@ -128,4 +128,9 @@ final class PostgreSQLDialect implements DatabaseDialect
             'orderBy' => " ORDER BY " . $caseSql . ", " . $tieBreakField,
         ];
     }
+
+    public function checkboxDbValue(bool $value): int
+    {
+        return $value ? 1 : 0;
+    }
 }
