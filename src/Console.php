@@ -220,60 +220,62 @@ class Console
             $this->echoResult("Cannot drop a non-dev and non-test database.", 'red');
         }
 
-        if ($_ENV['APP_ENV'] === 'DEV') {
-            $_ENV['DATABASE_NAME'] = $databaseNameCache;
-            unset($databaseNameCache);
+        $_ENV['DATABASE_NAME'] = $databaseNameCache;
+        unset($databaseNameCache);
 
-            define('MIGRATE_DB', SQLDatabaseService::forceCreate());
+        define('MIGRATE_DB', SQLDatabaseService::forceCreate());
 
-            if (str_starts_with($action, 'database:migrate')) {
-                define('CACHE', CacheService::getInstance());
+        if (str_starts_with($action, 'database:migrate')) {
+            define('CACHE', CacheService::getInstance());
 
-                $useSql = MIGRATE_DB->dialect->useDatabaseSql($dbNameQuoted);
+            $useSql = MIGRATE_DB->dialect->useDatabaseSql($dbNameQuoted);
 
-                if ($useSql !== null) {
-                    MIGRATE_DB->query($useSql, []);
-                }
+            if ($useSql !== null) {
+                MIGRATE_DB->query($useSql, []);
+            }
 
-                MIGRATE_DB->query(MIGRATE_DB->dialect->createMigrationTableSql(), []);
+            MIGRATE_DB->query(MIGRATE_DB->dialect->createMigrationTableSql(), []);
 
-                $appendedMigrations = [];
-                $appendedMigrationsData = MIGRATE_DB->select('migration', null, false, ['migration_id']);
+            $appendedMigrations = [];
+            $appendedMigrationsData = MIGRATE_DB->select('migration', null, false, ['migration_id']);
 
-                foreach ($appendedMigrationsData as $appendedMigrationsItem) {
-                    $appendedMigrations[] = $appendedMigrationsItem['migration_id'] . '.php';
-                }
+            foreach ($appendedMigrationsData as $appendedMigrationsItem) {
+                $appendedMigrations[] = $appendedMigrationsItem['migration_id'] . '.php';
+            }
 
-                if (!is_null($migrationFile)) {
-                    if (!in_array($migrationFile, $appendedMigrations) || $migrationDirection === 'down') {
-                        $this->executeMigration($migrationFile, $migrationDirection);
-                    } else {
-                        $this->echoResult("Migration " . $migrationFile . " has already been appended to the database `" . $_ENV['DATABASE_NAME'] . "`.", 'red');
-                    }
+            if (!is_null($migrationFile)) {
+                if (!in_array($migrationFile, $appendedMigrations) || $migrationDirection === 'down') {
+                    $this->executeMigration($migrationFile, $migrationDirection);
                 } else {
-                    $migrationDirection = 'up';
-                    $files = array_diff(scandir(INNER_PATH . 'src/Migrations/'), ['.', '..', 'Sql', 'Fixtures']);
-                    sort($files);
+                    $this->echoResult("Migration " . $migrationFile . " has already been appended to the database `" . $_ENV['DATABASE_NAME'] . "`.", 'red');
+                }
+            } else {
+                $migrationDirection = 'up';
+                $files = array_diff(scandir(INNER_PATH . 'src/Migrations/'), ['.', '..', 'Sql', 'Fixtures']);
+                sort($files);
 
-                    $foundMigration = false;
-                    $executedMigration = false;
+                $foundMigration = false;
+                $executedMigration = false;
 
-                    foreach ($files as $migrationFile) {
-                        if (preg_match('#^Migration\d+\.php$#', $migrationFile)) {
-                            $foundMigration = true;
+                foreach ($files as $migrationFile) {
+                    if (preg_match('#^Migration\d+\.php$#', $migrationFile)) {
+                        $foundMigration = true;
 
-                            if (!in_array($migrationFile, $appendedMigrations)) {
-                                $executedMigration = true;
-                                $this->executeMigration($migrationFile, $migrationDirection);
-                            }
+                        if (!in_array($migrationFile, $appendedMigrations)) {
+                            $executedMigration = true;
+                            $this->executeMigration($migrationFile, $migrationDirection);
                         }
                     }
-
-                    if ($foundMigration && !$executedMigration) {
-                        $this->echoResult("All migrations have been already applied to the database `" . $_ENV['DATABASE_NAME'] . "`.");
-                    }
                 }
-            } elseif ($action === 'make:cmsvc' && !is_null($CMSVCName)) {
+
+                if ($foundMigration && !$executedMigration) {
+                    $this->echoResult("All migrations have been already applied to the database `" . $_ENV['DATABASE_NAME'] . "`.");
+                }
+            }
+        }
+
+        if ($_ENV['APP_ENV'] === 'DEV') {
+            if ($action === 'make:cmsvc' && !is_null($CMSVCName)) {
                 $LOCALES_LIST = [
                     'EN',
                     'RU',
