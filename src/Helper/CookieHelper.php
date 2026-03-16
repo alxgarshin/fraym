@@ -20,7 +20,7 @@ abstract class CookieHelper implements Helper
     /** Массовое создание cookie
      * @param array<string|int, string|int|array> $cookies
      */
-    public static function batchSetCookie(array $cookies, ?int $time = null): void
+    public static function batchSetCookie(array $cookies, ?int $time = null, ?string $samesite = null): void
     {
         foreach ($cookies as $cookieKey => $cookie) {
             if (self::getCookie($cookieKey) !== (is_array($cookie) ? DataHelper::jsonFixedEncode($cookie) : $cookie)) {
@@ -28,7 +28,7 @@ abstract class CookieHelper implements Helper
                     self::deleteCookieFromHeaders($cookieKey);
                 }
 
-                setcookie($cookieKey, is_array($cookie) ? DataHelper::jsonFixedEncode($cookie) : (string) $cookie, CookieHelper::getOptions($time));
+                setcookie($cookieKey, is_array($cookie) ? DataHelper::jsonFixedEncode($cookie) : (string) $cookie, CookieHelper::getOptions($time, $samesite));
             }
         }
     }
@@ -52,17 +52,17 @@ abstract class CookieHelper implements Helper
     /** Массовое удаление cookie
      * @param string[] $cookiesNames
      */
-    public static function batchDeleteCookie(array $cookiesNames): void
+    public static function batchDeleteCookie(array $cookiesNames, ?string $samesite = null): void
     {
         foreach ($cookiesNames as $cookieKey) {
             self::deleteCookieFromHeaders($cookieKey);
 
-            setcookie($cookieKey, '', CookieHelper::getOptions(time() - 20));
+            setcookie($cookieKey, '', CookieHelper::getOptions(time() - 20, $samesite));
         }
     }
 
     /** Удаление всех cookie сайта */
-    public static function deleteAllCookies(): void
+    public static function deleteAllCookies(?string $samesite = null): void
     {
         if (isset($_SERVER['HTTP_COOKIE'])) {
             $cookies = explode(';', $_SERVER['HTTP_COOKIE']);
@@ -70,13 +70,13 @@ abstract class CookieHelper implements Helper
             foreach ($cookies as $cookie) {
                 $parts = explode('=', $cookie);
                 $name = trim($parts[0]);
-                setcookie($name, '', CookieHelper::getOptions(time() - 20));
+                setcookie($name, '', CookieHelper::getOptions(time() - 20, $samesite));
             }
         }
     }
 
     /** Получение стандартного набора свойств для всех cookie проекта */
-    public static function getOptions(?int $time = null): array
+    public static function getOptions(?int $time = null, ?string $samesite = null): array
     {
         return [
             'expires' => $time ?? (time() + 60 * 60 * 24 * 30),
@@ -84,7 +84,7 @@ abstract class CookieHelper implements Helper
             'domain' => $_ENV['COOKIE_PATH'],
             'secure' => true,
             'httponly' => true,
-            'samesite' => 'Strict',
+            'samesite' => $samesite ?? 'Lax',
         ];
     }
 
@@ -109,7 +109,7 @@ abstract class CookieHelper implements Helper
     }
 
     /** Удаление определенной cookie из headers */
-    private static function deleteCookieFromHeaders(string $cookieKey): void
+    private static function deleteCookieFromHeaders(string $cookieKey, ?string $samesite = null): void
     {
         $cookies = self::getCookiesFromHeaders();
 
@@ -118,7 +118,7 @@ abstract class CookieHelper implements Helper
 
             foreach ($cookies as $cookieName => $cookieValue) {
                 if ($cookieName !== $cookieKey) {
-                    setcookie($cookieName, $cookieValue, CookieHelper::getOptions());
+                    setcookie($cookieName, $cookieValue, CookieHelper::getOptions(null, $samesite));
                 }
             }
         }
