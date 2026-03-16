@@ -61,7 +61,7 @@ class Kernel
         $cmsvc = $_REQUEST['cmsvc'] ?? KIND;
         $id = ($_REQUEST['id'] ?? false) ? (is_array($_REQUEST['id']) ? $_REQUEST['id'] : [!is_numeric($_REQUEST['id']) ? $_REQUEST['id'] : (int) $_REQUEST['id']]) : null;
 
-        if ($id === KIND) {
+        if (($id[0] ?? '') === KIND) {
             $cmsvc = $id;
             $id = null;
         }
