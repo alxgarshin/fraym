@@ -57,8 +57,17 @@ class Kernel
         define('ACTION', ActionEnum::init());
         define('ACT', !is_null($_REQUEST['act'] ?? null) ? ActEnum::tryFrom($_REQUEST['act']) : null);
         define('KIND', $_REQUEST['kind'] ?? $_ENV['STARTING_KIND']);
-        define('CMSVC', $_REQUEST['cmsvc'] ?? KIND);
-        define('ID', ($_REQUEST['id'] ?? false) ? (is_array($_REQUEST['id']) ? $_REQUEST['id'] : [!is_numeric($_REQUEST['id']) ? $_REQUEST['id'] : (int) $_REQUEST['id']]) : null);
+
+        $cmsvc = $_REQUEST['cmsvc'] ?? KIND;
+        $id = ($_REQUEST['id'] ?? false) ? (is_array($_REQUEST['id']) ? $_REQUEST['id'] : [!is_numeric($_REQUEST['id']) ? $_REQUEST['id'] : (int) $_REQUEST['id']]) : null;
+
+        if ($id === KIND) {
+            $cmsvc = $id;
+            $id = null;
+        }
+
+        define('CMSVC', $cmsvc);
+        define('ID', $id);
         define('PAGE', (int) ($_REQUEST['page'] ?? 0));
         define('SORTING', (int) ($_REQUEST['sorting'] ?? 0));
         define('OBJ_TYPE', $_REQUEST['obj_type'] ?? null);
