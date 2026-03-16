@@ -186,8 +186,12 @@ abstract class ResponseHelper implements Helper
 
             $redirectToId = CookieHelper::getCookie('redirectToId');
 
-            if ($redirectToId && $redirectToId !== '[]') {
-                $redirectPath .= $redirectToId . '/';
+            if ($redirectToId) {
+                $redirectToId = DataHelper::jsonFixedDecode($redirectToId);
+
+                if ($redirectToId) {
+                    $redirectPath .= (is_array($redirectToId) ? $redirectToId[0] : $redirectToId) . '/';
+                }
             }
 
             if (CookieHelper::getCookie('redirectParams')) {
