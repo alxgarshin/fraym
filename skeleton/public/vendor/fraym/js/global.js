@@ -116,7 +116,7 @@ let touchstartY = 0;
 let touchendY = 0;
 let swipeTimeDiff = 0;
 let swipeTimeThreshold = 200;
-let swipeDiffThreshold = 130;
+let swipeDiffThreshold = 50;
 
 /** Переменные для автоподгрузки svg из бэкграундов в DOM (для управления через css) */
 const sbiSelector = '.sbi:not(.loading):not(.loaded)';
