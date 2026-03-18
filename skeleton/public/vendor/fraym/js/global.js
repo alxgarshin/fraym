@@ -2672,9 +2672,9 @@ function handleSwipe(elem) {
                         const anchor = selectedControl.find('a[id]');
                         const ahref = selectedControl.find('a[href]');
 
-                        if (ahref.asDomElement()) {
+                        if (ahref?.asDomElement()) {
                             updateState(ahref.attr('href'));
-                        } else if (anchor.asDomElement()) {
+                        } else if (anchor?.asDomElement()) {
                             selectedControl.click();
                         }
                     });
