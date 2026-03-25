@@ -74,6 +74,10 @@ abstract class DataHelper implements Helper
     /** Поиск в $_REQUEST ключа массива данных, в которых присутствует указанный id */
     public static function findDataKeyInRequestById(int|string $id): int
     {
+        if (ID === null) {
+            return 0;
+        }
+
         foreach (ID as $key => $value) {
             if ((string) $value === (string) $id) {
                 return $key;
