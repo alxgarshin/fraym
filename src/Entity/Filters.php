@@ -359,7 +359,7 @@ final class Filters
                             } elseif ($value[0] === 'not_set') {
                                 $blockSearchQuerySql .= " (t1." . $queryElementName . " IS NULL OR t1." . $queryElementName . "='')";
                             } else {
-                                $blockSearchQuerySql .= " (t1." . $queryElementName . "=" . (is_numeric($value[0]) ? $value[0] . " OR t1." . $queryElementName . "=" : "") . "'" . $value[0] . "')";
+                                $blockSearchQuerySql .= " (t1." . $queryElementName . "=" . (is_int($value[0]) ? $value[0] . " OR t1." . $queryElementName . "=" : "") . "'" . $value[0] . "')";
                             }
                         } elseif ($modelItem instanceof Item\Multiselect) {
                             if (!$firstSearchQuery) {
@@ -412,8 +412,20 @@ final class Filters
                                 $blockSearchQuerySql .= " (t1." . $queryElementName . " IS NULL OR t1." . $queryElementName . "='' OR t1." . $queryElementName . "='-'
                                 OR t1." . $queryElementName . "='--')";
                             } else {
-                                $blockSearchQuerySql .= " (t1." . $queryElementName . " LIKE '%-" . $value[0] . "-%' OR t1." . $queryElementName . " LIKE '%"
-                                    . $groupFieldsQuerySign . $value[0] . $groupFieldsQuerySign . "%' OR t1." . $queryElementName . "='" . $stripped_val . "')";
+                                $searchValue = str_replace(' ', '', (string) $value[0]);
+
+                                $normalizedCol = "REPLACE(
+    REPLACE(
+        REPLACE(
+            REPLACE(
+                REPLACE(" . "t1." . $queryElementName . ", ' ', ''
+                ), '\"', ''
+            ), '[', '-'
+        ), ']', '-'
+    ), ',', '-'
+)";
+
+                                $blockSearchQuerySql .= " (" . $normalizedCol . " LIKE '%-" . $searchValue . "-%' OR t1." . $queryElementName . "='" . $stripped_val . "')";
                             }
                         }
 
