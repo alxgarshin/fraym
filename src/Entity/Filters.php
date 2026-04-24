@@ -404,14 +404,14 @@ final class Filters
                                      *   - для строк:   [key][[..."val"...]]
                                      *   - для чисел:   [key][[...val...]]
                                      */
-                                    $jsonLikeNeedle = is_int($value[0])
-                                        ? (string) $value[0]
+                                    $jsonRegexNeedle = is_numeric($value[0])
+                                        ? '(' . $value[0] . '|"' . $value[0] . '")'
                                         : '"' . $value[0] . '"';
 
                                     $blockSearchQuerySql .= " (t1." . $entity->virtualField .
                                         " " . $regexpWord . " '\\\[" . $queryElementName . "\\\]\\\[[^]]*-" . $value[0] . "-[^]]*' OR t1." . $entity->virtualField .
                                         " LIKE '%[" . $queryElementName . "][" . $strippedVal . "]%' OR t1." . $entity->virtualField .
-                                        " " . $regexpWord . " '\\\[" . $queryElementName . "\\\]\\\[[^]]*(\\\\[|,)" . $jsonLikeNeedle . "(\\\\]|,)[^]]*')";
+                                        " " . $regexpWord . " '\\\[" . $queryElementName . "\\\]\\\[[^]]*(\\\\[|,)" . $jsonRegexNeedle . "(\\\\]|,)[^]]*')";
                                 }
                             } elseif ($modelItem->getOne() && !($modelItem->getGroup() > 0)) {
                                 /** Предполагаем, что тип колонки в этом случае = int */

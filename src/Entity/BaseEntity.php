@@ -1223,12 +1223,15 @@ abstract class BaseEntity
             /** Если у $sortingItem выставлен параметр $doNotUseInSorting, мы вообще не включаем его в запрос сортировки данных, никогда */
             if (!$sortingItem->doNotUseInSorting) {
                 if ($sortingItem->substituteDataType === SubstituteDataTypeEnum::TABLE) {
-                    if ($this->model->getElement($sortingItem->tableFieldName) instanceof Multiselect) {
+                    $element = $this->model->getElement($sortingItem->tableFieldName);
+
+                    if ($element instanceof Multiselect && !$element->getOne()) {
                         /** Если вдруг указан мультиселект в качестве поля, нам нужно выдернуть первое значение из поля */
+                        $firstElementSql = DB->dialect->jsonLeftJoinFirstElement('t1.' . $sortingItem->tableFieldName);
+
                         $leftJoinedTablesSql .= " LEFT JOIN " .
                             $sortingItem->substituteDataTableName . " t" . $tablesUsedCount . " ON " .
-                            "SUBSTRING(t1." . $sortingItem->tableFieldName . ", 2, LOCATE('-', t1." . $sortingItem->tableFieldName . ", 2) - 2)=" .
-                            "t" . $tablesUsedCount . "." . $sortingItem->substituteDataTableId;
+                            $firstElementSql . " = t" . $tablesUsedCount . "." . $sortingItem->substituteDataTableId;
                     } else {
                         $leftJoinedFieldsSql .= ", t" . $tablesUsedCount . "." . $sortingItem->substituteDataTableField . " AS "
                             . $sortingItem->substituteDataTableName . '__' . $sortingItem->substituteDataTableField;

@@ -116,4 +116,7 @@ interface DatabaseDialect
      * @param bool $negate Если true — вернуть выражение «не содержит»
      */
     public function jsonContainsExpression(string $column, string $needle, bool $negate = false): string;
+
+    /** SQL-выражение, возвращающее первый элемент JSON-массива для LEFT JOIN при сортировке */
+    public function jsonLeftJoinFirstElement(string $fieldName): string;
 }

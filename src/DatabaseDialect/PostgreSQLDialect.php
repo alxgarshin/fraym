@@ -140,4 +140,9 @@ final class PostgreSQLDialect implements DatabaseDialect
 
         return $negate ? "NOT (" . $expr . ")" : $expr;
     }
+
+    public function jsonLeftJoinFirstElement(string $fieldName): string
+    {
+        return "CASE " . "WHEN " . $fieldName . " ~ '^\\[.*\\]$' THEN CAST(" . $fieldName . "::jsonb ->> 0 AS INTEGER) " . "ELSE NULL " . "END";
+    }
 }

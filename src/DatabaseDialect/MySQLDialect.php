@@ -124,4 +124,9 @@ final class MySQLDialect implements DatabaseDialect
 
         return $negate ? "NOT " . $expr : $expr;
     }
+
+    public function jsonLeftJoinFirstElement(string $fieldName): string
+    {
+        return "CAST(JSON_UNQUOTE(" . "IF(JSON_VALID(" . $fieldName . "), JSON_EXTRACT(" . $fieldName . ", '$[0]'), NULL)" . ") AS UNSIGNED)";
+    }
 }
