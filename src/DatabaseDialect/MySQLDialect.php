@@ -117,4 +117,11 @@ final class MySQLDialect implements DatabaseDialect
     {
         return $value ? '1' : '0';
     }
+
+    public function jsonContainsExpression(string $column, string $needle, bool $negate = false): string
+    {
+        $expr = "JSON_CONTAINS(IFNULL(NULLIF(" . $column . ", ''), '[]'), " . $needle . ")";
+
+        return $negate ? "NOT " . $expr : $expr;
+    }
 }

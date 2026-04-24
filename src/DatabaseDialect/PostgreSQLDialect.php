@@ -133,4 +133,11 @@ final class PostgreSQLDialect implements DatabaseDialect
     {
         return $value ? 1 : 0;
     }
+
+    public function jsonContainsExpression(string $column, string $needle, bool $negate = false): string
+    {
+        $expr = "COALESCE(NULLIF(" . $column . ", ''), '[]')::jsonb @> " . $needle . "::jsonb";
+
+        return $negate ? "NOT (" . $expr . ")" : $expr;
+    }
 }

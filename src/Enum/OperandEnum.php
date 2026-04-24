@@ -27,4 +27,6 @@ enum OperandEnum
     case LESS_OR_EQUAL;
     case MORE_OR_EQUAL;
     case NOT_EQUAL;
+    case JSON_CONTAINS;
+    case JSON_NOT_CONTAINS;
 }

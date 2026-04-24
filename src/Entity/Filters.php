@@ -15,7 +15,7 @@ namespace Fraym\Entity;
 
 use Fraym\Element\{Attribute as Attribute, Item as Item};
 use Fraym\Enum\ActionEnum;
-use Fraym\Helper\{CookieHelper, DataHelper, LocaleHelper, TextHelper};
+use Fraym\Helper\{CookieHelper, DataHelper, LocaleHelper, MultiselectSqlHelper, TextHelper};
 use Fraym\Interface\ElementItem;
 
 final class Filters
@@ -386,46 +386,49 @@ final class Filters
                                 $blockSearchQuerySql .= "(";
                             }
 
-                            $stripped_val = str_replace('-', '', (string) $value[0]);
+                            $strippedVal = str_replace('-', '', (string) $value[0]);
 
                             if ($modelItem->getVirtual()) {
                                 if ($value[0] === 'not_set') {
+                                    /** Legacy-форматы пустого значения ([], [-], [--]) + новый JSON-формат [[]] + отсутствие ключа */
                                     $blockSearchQuerySql .= " (t1." . $entity->virtualField .
                                         " LIKE '%[" . $queryElementName . "][]%' OR t1." . $entity->virtualField .
                                         " LIKE '%[" . $queryElementName . "][-]%' OR t1." . $entity->virtualField .
                                         " LIKE '%[" . $queryElementName . "][--]%' OR t1." . $entity->virtualField .
+                                        " LIKE '%[" . $queryElementName . "][[]]%' OR t1." . $entity->virtualField .
                                         " NOT LIKE '%[" . $queryElementName . "][%')";
                                 } else {
+                                    /**
+                                     * Legacy: [key][-v1-v2-...] — ищем через REGEXP с "-val-"
+                                     * Новый JSON: [key][["v1","v2",...]] — ищем через LIKE с "val" в квадратных скобках
+                                     *   - для строк:   [key][[..."val"...]]
+                                     *   - для чисел:   [key][[...val...]]
+                                     */
+                                    $jsonLikeNeedle = is_int($value[0])
+                                        ? (string) $value[0]
+                                        : '"' . $value[0] . '"';
+
                                     $blockSearchQuerySql .= " (t1." . $entity->virtualField .
                                         " " . $regexpWord . " '\\\[" . $queryElementName . "\\\]\\\[[^]]*-" . $value[0] . "-[^]]*' OR t1." . $entity->virtualField .
-                                        " LIKE '%[" . $queryElementName . "][" . $stripped_val . "]%')";
+                                        " LIKE '%[" . $queryElementName . "][" . $strippedVal . "]%' OR t1." . $entity->virtualField .
+                                        " " . $regexpWord . " '\\\[" . $queryElementName . "\\\]\\\[[^]]*(\\\\[|,)" . $jsonLikeNeedle . "(\\\\]|,)[^]]*')";
                                 }
                             } elseif ($modelItem->getOne() && !($modelItem->getGroup() > 0)) {
                                 /** Предполагаем, что тип колонки в этом случае = int */
                                 if ($value[0] === 'not_set') {
                                     $blockSearchQuerySql .= " (t1." . $queryElementName . " IS NULL)";
                                 } else {
-                                    $blockSearchQuerySql .= " (t1." . $queryElementName . "='" . $stripped_val . "')";
+                                    $blockSearchQuerySql .= " (t1." . $queryElementName . "='" . $strippedVal . "')";
                                 }
                             }
-                            /** Предполагаем, что тип колонки в этом случае = varchar */ elseif ($value[0] === 'not_set') {
-                                $blockSearchQuerySql .= " (t1." . $queryElementName . " IS NULL OR t1." . $queryElementName . "='' OR t1." . $queryElementName . "='-'
-                                OR t1." . $queryElementName . "='--')";
+                            /** Предполагаем, что тип колонки в этом случае = varchar с JSON-массивом внутри */ elseif ($value[0] === 'not_set') {
+                                $blockSearchQuerySql .= " (t1." . $queryElementName . " IS NULL OR t1." . $queryElementName . "='' OR t1." . $queryElementName . "='[]')";
                             } else {
-                                $searchValue = str_replace(' ', '', (string) $value[0]);
-
-                                $normalizedCol = "REPLACE(
-    REPLACE(
-        REPLACE(
-            REPLACE(
-                REPLACE(" . "t1." . $queryElementName . ", ' ', ''
-                ), '\"', ''
-            ), '[', '-'
-        ), ']', '-'
-    ), ',', '-'
-)";
-
-                                $blockSearchQuerySql .= " (" . $normalizedCol . " LIKE '%-" . $searchValue . "-%' OR t1." . $queryElementName . "='" . $stripped_val . "')";
+                                $blockSearchQuerySql .= " (" .
+                                    DB->dialect->jsonContainsExpression(
+                                        "t1." . $queryElementName,
+                                        MultiselectSqlHelper::jsonLiteral($value[0]),
+                                    ) . ")";
                             }
                         }
 

@@ -16,7 +16,7 @@ namespace Fraym\Service;
 use Fraym\DatabaseDialect\{MySQLDialect, PostgreSQLDialect};
 use Fraym\Enum\{DbTypeEnum, OperandEnum};
 use Fraym\Exception\{DatabaseConnectionException, DatabaseQueryException};
-use Fraym\Helper\{DataHelper, LocaleHelper};
+use Fraym\Helper\{DataHelper, LocaleHelper, MultiselectSqlHelper};
 use Fraym\Interface\{Database, DatabaseDialect};
 use Generator;
 use PDO;
@@ -765,6 +765,22 @@ final class SQLDatabaseService implements Database
                     if (is_array($value) && is_int($key) && !is_null($value[2] ?? null)) {
                         if (!is_array($value[2])) {
                             $value[2] = [$value[2]];
+                        }
+
+                        if (in_array(OperandEnum::JSON_CONTAINS, $value[2]) || in_array(OperandEnum::JSON_NOT_CONTAINS, $value[2])) {
+                            $negate = in_array(OperandEnum::JSON_NOT_CONTAINS, $value[2]);
+
+                            if (($nameUsedInVariablesCount[$value[0]] ?? false) === false) {
+                                $nameUsedInVariablesCount[$value[0]] = -1;
+                            }
+                            $nameUsedInVariablesCount[$value[0]]++;
+                            $paramName = $value[0] . "_" . $nameUsedInVariablesCount[$value[0]];
+
+                            $expr = $this->dialect->jsonContainsExpression($dbColumn, ":" . $paramName, $negate);
+                            $whereQuery .= ($whereQuery !== "" ? " AND " : "") . $expr;
+                            $whereParams[] = [$paramName, MultiselectSqlHelper::bindValue($value[1])];
+
+                            continue;
                         }
 
                         if (in_array(OperandEnum::LIKE, $value[2])) {

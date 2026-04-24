@@ -105,4 +105,15 @@ interface DatabaseDialect
 
     /** Значение checkbox-поля в БД */
     public function checkboxDbValue(bool $value): bool|int|string;
+
+    /**
+     * SQL-выражение «колонка содержит JSON-элемент» для multiselect-колонок.
+     * Обёртка IFNULL/NULLIF (MySQL) или COALESCE/NULLIF (PostgreSQL) гарантирует,
+     * что NULL и пустая строка не ломают JSON-парсер.
+     *
+     * @param string $column Имя колонки — при необходимости уже квалифицированное (напр. "t1.tags")
+     * @param string $needle Либо bind-плейсхолдер (":name"), либо SQL-литерал с JSON внутри
+     * @param bool $negate Если true — вернуть выражение «не содержит»
+     */
+    public function jsonContainsExpression(string $column, string $needle, bool $negate = false): string;
 }
