@@ -2990,18 +2990,30 @@ window.fetch = new Proxy(window.fetch, {
             }
         }
 
-        if (isLocalUrl) {
-            if (!jwtToken && !options.headers.Authorization) {
-                if (jwtTokenRefreshing) {
-                    await jwtTokenRefreshing.catch(() => { });
-                } else {
-                    jwtTokenRefreshing = fetch(jwtTokenRefreshUrl, { method: 'GET' })
-                        .then(r => r.text())
-                        .then(token => { jwtToken = token; })
-                        .finally(() => { jwtTokenRefreshing = null; });
+        /** Обновление jwtToken (с защитой от параллельных запросов) */
+        const refreshJwtToken = async function () {
+            if (jwtTokenRefreshing) {
+                await jwtTokenRefreshing.catch(() => { });
+                return;
+            }
 
-                    await jwtTokenRefreshing.catch(() => { });
-                }
+            jwtTokenRefreshing = fetch(jwtTokenRefreshUrl, { method: 'GET' })
+                .then(r => r.ok ? r.text() : null)
+                .then(token => { if (token) jwtToken = token; })
+                .finally(() => { jwtTokenRefreshing = null; });
+
+            await jwtTokenRefreshing.catch(() => { });
+        }
+
+        const localUrl = isLocalUrl(url);
+
+        /** Запрос на сам refresh не проксируем — иначе бесконечный цикл при 401 */
+        const refreshUrlString = (typeof url === 'string' ? url : url.url);
+        const isRefreshRequest = refreshUrlString && refreshUrlString.indexOf(jwtTokenRefreshUrl) === 0;
+
+        if (localUrl && !isRefreshRequest) {
+            if (!jwtToken && !options.headers.Authorization) {
+                await refreshJwtToken();
             }
 
             if (jwtToken) {
@@ -3014,6 +3026,22 @@ window.fetch = new Proxy(window.fetch, {
             response = await fetch.apply(thisArg, [url, options]);
         } catch {
             return new Response(null, { status: 0, statusText: "NetworkError" });
+        }
+
+        /** Если токен протух (401) — сбросить, обновить и повторить запрос один раз */
+        if (localUrl && !isRefreshRequest && response.status === 401) {
+            jwtToken = undefined;
+            await refreshJwtToken();
+
+            if (jwtToken) {
+                options.headers.Authorization = 'Bearer ' + jwtToken;
+
+                try {
+                    response = await fetch.apply(thisArg, [url, options]);
+                } catch {
+                    return new Response(null, { status: 0, statusText: "NetworkError" });
+                }
+            }
         }
 
         return response;
