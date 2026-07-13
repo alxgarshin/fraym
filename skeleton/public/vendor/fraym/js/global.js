@@ -3312,14 +3312,16 @@ function actionRequest(params, target) {
         if (typeof actionRequestCallbacks.error[params.action] === 'function') {
             actionRequestCallbacks.error[params.action](null, params, target, error);
         }
+    }).finally(function () {
+        /** Re-enable кнопок и снятие loader'а — ПОСЛЕ завершения запроса (в .finally),
+         *  а не синхронно: иначе возможен double-submit и мигание loader'а. */
+        if (params.dynamicForm && target) {
+            target.find('button.main')?.each(function () {
+                _(this, { noCache: true }).enable().destroy();
+                removeLoader(this);
+            });
+        }
     });
-
-    if (params.dynamicForm && target) {
-        target.find('button.main')?.each(function () {
-            _(this, { noCache: true }).enable().destroy();
-            removeLoader(this);
-        });
-    }
 }
 
 /** ВАЛИДАЦИИ */
