@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Fraym\Helper;
 
 use DateTime;
+use Exception;
 use Fraym\Interface\Helper;
 
 abstract class AuthHelper implements Helper
@@ -37,22 +38,60 @@ abstract class AuthHelper implements Helper
     /** Проверка валидности токена авторизации */
     public static function getAuthTokenPayload(): ?array
     {
-        $headers = getallheaders();
+        $requestHeaders = getallheaders();
+        $authorization = $requestHeaders['Authorization'] ?? '';
 
-        if ($headers['Authorization'] ?? false) {
-            if (str_starts_with($headers['Authorization'], 'Bearer ')) {
-                $authToken = trim(substr($headers['Authorization'], 7));
-                $tokenParts = explode('.', $authToken);
-                $headers = DataHelper::jsonFixedDecode(base64_decode($tokenParts[0]));
-                $payload = DataHelper::jsonFixedDecode(base64_decode($tokenParts[1]));
-
-                if ($authToken === self::generateJWTAuthToken($headers, $payload)) {
-                    return $payload;
-                }
-            }
+        if (!is_string($authorization) || !str_starts_with($authorization, 'Bearer ')) {
+            return null;
         }
 
-        return null;
+        $authToken = trim(substr($authorization, 7));
+        $tokenParts = explode('.', $authToken);
+
+        if (count($tokenParts) !== 3) {
+            return null;
+        }
+
+        [$headersEncoded, $payloadEncoded, $signatureEncoded] = $tokenParts;
+
+        $headersJson = DataHelper::base64UrlDecode($headersEncoded);
+        $payloadJson = DataHelper::base64UrlDecode($payloadEncoded);
+
+        if (is_null($headersJson) || is_null($payloadJson)) {
+            return null;
+        }
+
+        try {
+            $tokenHeaders = DataHelper::jsonFixedDecode($headersJson, true);
+            $payload = DataHelper::jsonFixedDecode($payloadJson, true);
+        } catch (Exception) {
+            return null;
+        }
+
+        if (!is_array($tokenHeaders) || !is_array($payload)) {
+            return null;
+        }
+
+        /** Явная проверка алгоритма — защита от alg-подмены */
+        if (($tokenHeaders['alg'] ?? null) !== 'HS256') {
+            return null;
+        }
+
+        /** Проверка подписи в постоянном времени */
+        $expectedSignature = DataHelper::base64UrlEncode(
+            hash_hmac('SHA256', $headersEncoded . $payloadEncoded, $_ENV['PROJECT_HASH_WORD'], true),
+        );
+
+        if (!hash_equals($expectedSignature, $signatureEncoded)) {
+            return null;
+        }
+
+        /** Протухший токен невалиден (проверка exp здесь, а не только у вызывающего) */
+        if (!isset($payload['exp']) || !is_int($payload['exp']) || $payload['exp'] < time()) {
+            return null;
+        }
+
+        return $payload;
     }
 
     /** Генерация криптографичного уникального токена для обновления токена авторизации */
@@ -95,7 +134,7 @@ abstract class AuthHelper implements Helper
             hash_hmac('SHA256', CURRENT_USER->id() . ':' . CURRENT_USER->sid() . ':' . ($nonce - 1), $_ENV['PROJECT_HASH_WORD']),
         ];
 
-        return in_array($token, $valid, true);
+        return hash_equals($valid[0], $token) || hash_equals($valid[1], $token);
     }
 
     /** Сброс cookie refreshToken */

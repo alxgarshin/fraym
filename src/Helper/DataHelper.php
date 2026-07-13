@@ -305,6 +305,16 @@ abstract class DataHelper implements Helper
         return rtrim(strtr(base64_encode($str), '+/', '-_'), '=');
     }
 
+    /** Base64Url расшифровка строки (обратная base64UrlEncode); null при некорректном вводе */
+    public static function base64UrlDecode(string $str): ?string
+    {
+        $base64 = strtr($str, '-_', '+/');
+        $padded = str_pad($base64, intdiv(strlen($base64) + 3, 4) * 4, '=', STR_PAD_RIGHT);
+        $decoded = base64_decode($padded, true);
+
+        return $decoded === false ? null : $decoded;
+    }
+
     /** Поиск по ключу в массиве вида [name, value] */
     public static function getFlatArrayElement(int|string|array $needle, array $haystack): ?array
     {
