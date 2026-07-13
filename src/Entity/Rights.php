@@ -37,7 +37,7 @@ class Rights
             if ($defaultValue instanceof RightsRestrict) {
                 $service = $this->service;
 
-                if (!$defaultValue->serviceCheck && $defaultValue->query && method_exists($service, $defaultValue->query)) {
+                if (!$defaultValue->serviceCheck && $defaultValue->query && !is_null($service) && method_exists($service, $defaultValue->query)) {
                     $serviceQuery = $service->{$defaultValue->query}();
 
                     if (is_string($serviceQuery)) {
@@ -75,7 +75,7 @@ class Rights
             if ($defaultValue instanceof RightsRestrict) {
                 $service = $this->service;
 
-                if (!$defaultValue->serviceCheck && $defaultValue->query && method_exists($service, $defaultValue->query)) {
+                if (!$defaultValue->serviceCheck && $defaultValue->query && !is_null($service) && method_exists($service, $defaultValue->query)) {
                     $serviceQuery = $service->{$defaultValue->query}();
 
                     if (is_string($serviceQuery)) {
@@ -113,7 +113,7 @@ class Rights
             if ($defaultValue instanceof RightsRestrict) {
                 $service = $this->service;
 
-                if (!$defaultValue->serviceCheck && $defaultValue->query && method_exists($service, $defaultValue->query)) {
+                if (!$defaultValue->serviceCheck && $defaultValue->query && !is_null($service) && method_exists($service, $defaultValue->query)) {
                     $serviceQuery = $service->{$defaultValue->query}();
 
                     if (is_string($serviceQuery)) {
@@ -150,7 +150,7 @@ class Rights
                 $defaultValue = $this->viewRight;
                 $service = $this->service;
 
-                if (is_string($defaultValue) && method_exists($service, $defaultValue)) {
+                if (is_string($defaultValue) && !is_null($service) && method_exists($service, $defaultValue)) {
                     $defaultValue = $service->{$defaultValue}();
                 }
 
@@ -173,7 +173,7 @@ class Rights
                 $defaultValue = $this->addRight;
                 $service = $this->service;
 
-                if (is_string($defaultValue) && method_exists($service, $defaultValue)) {
+                if (is_string($defaultValue) && !is_null($service) && method_exists($service, $defaultValue)) {
                     $defaultValue = $service->{$defaultValue}();
                 }
 
@@ -188,7 +188,7 @@ class Rights
                 $defaultValue = $this->changeRight;
                 $service = $this->service;
 
-                if (is_string($defaultValue) && method_exists($service, $defaultValue)) {
+                if (is_string($defaultValue) && !is_null($service) && method_exists($service, $defaultValue)) {
                     $defaultValue = $service->{$defaultValue}();
                 }
 
@@ -203,7 +203,7 @@ class Rights
                 $defaultValue = $this->deleteRight;
                 $service = $this->service;
 
-                if (is_string($defaultValue) && method_exists($service, $defaultValue)) {
+                if (is_string($defaultValue) && !is_null($service) && method_exists($service, $defaultValue)) {
                     $defaultValue = $service->{$defaultValue}();
                 }
 
