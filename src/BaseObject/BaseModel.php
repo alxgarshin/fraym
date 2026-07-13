@@ -148,6 +148,38 @@ abstract class BaseModel
         return $this->modelData[$elementName] ?? null;
     }
 
+    /** Резолвит строковый коллбек по имени метода: сперва сервис CMSVC, затем сама модель.
+     * Не-строка возвращается как есть. Строка, не соответствующая ни методу сервиса, ни методу
+     * модели, — вероятная опечатка в имени коллбека: в DEV бросает исключение (ловит тихие
+     * баги), иначе логирует и возвращает строку как литерал (сохраняя прежнее поведение).
+     * Null-safe по сервису: модуль без сервиса резолвит коллбек по методу модели без TypeError. */
+    private function resolveCallback(mixed $value): mixed
+    {
+        if (!is_string($value)) {
+            return $value;
+        }
+
+        $service = $this->CMSVC->service;
+
+        if (!is_null($service) && method_exists($service, $value)) {
+            return $service->{$value}();
+        }
+
+        if (method_exists($this, $value)) {
+            return $this->{$value}();
+        }
+
+        $message = 'resolveCallback: method "' . $value . '" not found on service or model ' . static::class . ' (probable typo)';
+
+        if (($_ENV['APP_ENV'] ?? '') === 'DEV') {
+            throw new RuntimeException($message);
+        }
+
+        error_log($message);
+
+        return $value;
+    }
+
     public function initElement(
         ElementItem|string $elementOrElementName,
         ?string $className = null,
@@ -156,8 +188,6 @@ abstract class BaseModel
         ?Attribute\OnChange $change = null,
         ?BaseEntity $alternativeEntity = null,
     ): ?ElementItem {
-        $service = $this->CMSVC->service;
-
         if ($elementOrElementName instanceof ElementItem) {
             $elementName = $elementOrElementName->name;
             $attribute = $elementOrElementName->getAttribute();
@@ -233,26 +263,12 @@ abstract class BaseModel
                 }
 
                 if (is_null($values)) {
-                    $values = $property->getValues();
-
-                    if (is_string($values) && method_exists($service, $values)) {
-                        $values = $service->{$values}();
-                    } elseif (is_string($values) && method_exists($this, $values)) {
-                        $values = $this->{$values}();
-                    }
+                    $values = $this->resolveCallback($property->getValues());
                 }
 
                 $property->getAttribute()->values = $values;
 
-                $locked = $property->getAttribute()->locked;
-
-                if (is_string($locked) && method_exists($service, $locked)) {
-                    $locked =  $service->{$locked}();
-                } elseif (is_string($locked) && method_exists($this, $locked)) {
-                    $locked =  $this->{$locked}();
-                }
-
-                $property->getAttribute()->locked = $locked;
+                $property->getAttribute()->locked = $this->resolveCallback($property->getAttribute()->locked);
             }
 
             if (method_exists($property, 'getCreator')) {
@@ -261,33 +277,23 @@ abstract class BaseModel
 
                 if (!is_null($multiselectCreatorAdditionalData)) {
                     foreach ($multiselectCreatorAdditionalData as $multiselectCreatorAdditionalName => $multiselectCreatorAdditionalItem) {
-                        if (is_string($multiselectCreatorAdditionalItem) && method_exists($service, $multiselectCreatorAdditionalItem)) {
-                            $multiselectCreatorAdditionalData[$multiselectCreatorAdditionalName] = $service->{$multiselectCreatorAdditionalItem}();
-                        } elseif (is_string($multiselectCreatorAdditionalItem) && method_exists($this, $multiselectCreatorAdditionalItem)) {
-                            $multiselectCreatorAdditionalData[$multiselectCreatorAdditionalName] = $this->{$multiselectCreatorAdditionalItem}();
-                        }
+                        $multiselectCreatorAdditionalData[$multiselectCreatorAdditionalName] = $this->resolveCallback($multiselectCreatorAdditionalItem);
                     }
                     $property->getCreator()->setAdditional($multiselectCreatorAdditionalData);
                 }
             }
 
             if ($property instanceof Item\Multiselect) {
-                $images = $property->getAttribute()->images;
-
-                if (is_string($images) && method_exists($service, $images)) {
-                    $property->getAttribute()->images = $service->{$images}();
-                } elseif (is_string($images) && method_exists($this, $images)) {
-                    $property->getAttribute()->images = $this->{$images}();
-                }
+                $property->getAttribute()->images = $this->resolveCallback($property->getAttribute()->images);
             }
 
-            $context = $property->getAttribute()->context;
+            $rawContext = $property->getAttribute()->context;
+            $context = $this->resolveCallback($rawContext);
 
-            if (is_string($context) && method_exists($service, $context)) {
-                $context = $service->{$context}();
-            } elseif (is_string($context) && method_exists($this, $context)) {
-                $context = $this->{$context}();
-            } elseif (!is_array($context) || count($context) === 0) {
+            /* default-контекст генерируется только если контекст не задан валидным способом:
+               resolveCallback вернул исходную строку-литерал (опечатка, prod) либо контекст пуст/не массив.
+               строка-метод, вернувшая массив (в т.ч. пустой), проходит как есть — поведение сохранено. */
+            if ($context === $rawContext && (!is_array($context) || count($context) === 0)) {
                 $objectName = ObjectsHelper::getClassShortNameFromCMSVCObject($this);
                 $propertiesWithListContext = $this->CMSVC->view->propertiesWithListContext;
 
