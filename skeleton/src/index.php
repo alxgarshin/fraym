@@ -138,17 +138,22 @@ if ($RESPONSE_DATA instanceof ArrayResponse) {
         $RESPONSE_RESULT = preg_replace('#<!--maincontent-->#', DataHelper::pregQuoteReplaced($RESPONSE_DATA->getHtml()), $RESPONSE_TEMPLATE);
 
         /** Добавляем сообщения-нотификации и CSRF-токен */
-        $messageArray = '<script>
-    window["messages"] = defaultFor(window["messages"], []);';
+        $messagesPairs = [];
 
         if ($cookieMessages) {
             foreach ($cookieMessages as $message) {
-                $messageArray .= 'messages.push(Array("' . $message[0] . '","' . str_replace('"', '\"', $message[1]) . '"));';
+                $messagesPairs[] = [$message[0], $message[1]];
             }
         }
 
+        /** JSON_HEX_* экранируют < > & ' " → безопасно внутри <script> (не разорвать тег/строку) */
+        $jsonFlags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE;
+
+        $messageArray = '<script>
+    window["messages"] = defaultFor(window["messages"], []).concat(' . (json_encode($messagesPairs, $jsonFlags) ?: '[]') . ');';
+
         if (CURRENT_USER->isLogged()) {
-            $messageArray .= 'window["csrfToken"] = "' . AuthHelper::generateCsrfToken() . '";';
+            $messageArray .= 'window["csrfToken"] = ' . (json_encode(AuthHelper::generateCsrfToken(), $jsonFlags) ?: '""') . ';';
         }
 
         $messageArray .= '</script>';
