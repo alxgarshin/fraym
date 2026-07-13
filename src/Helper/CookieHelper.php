@@ -88,38 +88,65 @@ abstract class CookieHelper implements Helper
         ];
     }
 
-    /** Получение текущих cookie из header'а */
+    /** Получение текущих cookie из header'а.
+     * Разбирает сырую строку Set-Cookie вручную: имена с точками/пробелами не искажаются
+     * (в отличие от parse_str), при повторной установке в рамках запроса берётся последнее значение. */
     private static function getCookiesFromHeaders(): array
     {
         $cookies = [];
-        $headers = headers_list();
 
-        foreach ($headers as $header) {
-            if (str_starts_with($header, 'Set-Cookie: ')) {
-                $value = str_replace('&', urlencode('&'), substr($header, 12));
-                parse_str(current(explode(';', $value, 2)), $pair);
-
-                if (!in_array('deleted', $pair)) {
-                    $cookies = array_merge_recursive($cookies, $pair);
-                }
+        foreach (headers_list() as $header) {
+            if (!str_starts_with($header, 'Set-Cookie: ')) {
+                continue;
             }
+
+            $nameValue = current(explode(';', substr($header, 12), 2));
+            $parts = explode('=', $nameValue, 2);
+
+            if (count($parts) !== 2) {
+                continue;
+            }
+
+            $name = trim($parts[0]);
+            $value = urldecode(trim($parts[1]));
+
+            if ($value === 'deleted') {
+                continue;
+            }
+
+            $cookies[$name] = $value;
         }
 
         return $cookies;
     }
 
-    /** Удаление определенной cookie из headers */
-    private static function deleteCookieFromHeaders(string $cookieKey, ?string $samesite = null): void
+    /** Удаление определённой cookie из headers с сохранением исходных опций остальных.
+     * Работает с сырыми строками Set-Cookie: удаляет только целевую, остальные re-emit'ит
+     * как есть (не теряя их expires/samesite/domain, в отличие от перевыставления через setcookie). */
+    private static function deleteCookieFromHeaders(string $cookieKey): void
     {
-        $cookies = self::getCookiesFromHeaders();
+        $preserved = [];
+        $found = false;
 
-        if ($cookies[$cookieKey] ?? false) {
+        foreach (headers_list() as $header) {
+            if (!str_starts_with($header, 'Set-Cookie: ')) {
+                continue;
+            }
+
+            $name = trim(explode('=', substr($header, 12), 2)[0]);
+
+            if ($name === $cookieKey) {
+                $found = true;
+            } else {
+                $preserved[] = $header;
+            }
+        }
+
+        if ($found) {
             header_remove('Set-Cookie');
 
-            foreach ($cookies as $cookieName => $cookieValue) {
-                if ($cookieName !== $cookieKey) {
-                    setcookie($cookieName, $cookieValue, CookieHelper::getOptions(null, $samesite));
-                }
+            foreach ($preserved as $header) {
+                header($header, false);
             }
         }
     }
