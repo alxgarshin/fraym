@@ -62,6 +62,11 @@ class Select extends BaseElement implements HasDefaultValue
 
         /** Механизм динамического поиска списка значений на основе ввода пользователя */
         public ?BaseHelper $helper = null,
+
+        /** Legacy-поиск по устаревшему dash-формату (`-v1-v2-`) в дополнение к JSON — для virtualField,
+         *  где dash встречался. По умолчанию false: фильтры генерируют только JSON-условия.
+         *  Ставить true только при наличии старых dash-данных (`database:scan-multiselect-formats`). */
+        public bool $legacySearch = false,
         ?bool $obligatory = null,
         ?string $helpClass = null,
         ?int $group = null,

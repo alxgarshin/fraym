@@ -91,6 +91,12 @@ class Multiselect extends BaseElement implements HasDefaultValue
 
         /** Механизм пополнения списка путем вписания нового объекта в имеющуюся связанную таблицу */
         public ?MultiselectCreator $creator = null,
+
+        /** Legacy-поиск по устаревшему dash-формату (`-v1-v2-`) в дополнение к JSON.
+         *  По умолчанию false: фильтры генерируют только быстрые JSON-условия. Ставить true
+         *  только для полей, у которых в БД остались старые dash-данные
+         *  (проверить командой `database:scan-multiselect-formats`). */
+        public bool $legacySearch = false,
         ?bool $obligatory = null,
         ?string $helpClass = null,
         ?int $group = null,
