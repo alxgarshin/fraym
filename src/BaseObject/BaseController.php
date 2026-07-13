@@ -102,7 +102,7 @@ abstract class BaseController
                 }
             } elseif (ACTION === ActionEnum::clearFilters) {
                 $this->entity->filters->clearEntityFiltersData();
-                $this->service->postClearFilters();
+                $this->service?->postClearFilters();
                 ResponseHelper::redirect(ResponseHelper::redirectConstruct());
             } elseif (!is_null(ACTION) && method_exists($this, ACTION)) {
                 $action = ACTION;
