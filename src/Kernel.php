@@ -56,9 +56,18 @@ class Kernel
         define('ABSOLUTE_PATH', $_ENV['ABSOLUTE_PATH']);
         define('ACTION', ActionEnum::init());
         define('ACT', !is_null($_REQUEST['act'] ?? null) ? ActEnum::tryFrom($_REQUEST['act']) : null);
-        define('KIND', $_REQUEST['kind'] ?? $_ENV['STARTING_KIND']);
+        $kind = $_REQUEST['kind'] ?? $_ENV['STARTING_KIND'];
+
+        if (!is_string($kind) || !preg_match('/^[a-zA-Z][a-zA-Z0-9_]{0,64}$/', $kind)) {
+            $kind = $_ENV['STARTING_KIND'];
+        }
+        define('KIND', $kind);
 
         $cmsvc = $_REQUEST['cmsvc'] ?? KIND;
+
+        if (!is_string($cmsvc) || !preg_match('/^[a-zA-Z][a-zA-Z0-9_]{0,64}$/', $cmsvc)) {
+            $cmsvc = KIND;
+        }
         $id = ($_REQUEST['id'] ?? false) ? (is_array($_REQUEST['id']) ? $_REQUEST['id'] : [!is_numeric($_REQUEST['id']) ? $_REQUEST['id'] : (int) $_REQUEST['id']]) : null;
 
         if (($id[0] ?? '') === KIND) {
@@ -70,7 +79,12 @@ class Kernel
         define('ID', $id);
         define('PAGE', (int) ($_REQUEST['page'] ?? 0));
         define('SORTING', (int) ($_REQUEST['sorting'] ?? 0));
-        define('OBJ_TYPE', $_REQUEST['obj_type'] ?? null);
+        $objType = $_REQUEST['obj_type'] ?? null;
+
+        if (!is_null($objType) && (!is_string($objType) || !preg_match('/^[a-zA-Z0-9_{}.\-]{1,66}$/', $objType))) {
+            $objType = null;
+        }
+        define('OBJ_TYPE', $objType);
         $objId = ($_REQUEST['obj_id'] ?? false) ? (is_array($_REQUEST['obj_id']) ? $_REQUEST['obj_id'][0] : $_REQUEST['obj_id']) : null;
         define('OBJ_ID', is_numeric($objId) ? (int) $objId : $objId);
 
