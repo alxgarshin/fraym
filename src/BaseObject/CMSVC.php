@@ -223,10 +223,10 @@ final class CMSVC
             $modelInstance->modelData = $data;
 
             if (is_null($id)) {
-                /** Находим самый большой ключ с частью "mockModel_" */
+                /** Находим самый большой ключ с частью "mockModel_" и берём следующий за ним */
                 $modelInstancesForModel = CACHE->getFromCache('_MODELINSTANCES', null, $modelClass);
                 $modelInstancesKeys = array_keys($modelInstancesForModel ?? []);
-                $highestKey = 0;
+                $highestKey = -1;
 
                 foreach ($modelInstancesKeys as $modelInstancesKey) {
                     unset($match);
@@ -237,7 +237,7 @@ final class CMSVC
                         }
                     }
                 }
-                $id = 'mockModel_' . $highestKey;
+                $id = 'mockModel_' . ($highestKey + 1);
             }
 
             if (!$model->isConstructing) {
