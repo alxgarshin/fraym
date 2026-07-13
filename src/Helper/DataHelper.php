@@ -234,18 +234,88 @@ abstract class DataHelper implements Helper
         return $protocol . '://' . $_SERVER['SERVER_NAME'] . $port . $_SERVER['REQUEST_URI'];
     }
 
-    /** Получение "реального" IP пользователя */
+    /** Получение "реального" IP пользователя.
+     * X-Forwarded-For принимается ТОЛЬКО если запрос пришёл через доверенный прокси
+     * (REMOTE_ADDR входит в TRUSTED_PROXIES); иначе — REMOTE_ADDR. Защита от IP-spoofing. */
     public static function getRealIp(): string
     {
-        if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-            $ip = $_SERVER['HTTP_CLIENT_IP'];
-        } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-            $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-        } else {
-            $ip = $_SERVER['REMOTE_ADDR'];
+        $remoteAddr = $_SERVER['REMOTE_ADDR'] ?? '';
+
+        if (self::isTrustedProxy($remoteAddr) && !empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            /** X-Forwarded-For: client, proxy1, ... — самый левый адрес это исходный клиент */
+            $clientIp = trim(explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'])[0]);
+
+            if (filter_var($clientIp, FILTER_VALIDATE_IP) !== false) {
+                return $clientIp;
+            }
         }
 
-        return $ip;
+        return $remoteAddr;
+    }
+
+    /** Входит ли IP в список доверенных прокси (TRUSTED_PROXIES — CSV из CIDR или одиночных IP) */
+    private static function isTrustedProxy(string $ip): bool
+    {
+        $trusted = $_ENV['TRUSTED_PROXIES'] ?? '';
+
+        if (!is_string($trusted) || $trusted === '' || $ip === '') {
+            return false;
+        }
+
+        foreach (explode(',', $trusted) as $cidr) {
+            $cidr = trim($cidr);
+
+            if ($cidr !== '' && self::ipInCidr($ip, $cidr)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** Проверка вхождения IP в CIDR-подсеть (IPv4 и IPv6 — через inet_pton, побитовое сравнение) */
+    private static function ipInCidr(string $ip, string $cidr): bool
+    {
+        if (!str_contains($cidr, '/')) {
+            return $ip === $cidr;
+        }
+
+        [$subnet, $maskBitsRaw] = explode('/', $cidr, 2);
+
+        if (filter_var($ip, FILTER_VALIDATE_IP) === false || filter_var($subnet, FILTER_VALIDATE_IP) === false) {
+            return false;
+        }
+
+        $ipBin = inet_pton($ip);
+        $subnetBin = inet_pton($subnet);
+
+        if ($ipBin === false || $subnetBin === false || strlen($ipBin) !== strlen($subnetBin)) {
+            /** разные семейства адресов (IPv4 против IPv6) */
+            return false;
+        }
+
+        $maskBits = (int) $maskBitsRaw;
+
+        if ($maskBits < 0 || $maskBits > strlen($ipBin) * 8) {
+            return false;
+        }
+
+        $fullBytes = intdiv($maskBits, 8);
+        $remainingBits = $maskBits % 8;
+
+        if ($fullBytes > 0 && strncmp($ipBin, $subnetBin, $fullBytes) !== 0) {
+            return false;
+        }
+
+        if ($remainingBits > 0) {
+            $mask = ~(0xFF >> $remainingBits) & 0xFF;
+
+            if ((ord($ipBin[$fullBytes]) & $mask) !== (ord($subnetBin[$fullBytes]) & $mask)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /** preg_quote заменяемого preg_replace контента */
