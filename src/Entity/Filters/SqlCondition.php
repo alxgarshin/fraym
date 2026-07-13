@@ -24,9 +24,15 @@ final class SqlCondition
     /** @var array<int, array{0: string, 1: mixed}> */
     private array $params = [];
 
+    /** $placeholderPrefix различает наборы плейсхолдеров, попадающие в ОДИН запрос
+     *  (фильтры и restrict-права мержатся вместе — иначе :f_0 столкнулись бы). */
+    public function __construct(private string $placeholderPrefix = 'f')
+    {
+    }
+
     public function bind(mixed $value): string
     {
-        $name = 'f_' . $this->counter++;
+        $name = $this->placeholderPrefix . '_' . $this->counter++;
         $this->params[] = [$name, $value];
 
         return ':' . $name;

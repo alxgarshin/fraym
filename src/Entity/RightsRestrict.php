@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Fraym\Entity;
 
+use Fraym\Entity\Filters\SqlCondition;
+
 /** DTO ограничения прав доступа */
 final class RightsRestrict
 {
@@ -25,6 +27,11 @@ final class RightsRestrict
 
         /** Признак проверки получения ограничения из одноименной функции в сервисе */
         public bool $serviceCheck = false,
+
+        /** Ограничение в формате constructWhere (['field' => value] / [['field', value]]).
+         *  Предпочтительнее строкового query: алиас таблицы навешивается декларативно, без regex,
+         *  ломающегося на JOIN/подзапросах. При заданном criteria строковый query игнорируется. */
+        public array $criteria = [],
     ) {
         if ($this->query && $this->params) {
             preg_match_all('/:[a-zA-Z0-9_]+/', $this->query, $matches);
@@ -33,6 +40,25 @@ final class RightsRestrict
 
             $this->params = $this->normalizeAndCleanParams($this->params, $expectedKeys);
         }
+    }
+
+    /** WHERE-фрагмент и параметры с учётом префикса таблицы (напр. 't1.').
+     * @return array{0: string, 1: array} */
+    public function getWhere(string $prefix = ''): array
+    {
+        if ($this->criteria !== []) {
+            return $this->buildSqlFromCriteria($prefix);
+        }
+
+        $query = $this->query;
+
+        if ($prefix !== '' && $query !== '') {
+            /** @deprecated regex-навешивание алиаса — ломается на JOIN/подзапросах; используйте criteria */
+            $query = preg_replace('# (and|or) (\(?)#i', ' $1 $2' . $prefix, $query);
+            $query = preg_replace('#^(\(?)#', '$1' . $prefix, $query);
+        }
+
+        return [$query ?? '', $this->params];
     }
 
     /** Очищает и нормализует массив параметров
@@ -72,5 +98,25 @@ final class RightsRestrict
         }
 
         return $cleaned;
+    }
+
+    /** @return array{0: string, 1: array} */
+    private function buildSqlFromCriteria(string $prefix): array
+    {
+        $cond = new SqlCondition('r');
+        $parts = [];
+
+        foreach ($this->criteria as $key => $value) {
+            if (is_string($key)) {
+                $field = $prefix . $key;
+                $parts[] = is_null($value) ? $field . ' IS NULL' : $cond->eq($field, $value);
+            } elseif (is_array($value)) {
+                $field = $prefix . $value[0];
+                $fieldValue = $value[1] ?? null;
+                $parts[] = is_null($fieldValue) ? $field . ' IS NULL' : $cond->eq($field, $fieldValue);
+            }
+        }
+
+        return [implode(' AND ', $parts), $cond->getParams()];
     }
 }

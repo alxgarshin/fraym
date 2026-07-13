@@ -430,9 +430,10 @@ abstract class BaseEntity
 
                         if (!is_null($id)) {
                             if (!is_null($objectRights->changeRestrict)) {
+                                [$restrictSql, $restrictParams] = $objectRights->changeRestrict->getWhere();
                                 $result = DB->query(
-                                    'SELECT * FROM ' . DB->dbType->quoteIdentifier($this->table) . ' WHERE ' . $objectRights->changeRestrict->query . ' AND id=:id',
-                                    array_merge($objectRights->changeRestrict->params, [['id', $id]]),
+                                    'SELECT * FROM ' . DB->dbType->quoteIdentifier($this->table) . ' WHERE ' . $restrictSql . ' AND id=:id',
+                                    array_merge($restrictParams, [['id', $id]]),
                                     true,
                                 );
                             } else {
@@ -519,9 +520,10 @@ abstract class BaseEntity
                 foreach ($arrayOfIds as $key => $id) {
                     if (!is_null($id)) {
                         if (!is_null($objectRights->deleteRestrict)) {
+                            [$restrictSql, $restrictParams] = $objectRights->deleteRestrict->getWhere();
                             $result = DB->query(
-                                'SELECT * FROM ' . DB->dbType->quoteIdentifier($this->table) . ' WHERE ' . $objectRights->deleteRestrict->query . ' AND id=:id',
-                                array_merge($objectRights->deleteRestrict->params, [['id', $id]]),
+                                'SELECT * FROM ' . DB->dbType->quoteIdentifier($this->table) . ' WHERE ' . $restrictSql . ' AND id=:id',
+                                array_merge($restrictParams, [['id', $id]]),
                                 true,
                             );
                         } else {
@@ -650,15 +652,10 @@ abstract class BaseEntity
                 $preparedViewRestrictSqlQuery = null;
 
                 if (!is_null($viewRestrict)) {
-                    $preparedViewRestrictSqlQuery = preg_replace(
-                        '# (and|or) (\(?)#i',
-                        ' $1 $2' . $mainTablePrefix,
-                        $viewRestrict->query,
-                    );
-                    $preparedViewRestrictSqlQuery = preg_replace('#^(\(?)#', '$1' . $mainTablePrefix, $preparedViewRestrictSqlQuery);
-                    $preparedViewRestrictSqlQuery = " WHERE " . $preparedViewRestrictSqlQuery;
+                    [$restrictSql, $restrictParams] = $viewRestrict->getWhere($mainTablePrefix);
+                    $preparedViewRestrictSqlQuery = " WHERE " . $restrictSql;
 
-                    $QUERY_PARAMS = array_merge($QUERY_PARAMS, $viewRestrict->params);
+                    $QUERY_PARAMS = array_merge($QUERY_PARAMS, $restrictParams);
                 }
 
                 [$ORDER, $leftJoinedTablesSql, $leftJoinedFieldsSql] = $this->getOrderString($this->sortingData, $mainTablePrefix);
@@ -860,9 +857,10 @@ abstract class BaseEntity
                         $modelRights->deleteRight = false;
                     } else {
                         if (in_array($act, [ActEnum::view, ActEnum::edit]) && !is_null($modelRights->viewRestrict)) {
+                            [$restrictSql, $restrictParams] = $modelRights->viewRestrict->getWhere();
                             $viewCheckData = DB->query(
-                                'SELECT * FROM ' . DB->dbType->quoteIdentifier($this->table) . ' WHERE id=:id AND ' . $modelRights->viewRestrict->query,
-                                array_merge($modelRights->viewRestrict->params, [['id', $id]]),
+                                'SELECT * FROM ' . DB->dbType->quoteIdentifier($this->table) . ' WHERE id=:id AND ' . $restrictSql,
+                                array_merge($restrictParams, [['id', $id]]),
                                 true,
                             );
 
@@ -872,9 +870,10 @@ abstract class BaseEntity
                         }
 
                         if (in_array($act, [ActEnum::edit]) && !is_null($modelRights->changeRestrict)) {
+                            [$restrictSql, $restrictParams] = $modelRights->changeRestrict->getWhere();
                             $changeCheckData = DB->query(
-                                'SELECT * FROM ' . DB->dbType->quoteIdentifier($this->table) . ' WHERE id=:id AND ' . $modelRights->changeRestrict->query,
-                                array_merge($modelRights->changeRestrict->params, [['id', $id]]),
+                                'SELECT * FROM ' . DB->dbType->quoteIdentifier($this->table) . ' WHERE id=:id AND ' . $restrictSql,
+                                array_merge($restrictParams, [['id', $id]]),
                                 true,
                             );
 
@@ -884,9 +883,10 @@ abstract class BaseEntity
                         }
 
                         if (in_array($act, [ActEnum::edit]) && !is_null($modelRights->deleteRestrict)) {
+                            [$restrictSql, $restrictParams] = $modelRights->deleteRestrict->getWhere();
                             $deleteCheckData = DB->query(
-                                'SELECT * FROM ' . DB->dbType->quoteIdentifier($this->table) . ' WHERE id=:id AND ' . $modelRights->deleteRestrict->query,
-                                array_merge($modelRights->deleteRestrict->params, [['id', $id]]),
+                                'SELECT * FROM ' . DB->dbType->quoteIdentifier($this->table) . ' WHERE id=:id AND ' . $restrictSql,
+                                array_merge($restrictParams, [['id', $id]]),
                                 true,
                             );
 
