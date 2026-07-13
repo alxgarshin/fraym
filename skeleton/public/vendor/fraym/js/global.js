@@ -3057,7 +3057,7 @@ window.fetch = new Proxy(window.fetch, {
 });
 
 /** Функция проверки подгруженности элемента данных */
-function dataElementLoad(dataName, element, loadingFunction, loadedFunction, options, dataElementCategory) {
+function dataElementLoad(dataName, element, loadingFunction, loadedFunction, options, dataElementCategory, attempt) {
     if (
         dataName === undefined ||
         element === undefined ||
@@ -3068,6 +3068,7 @@ function dataElementLoad(dataName, element, loadingFunction, loadedFunction, opt
     }
 
     dataElementCategory = defaultFor(dataElementCategory, 'libraries');
+    attempt = defaultFor(attempt, 0);
 
     if (dataLoaded[dataElementCategory][dataName] === undefined) {
         dataLoaded[dataElementCategory][dataName] = false;
@@ -3075,9 +3076,15 @@ function dataElementLoad(dataName, element, loadingFunction, loadedFunction, opt
     }
 
     if (dataLoaded[dataElementCategory][dataName] === false) {
+        if (attempt >= 100) {
+            console.error(`dataElementLoad: timeout loading "${dataName}" (${dataElementCategory}) — script did not load`);
+
+            return;
+        }
+
         delay(50)
             .then(() => {
-                dataElementLoad(dataName, element, loadingFunction, loadedFunction, options, dataElementCategory);
+                dataElementLoad(dataName, element, loadingFunction, loadedFunction, options, dataElementCategory, attempt + 1);
             });
     } else if (dataLoaded[dataElementCategory][dataName] === true) {
         loadedFunction.call(element, options);
