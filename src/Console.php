@@ -143,7 +143,7 @@ class Console
             $databaseUser = $_ENV['DATABASE_USER'];
             $databasePassword = $_ENV['DATABASE_PASSWORD'];
             $_ENV['DATABASE_USER'] = $dbType->getRootUser();
-            $_ENV['DATABASE_PASSWORD'] = 'secret';
+            $_ENV['DATABASE_PASSWORD'] = $_ENV['DATABASE_ROOT_PASSWORD'] ?? 'secret';
 
             define("ROOT_DB", SQLDatabaseService::forceCreate());
 
