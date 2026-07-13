@@ -3277,13 +3277,21 @@ function actionRequest(params, target) {
         }
 
         if (jsonData['response'] === 'success') {
-            actionRequestCallbacks.success[params.action](jsonData, params, target);
+            if (typeof actionRequestCallbacks.success[params.action] === 'function') {
+                actionRequestCallbacks.success[params.action](jsonData, params, target);
+            } else {
+                console.warn('actionRequest: no success callback for action "' + params.action + '"');
+            }
         } else {
             if (!actionRequestSupressErrorForActions.includes(params.action) && navigator.onLine) {
                 showMessageFromJsonData(jsonData);
             }
 
-            actionRequestCallbacks.error[params.action](jsonData, params, target);
+            if (typeof actionRequestCallbacks.error[params.action] === 'function') {
+                actionRequestCallbacks.error[params.action](jsonData, params, target);
+            } else {
+                console.warn('actionRequest: no error callback for action "' + params.action + '"');
+            }
         }
     }).catch(function (error) {
         if (el('div.fullpage_cover')) {
@@ -3301,7 +3309,9 @@ function actionRequest(params, target) {
             });
         }
 
-        actionRequestCallbacks.error[params.action](null, params, target, error);
+        if (typeof actionRequestCallbacks.error[params.action] === 'function') {
+            actionRequestCallbacks.error[params.action](null, params, target, error);
+        }
     });
 
     if (params.dynamicForm && target) {
