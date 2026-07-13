@@ -822,7 +822,7 @@ final class Filters
         }
 
         if ($textFieldsExistInSearch) {
-            $filterBlock = @$filtersBlocks[] = new FiltersBlock();
+            $filterBlock = $filtersBlocks[] = new FiltersBlock();
 
             $createdItem = $filterBlock->addFiltersViewItem(new Item\Text());
             $createdItem->name = 'searchAllTextFields';
@@ -864,7 +864,7 @@ final class Filters
                     $modelItem instanceof Item\Password
                 )
             ) {
-                $filterBlock = @$filtersBlocks[] = new FiltersBlock();
+                $filterBlock = $filtersBlocks[] = new FiltersBlock();
                 $filterBlock->addModelItem($modelItem);
 
                 $searchFieldName = 'search' . ($modelItem->entity instanceof CatalogItemEntity ? '2' : '') . '_' . $modelItem->name;
