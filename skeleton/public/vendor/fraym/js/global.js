@@ -2724,7 +2724,6 @@ function updateState(newHref, replacedDiv, form) {
             } else {
                 //хэш точно такой же, значит, где-то баг с управлением историей
                 console.error('popStateChanging, но хэш не изменился');
-                console.trace();
             }
         } else {
             if ("pushState" in history) {
@@ -3290,14 +3289,8 @@ function actionRequest(params, target) {
         data = params;
     }
 
-    let headers = {};
-    if (jwtToken != '') {
-        headers.Authorization = 'Bearer ' + jwtToken;
-    }
-
     fetchData(url, {
         method: 'POST',
-        headers: headers,
         json: true
     }, data).then(function (jsonData) {
         if (el('div.fullpage_cover')) {
