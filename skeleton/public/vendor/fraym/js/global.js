@@ -30,6 +30,7 @@ let doDropfieldRefresh = true;
 let doSubmit = false;
 let blockDefaultSubmit = false;
 let popStateChanging = false;
+let navigationToken = 0;
 let currentHref = document.location.href;
 let hrefAfterModalClose = null;
 const filesDirProtectRegexp = document.location.protocol + '//' + document.location.hostname + '/uploads/';
@@ -2757,12 +2758,15 @@ function updateState(newHref, replacedDiv, form) {
 
                 showExecutionTime('updateState before request');
 
+                const thisNavigation = ++navigationToken;
+
                 fetchData(link, { method: (doSubmit ? 'POST' : 'GET'), json: true }, data).then(result => {
                     showExecutionTime('updateState beginning of success');
 
-                    /** Валидация ответа ДО любой мутации DOM/истории: fetchData на !ok или сетевой
-                     *  ошибке возвращает Response-заглушку (status 0) без html/redirect. Если это не
-                     *  корректный payload — уходим в .catch, сохраняя старый контент (без «белого экрана»). */
+                    if (thisNavigation !== navigationToken) {
+                        return false;
+                    }
+
                     const hasHtml = typeof result?.html === 'string';
                     const hasRedirect = typeof result?.redirect === 'string' && result.redirect !== '';
 
