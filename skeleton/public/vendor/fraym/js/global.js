@@ -2760,6 +2760,16 @@ function updateState(newHref, replacedDiv, form) {
                 fetchData(link, { method: (doSubmit ? 'POST' : 'GET'), json: true }, data).then(result => {
                     showExecutionTime('updateState beginning of success');
 
+                    /** Валидация ответа ДО любой мутации DOM/истории: fetchData на !ok или сетевой
+                     *  ошибке возвращает Response-заглушку (status 0) без html/redirect. Если это не
+                     *  корректный payload — уходим в .catch, сохраняя старый контент (без «белого экрана»). */
+                    const hasHtml = typeof result?.html === 'string';
+                    const hasRedirect = typeof result?.redirect === 'string' && result.redirect !== '';
+
+                    if (!hasHtml && !hasRedirect) {
+                        throw new Error('Invalid navigation response: missing html and redirect');
+                    }
+
                     showMessagesFromJson(result);
 
                     if (result.redirect !== undefined && result.redirect !== '') {
