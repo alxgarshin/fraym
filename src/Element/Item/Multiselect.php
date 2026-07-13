@@ -285,6 +285,11 @@ class Multiselect extends BaseElement
         return $this->getAttribute()->one;
     }
 
+    public function getLegacySearch(): bool
+    {
+        return $this->getAttribute()->legacySearch;
+    }
+
     public function getImages(): ?array
     {
         return $this->getAttribute()->images;

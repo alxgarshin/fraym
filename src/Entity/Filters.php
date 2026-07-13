@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Fraym\Entity;
 
 use Fraym\Element\{Attribute as Attribute, Item as Item};
+use Fraym\Entity\Filters\SqlCondition;
 use Fraym\Enum\ActionEnum;
 use Fraym\Helper\{CookieHelper, DataHelper, LocaleHelper, MultiselectSqlHelper, TextHelper};
 use Fraym\Interface\ElementItem;
@@ -150,7 +151,7 @@ final class Filters
         $dataArray = ($getDataFromCookies ? ($this->getFiltersCookie()[$kind][$entity->name] ?? []) : $_REQUEST);
 
         $searchQuerySql = is_null($entity->view->viewRights->viewRestrict) ? " WHERE" : "";
-        $searchQueryParams = [];
+        $cond = new SqlCondition();
 
         /** Символ-обёртка значения в LIKE-паттерне при поиске внутри JSON-групп */
         $groupFieldsQuerySign = DB->dialect->getGroupFieldQuerySign();
@@ -265,21 +266,20 @@ final class Filters
                                 } elseif (count($allTextFields) > 0) {
                                     if ($modelItem->getVirtual()) {
                                         foreach ($allTextFields as $allTextField) {
-                                            $blockSearchQuerySql .= "LOWER(t1." . $entity->virtualField . ") " . $regexpWord .
-                                                " '\\\[" . mb_strtolower($queryElementName) . "\\\]\\\[[^]]*" . mb_strtolower($allTextField) . "[^]]*\\\]' AND ";
+                                            $blockSearchQuerySql .= "LOWER(t1." . $entity->virtualField . ") " . $regexpWord . " " .
+                                                $cond->bind('\[' . mb_strtolower($queryElementName) . '\]\[[^]]*' . mb_strtolower($allTextField) . '[^]]*\]') . " AND ";
                                         }
                                     } else {
                                         foreach ($allTextFields as $allTextField) {
-                                            $blockSearchQuerySql .= "LOWER(t1." . $queryElementName . ") " . $regexpWord . " '";
-
                                             if ($modelItem->getGroup()) {
                                                 $converted_text = DataHelper::jsonFixedEncode([$allTextField]);
                                                 $converted_text = str_replace(['\\', '"'], '', $converted_text);
-                                                $blockSearchQuerySql .= mb_strtolower($converted_text);
+                                                $regexNeedle = mb_strtolower($converted_text);
                                             } else {
-                                                $blockSearchQuerySql .= mb_strtolower($allTextField);
+                                                $regexNeedle = mb_strtolower($allTextField);
                                             }
-                                            $blockSearchQuerySql .= "' AND ";
+
+                                            $blockSearchQuerySql .= "LOWER(t1." . $queryElementName . ") " . $regexpWord . " " . $cond->bind($regexNeedle) . " AND ";
                                         }
                                     }
                                 }
@@ -345,21 +345,23 @@ final class Filters
                             if ($modelItem->getVirtual()) {
                                 if ($value[0] === 'not_set') {
                                     $blockSearchQuerySql .= " (t1." . $entity->virtualField .
-                                        " LIKE '%[" . $queryElementName . "][]%' OR t1." . $entity->virtualField .
-                                        " NOT LIKE '%[" . $queryElementName . "][%')";
+                                        " LIKE " . $cond->bind('%[' . $queryElementName . '][]%') . " OR t1." . $entity->virtualField .
+                                        " NOT LIKE " . $cond->bind('%[' . $queryElementName . '][%') . ")";
                                 } else {
-                                    $blockSearchQuerySql .= " t1." . $entity->virtualField . " LIKE '%[" . $queryElementName . "][" . $value[0] . "]%'";
+                                    $blockSearchQuerySql .= " " . $cond->like("t1." . $entity->virtualField, '%[' . $queryElementName . '][' . $value[0] . ']%');
                                 }
                             } elseif ($modelItem->getGroup()) {
                                 if ($value[0] === 'not_set') {
                                     $blockSearchQuerySql .= " (t1." . $queryElementName . " IS NULL OR t1." . $queryElementName . "='')";
                                 } else {
-                                    $blockSearchQuerySql .= " t1." . $queryElementName . " LIKE '%" . $groupFieldsQuerySign . $value[0] . $groupFieldsQuerySign . "%'";
+                                    $blockSearchQuerySql .= " " . $cond->like("t1." . $queryElementName, '%' . $groupFieldsQuerySign . $value[0] . $groupFieldsQuerySign . '%');
                                 }
                             } elseif ($value[0] === 'not_set') {
                                 $blockSearchQuerySql .= " (t1." . $queryElementName . " IS NULL OR t1." . $queryElementName . "='')";
+                            } elseif (is_int($value[0])) {
+                                $blockSearchQuerySql .= " (" . $cond->eq("t1." . $queryElementName, $value[0]) . " OR " . $cond->eq("t1." . $queryElementName, (string) $value[0]) . ")";
                             } else {
-                                $blockSearchQuerySql .= " (t1." . $queryElementName . "=" . (is_int($value[0]) ? $value[0] . " OR t1." . $queryElementName . "=" : "") . "'" . $value[0] . "')";
+                                $blockSearchQuerySql .= " (" . $cond->eq("t1." . $queryElementName, $value[0]) . ")";
                             }
                         } elseif ($modelItem instanceof Item\Multiselect) {
                             if (!$firstSearchQuery) {
@@ -388,47 +390,53 @@ final class Filters
 
                             $strippedVal = str_replace('-', '', (string) $value[0]);
 
+                            $legacySearch = $modelItem->getLegacySearch();
+
                             if ($modelItem->getVirtual()) {
                                 if ($value[0] === 'not_set') {
-                                    /** Legacy-форматы пустого значения ([], [-], [--]) + новый JSON-формат [[]] + отсутствие ключа */
-                                    $blockSearchQuerySql .= " (t1." . $entity->virtualField .
-                                        " LIKE '%[" . $queryElementName . "][]%' OR t1." . $entity->virtualField .
-                                        " LIKE '%[" . $queryElementName . "][-]%' OR t1." . $entity->virtualField .
-                                        " LIKE '%[" . $queryElementName . "][--]%' OR t1." . $entity->virtualField .
-                                        " LIKE '%[" . $queryElementName . "][[]]%' OR t1." . $entity->virtualField .
-                                        " NOT LIKE '%[" . $queryElementName . "][%')";
+                                    $notSetParts = [
+                                        "t1." . $entity->virtualField . " LIKE " . $cond->bind('%[' . $queryElementName . '][]%'),
+                                        "t1." . $entity->virtualField . " LIKE " . $cond->bind('%[' . $queryElementName . '][[]]%'),
+                                        "t1." . $entity->virtualField . " NOT LIKE " . $cond->bind('%[' . $queryElementName . '][%'),
+                                    ];
+
+                                    if ($legacySearch) {
+                                        array_splice($notSetParts, 1, 0, [
+                                            "t1." . $entity->virtualField . " LIKE " . $cond->bind('%[' . $queryElementName . '][-]%'),
+                                            "t1." . $entity->virtualField . " LIKE " . $cond->bind('%[' . $queryElementName . '][--]%'),
+                                        ]);
+                                    }
+
+                                    $blockSearchQuerySql .= " (" . implode(" OR ", $notSetParts) . ")";
                                 } else {
-                                    /**
-                                     * Legacy: [key][-v1-v2-...] — ищем через REGEXP с "-val-"
-                                     * Новый JSON: [key][["v1","v2",...]] — ищем через LIKE с "val" в квадратных скобках
-                                     *   - для строк:   [key][[..."val"...]]
-                                     *   - для чисел:   [key][[...val...]]
-                                     */
                                     $jsonRegexNeedle = is_numeric($value[0])
                                         ? '(' . $value[0] . '|"' . $value[0] . '")'
                                         : '"' . $value[0] . '"';
 
-                                    $blockSearchQuerySql .= " (t1." . $entity->virtualField .
-                                        " " . $regexpWord . " '\\\[" . $queryElementName . "\\\]\\\[[^]]*-" . $value[0] . "-[^]]*' OR t1." . $entity->virtualField .
-                                        " LIKE '%[" . $queryElementName . "][" . $strippedVal . "]%' OR t1." . $entity->virtualField .
-                                        " " . $regexpWord . " '\\\[" . $queryElementName . "\\\]\\\[[^]]*(\\\\[|,)" . $jsonRegexNeedle . "(\\\\]|,)[^]]*')";
+                                    $valueParts = [
+                                        "t1." . $entity->virtualField . " LIKE " . $cond->bind('%[' . $queryElementName . '][' . $strippedVal . ']%'),
+                                        "t1." . $entity->virtualField . " " . $regexpWord . " " . $cond->bind('\[' . $queryElementName . '\]\[[^]]*(\[|,)' . $jsonRegexNeedle . '(\]|,)[^]]*'),
+                                    ];
+
+                                    if ($legacySearch) {
+                                        array_unshift(
+                                            $valueParts,
+                                            "t1." . $entity->virtualField . " " . $regexpWord . " " . $cond->bind('\[' . $queryElementName . '\]\[[^]]*-' . $value[0] . '-[^]]*'),
+                                        );
+                                    }
+
+                                    $blockSearchQuerySql .= " (" . implode(" OR ", $valueParts) . ")";
                                 }
                             } elseif ($modelItem->getOne() && !($modelItem->getGroup() > 0)) {
-                                /** Предполагаем, что тип колонки в этом случае = int */
                                 if ($value[0] === 'not_set') {
                                     $blockSearchQuerySql .= " (t1." . $queryElementName . " IS NULL)";
                                 } else {
-                                    $blockSearchQuerySql .= " (t1." . $queryElementName . "='" . $strippedVal . "')";
+                                    $blockSearchQuerySql .= " (" . $cond->eq("t1." . $queryElementName, $strippedVal) . ")";
                                 }
-                            }
-                            /** Предполагаем, что тип колонки в этом случае = varchar с JSON-массивом внутри */ elseif ($value[0] === 'not_set') {
+                            } elseif ($value[0] === 'not_set') {
                                 $blockSearchQuerySql .= " (t1." . $queryElementName . " IS NULL OR t1." . $queryElementName . "='' OR t1." . $queryElementName . "='[]')";
                             } else {
-                                $blockSearchQuerySql .= " (" .
-                                    DB->dialect->jsonContainsExpression(
-                                        "t1." . $queryElementName,
-                                        MultiselectSqlHelper::jsonLiteral($value[0]),
-                                    ) . ")";
+                                $blockSearchQuerySql .= " (" . MultiselectSqlHelper::contains("t1." . $queryElementName, $cond->bind(MultiselectSqlHelper::bindValue($value[0]))) . ")";
                             }
                         }
 
@@ -483,9 +491,9 @@ final class Filters
 
                     if ($filtersViewSecondItem->getVirtual()) {
                         if ($selectType === '1') {
-                            $blockSearchQuerySql .= " t1." . $entity->virtualField . " LIKE '%[" . $queryElementName . "][" . $date_in_format . "]%'";
+                            $blockSearchQuerySql .= " " . $cond->like("t1." . $entity->virtualField, '%[' . $queryElementName . '][' . $date_in_format . ']%');
                         } elseif ($selectType === '2') {
-                            $blockSearchQuerySql .= " t1." . $entity->virtualField . " NOT LIKE '%[" . $queryElementName . "][" . $date_in_format . "]%'";
+                            $blockSearchQuerySql .= " " . $cond->notLike("t1." . $entity->virtualField, '%[' . $queryElementName . '][' . $date_in_format . ']%');
                         }
                     } else {
                         $blockSearchQuerySql .= " (t1." . $queryElementName . match ($selectType) {
@@ -495,7 +503,7 @@ final class Filters
                             '4' => "<",
                             default => '',
                         }
-                        . "'" . $date_in_format . "'";
+                        . " " . $cond->bind($date_in_format);
 
                         if ($selectType === '2' || $selectType === '4') {
                             $blockSearchQuerySql .= " OR t1." . $queryElementName . " IS NULL";
@@ -507,14 +515,14 @@ final class Filters
                     ($dataArray[$filtersViewFirstItem->name] ?? '') !== '' &&
                     ($dataArray[$filtersViewSecondItem->name] ?? '') !== ''
                 ) {
-                    $thistime1 = strtotime($dataArray[$filtersViewSecondItem->name]);
+                    $thistime1 = (int) strtotime($dataArray[$filtersViewSecondItem->name]);
                     $thistime2 = $thistime1 + (60 * 60 * 24);
 
                     $blockSearchQuerySql .= " (t1." . $queryElementName . match ($dataArray[$filtersViewFirstItem->name]) {
-                        '1' => ">=" . $thistime1 . " AND t1." . $queryElementName . "<" . $thistime2,
-                        '2' => "<" . $thistime1 . " OR t1." . $queryElementName . ">=" . $thistime2,
-                        '3' => ">=" . $thistime2,
-                        '4' => "<" . $thistime1,
+                        '1' => ">=" . $cond->bind($thistime1) . " AND t1." . $queryElementName . "<" . $cond->bind($thistime2),
+                        '2' => "<" . $cond->bind($thistime1) . " OR t1." . $queryElementName . ">=" . $cond->bind($thistime2),
+                        '3' => ">=" . $cond->bind($thistime2),
+                        '4' => "<" . $cond->bind($thistime1),
                         default => '',
                     }
                     . ")";
@@ -556,35 +564,54 @@ final class Filters
 
                     if ($modelItem->getVirtual()) {
                         if ($selectType === '1') {
-                            $blockSearchQuerySql .= "t1." . $entity->virtualField . " LIKE '%[" . $queryElementName . "][" .
-                                implode("]%' OR t1." . $entity->virtualField . " LIKE '%[" . $queryElementName . "][", $searchvals) . "]%'";
+                            $parts = [];
+
+                            foreach ($searchvals as $searchval) {
+                                $parts[] = "t1." . $entity->virtualField . " LIKE " . $cond->bind('%[' . $queryElementName . '][' . $searchval . ']%');
+                            }
+
+                            $blockSearchQuerySql .= implode(" OR ", $parts);
                         } elseif ($selectType === '2') {
-                            $blockSearchQuerySql .= "t1." . $entity->virtualField . " NOT LIKE '%[" . $queryElementName . "][" .
-                                implode("]%' AND t1." . $entity->virtualField . " NOT LIKE '%[" . $queryElementName . "][", $searchvals) . "]%'";
+                            $parts = [];
+
+                            foreach ($searchvals as $searchval) {
+                                $parts[] = "t1." . $entity->virtualField . " NOT LIKE " . $cond->bind('%[' . $queryElementName . '][' . $searchval . ']%');
+                            }
+
+                            $blockSearchQuerySql .= implode(" AND ", $parts);
                         }
                     } elseif ($selectType === '1') {
-                        $blockSearchQuerySql .= "t1." . $queryElementName . "=" . implode(" OR t1." . $queryElementName . "=", $searchvals);
+                        $parts = [];
+
+                        foreach ($searchvals as $searchval) {
+                            $parts[] = $cond->eq("t1." . $queryElementName, $searchval);
+                        }
+
+                        $blockSearchQuerySql .= implode(" OR ", $parts);
 
                         if ($hasNull) {
                             $blockSearchQuerySql .= " OR t1." . $queryElementName . " IS NULL";
                         }
                     } elseif ($selectType === '2') {
-                        $blockSearchQuerySql .= "t1." . $queryElementName . "!=" . implode(
-                            " AND t1." . $queryElementName . "!=",
-                            $searchvals,
-                        );
+                        $parts = [];
+
+                        foreach ($searchvals as $searchval) {
+                            $parts[] = $cond->notEq("t1." . $queryElementName, $searchval);
+                        }
+
+                        $blockSearchQuerySql .= implode(" AND ", $parts);
 
                         if ($hasNull) {
                             $blockSearchQuerySql .= " AND t1." . $queryElementName . " IS NOT NULL";
                         }
                     } elseif ($selectType === '3') {
-                        $blockSearchQuerySql .= "t1." . $queryElementName . ">" . $searchvals[0]; //не может быть ситуация: "больше нескольких значений через запятую"
+                        $blockSearchQuerySql .= $cond->more("t1." . $queryElementName, $searchvals[0]);
 
                         if ($searchvals[0] < 0) {
                             $blockSearchQuerySql .= " OR t1." . $queryElementName . " IS NULL";
                         }
                     } elseif ($selectType === '4') {
-                        $blockSearchQuerySql .= "t1." . $queryElementName . "<" . $searchvals[0]; //не может быть ситуация: "меньше нескольких значений через запятую"
+                        $blockSearchQuerySql .= $cond->less("t1." . $queryElementName, $searchvals[0]);
 
                         if ($searchvals[0] > 0) {
                             $blockSearchQuerySql .= " OR t1." . $queryElementName . " IS NULL";
@@ -604,7 +631,7 @@ final class Filters
                         $blockSearchQuerySql .= " (t1." . $queryElementName . "!='1' OR t1." . $queryElementName . " IS NULL)";
                     }
                 } elseif ($modelItem instanceof Item\Select && !is_null($modelItem->getHelper()) && ($dataArray[$filtersViewFirstItem->name] ?? false)) {
-                    $blockSearchQuerySql .= " t1." . $queryElementName . "=" . $dataArray[$filtersViewFirstItem->name];
+                    $blockSearchQuerySql .= " " . $cond->eq("t1." . $queryElementName, $dataArray[$filtersViewFirstItem->name]);
                 }
 
                 if ($blockSearchQuerySql !== "") {
@@ -660,7 +687,7 @@ final class Filters
             }
 
             $this->searchQuerySql = $searchQuerySql;
-            $this->searchQueryParams = $searchQueryParams;
+            $this->searchQueryParams = $cond->getParams();
             $this->currentFiltersLink = $currentFiltersLink;
 
             if (!$getDataFromCookies) {
