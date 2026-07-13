@@ -969,9 +969,7 @@ abstract class BaseEntity
 
         if (is_null($sortingItem) || $sortingItem->showFieldDataInEntityTable) {
             if ($modelElement->checkVisibility() || $sortingItem->substituteDataType === SubstituteDataTypeEnum::TABLE || $sortingItem->substituteDataType === SubstituteDataTypeEnum::ARRAY) {
-                if (($DATA_ITEM[$modelElement->name] ?? null) !== null) {
-                    $modelElement->set($DATA_ITEM[$modelElement->name]);
-                }
+                $modelElement->set($DATA_ITEM[$modelElement->name] ?? null);
 
                 if ($this instanceof CatalogEntity || $this instanceof CatalogItemEntity) {
                     if ($sortingItem->showFieldShownNameInCatalogItemString) {
