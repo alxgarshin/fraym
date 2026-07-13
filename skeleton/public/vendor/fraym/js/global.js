@@ -3003,9 +3003,14 @@ window.fetch = new Proxy(window.fetch, {
         }
 
         /** Обновление jwtToken (с защитой от параллельных запросов) */
-        const refreshJwtToken = async function () {
+        const refreshJwtToken = async function (staleToken) {
             if (jwtTokenRefreshing) {
                 await jwtTokenRefreshing.catch(() => { });
+                return;
+            }
+
+            /** Токен уже обновлён параллельным потоком (отличается от использованного) — refresh не нужен. */
+            if (staleToken !== undefined && jwtToken !== staleToken) {
                 return;
             }
 
@@ -3042,16 +3047,28 @@ window.fetch = new Proxy(window.fetch, {
 
         /** Если токен протух (401) — сбросить, обновить и повторить запрос один раз */
         if (localUrl && !isRefreshRequest && response.status === 401) {
-            jwtToken = undefined;
-            await refreshJwtToken();
+            /** Не затираем jwtToken (иначе гонка стирает свежий токен параллельного refresh) —
+             *  вместо этого сравниваем использованный токен с обновлённым. */
+            const usedAuth = options.headers.Authorization;
+            const usedToken = usedAuth ? usedAuth.slice(7) : undefined;
 
-            if (jwtToken) {
+            await refreshJwtToken(usedToken);
+
+            if (jwtToken && ('Bearer ' + jwtToken) !== usedAuth) {
                 options.headers.Authorization = 'Bearer ' + jwtToken;
 
                 try {
                     response = await fetch.apply(thisArg, [url, options]);
                 } catch {
                     return new Response(null, { status: 0, statusText: "NetworkError" });
+                }
+            } else {
+                /** Refresh не дал нового токена — сессия истекла: уходим на login (не молча). */
+                const loginUrl = `${absolutePath()}/login/`;
+
+                if (!window.location.href.startsWith(loginUrl)) {
+                    console.warn('JWT refresh failed after 401 — redirecting to login');
+                    window.location = loginUrl;
                 }
             }
         }
