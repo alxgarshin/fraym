@@ -2828,10 +2828,24 @@ function updateState(newHref, replacedDiv, form) {
                         const scripts = _(replacedDiv).asDomElement()?.getElementsByTagName('script');
 
                         if (scripts) {
-                            for (let ix = 0; ix < scripts.length; ix++) {
+                            /** Снапшот: appendChild может мутировать живую HTMLCollection. */
+                            for (const oldScript of Array.from(scripts)) {
                                 const newScript = document.createElement('script');
 
-                                newScript.text = scripts[ix].text;
+                                if (oldScript.src) {
+                                    /** Внешний скрипт: переносим src/type, чтобы он реально загрузился (раньше игнорировался). */
+                                    newScript.src = oldScript.src;
+
+                                    if (oldScript.type) {
+                                        newScript.type = oldScript.type;
+                                    }
+                                } else {
+                                    /** Инлайн-скрипт: оборачиваем в IIFE — top-level const/let становятся локальными,
+                                     *  иначе повторное объявление при повторном визите → SyntaxError.
+                                     *  \n перед })(); защищает от хвостового // line-комментария. */
+                                    newScript.text = '(function(){\n' + oldScript.text + '\n})();';
+                                }
+
                                 document.head.appendChild(newScript);
                                 newScript.remove();
                             }
