@@ -148,38 +148,6 @@ abstract class BaseModel
         return $this->modelData[$elementName] ?? null;
     }
 
-    /** Резолвит строковый коллбек по имени метода: сперва сервис CMSVC, затем сама модель.
-     * Не-строка возвращается как есть. Строка, не соответствующая ни методу сервиса, ни методу
-     * модели, — вероятная опечатка в имени коллбека: в DEV бросает исключение (ловит тихие
-     * баги), иначе логирует и возвращает строку как литерал (сохраняя прежнее поведение).
-     * Null-safe по сервису: модуль без сервиса резолвит коллбек по методу модели без TypeError. */
-    private function resolveCallback(mixed $value): mixed
-    {
-        if (!is_string($value)) {
-            return $value;
-        }
-
-        $service = $this->CMSVC->service;
-
-        if (!is_null($service) && method_exists($service, $value)) {
-            return $service->{$value}();
-        }
-
-        if (method_exists($this, $value)) {
-            return $this->{$value}();
-        }
-
-        $message = 'resolveCallback: method "' . $value . '" not found on service or model ' . static::class . ' (probable typo)';
-
-        if (($_ENV['APP_ENV'] ?? '') === 'DEV') {
-            throw new RuntimeException($message);
-        }
-
-        error_log($message);
-
-        return $value;
-    }
-
     public function initElement(
         ElementItem|string $elementOrElementName,
         ?string $className = null,
@@ -377,5 +345,37 @@ abstract class BaseModel
         $this->elementsList = $modelElements;
 
         return $this;
+    }
+
+    /** Резолвит строковый коллбек по имени метода: сперва сервис CMSVC, затем сама модель.
+     * Не-строка возвращается как есть. Строка, не соответствующая ни методу сервиса, ни методу
+     * модели, — вероятная опечатка в имени коллбека: в DEV бросает исключение (ловит тихие
+     * баги), иначе логирует и возвращает строку как литерал (сохраняя прежнее поведение).
+     * Null-safe по сервису: модуль без сервиса резолвит коллбек по методу модели без TypeError. */
+    private function resolveCallback(mixed $value): mixed
+    {
+        if (!is_string($value)) {
+            return $value;
+        }
+
+        $service = $this->CMSVC->service;
+
+        if (!is_null($service) && method_exists($service, $value)) {
+            return $service->{$value}();
+        }
+
+        if (method_exists($this, $value)) {
+            return $this->{$value}();
+        }
+
+        $message = 'resolveCallback: method "' . $value . '" not found on service or model ' . static::class . ' (probable typo)';
+
+        if (($_ENV['APP_ENV'] ?? '') === 'DEV') {
+            throw new RuntimeException($message);
+        }
+
+        error_log($message);
+
+        return $value;
     }
 }
