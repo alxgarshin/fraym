@@ -37,6 +37,7 @@ final class SQLDatabaseService implements Database
         'query' => '',
         'data' => [],
         'result' => null,
+        'fromAndWhere' => null,
     ];
 
     private array $preparedQueriesCache = [];
@@ -204,16 +205,28 @@ final class SQLDatabaseService implements Database
             $fieldsSetQuery = implode(', ', $fieldsSet);
         }
 
-        return $this->query(
+        $result = $this->query(
             query: "SELECT " . ($onlyCount ? "COUNT(*)" : $fieldsSetQuery) . " FROM " . $tableName . $whereQuery . $orderQuery . $limitQuery . $offsetQuery,
             data: $params,
             oneResult: $onlyCount ? true : $oneResult,
         );
+
+        $this->lastQuery['fromAndWhere'] = $tableName . $whereQuery;
+
+        return $result;
     }
 
     /** Получение количества объектов таблицы из последнего PDOStatement'а */
     public function selectCount(): int
     {
+        if ($this->lastQuery['fromAndWhere'] ?? false) {
+            $stmt = $this->prepare("SELECT COUNT(*) FROM " . $this->lastQuery['fromAndWhere']);
+
+            $this->execute($stmt, $this->lastQuery['data']);
+
+            return (int) $stmt->fetchColumn();
+        }
+
         if ($this->lastQuery['query'] ?? false) {
             $query = $this->lastQuery['query'];
 
