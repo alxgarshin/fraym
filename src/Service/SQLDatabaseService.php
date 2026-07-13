@@ -160,7 +160,9 @@ final class SQLDatabaseService implements Database
     /** Получение количества строк, задетых последней операцией в базе данных */
     public function rowCount(): int
     {
-        return $this->lastQuery['stmt']->rowCount();
+        $stmt = $this->lastQuery['stmt'] ?? null;
+
+        return $stmt instanceof PDOStatement ? $stmt->rowCount() : 0;
     }
 
     /** Получение данных из таблицы */
