@@ -253,71 +253,6 @@ abstract class DataHelper implements Helper
         return $remoteAddr;
     }
 
-    /** Входит ли IP в список доверенных прокси (TRUSTED_PROXIES — CSV из CIDR или одиночных IP) */
-    private static function isTrustedProxy(string $ip): bool
-    {
-        $trusted = $_ENV['TRUSTED_PROXIES'] ?? '';
-
-        if (!is_string($trusted) || $trusted === '' || $ip === '') {
-            return false;
-        }
-
-        foreach (explode(',', $trusted) as $cidr) {
-            $cidr = trim($cidr);
-
-            if ($cidr !== '' && self::ipInCidr($ip, $cidr)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /** Проверка вхождения IP в CIDR-подсеть (IPv4 и IPv6 — через inet_pton, побитовое сравнение) */
-    private static function ipInCidr(string $ip, string $cidr): bool
-    {
-        if (!str_contains($cidr, '/')) {
-            return $ip === $cidr;
-        }
-
-        [$subnet, $maskBitsRaw] = explode('/', $cidr, 2);
-
-        if (filter_var($ip, FILTER_VALIDATE_IP) === false || filter_var($subnet, FILTER_VALIDATE_IP) === false) {
-            return false;
-        }
-
-        $ipBin = inet_pton($ip);
-        $subnetBin = inet_pton($subnet);
-
-        if ($ipBin === false || $subnetBin === false || strlen($ipBin) !== strlen($subnetBin)) {
-            /** разные семейства адресов (IPv4 против IPv6) */
-            return false;
-        }
-
-        $maskBits = (int) $maskBitsRaw;
-
-        if ($maskBits < 0 || $maskBits > strlen($ipBin) * 8) {
-            return false;
-        }
-
-        $fullBytes = intdiv($maskBits, 8);
-        $remainingBits = $maskBits % 8;
-
-        if ($fullBytes > 0 && strncmp($ipBin, $subnetBin, $fullBytes) !== 0) {
-            return false;
-        }
-
-        if ($remainingBits > 0) {
-            $mask = ~(0xFF >> $remainingBits) & 0xFF;
-
-            if ((ord($ipBin[$fullBytes]) & $mask) !== (ord($subnetBin[$fullBytes]) & $mask)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     /** preg_quote заменяемого preg_replace контента */
     public static function pregQuoteReplaced(?string $text): string
     {
@@ -409,23 +344,20 @@ abstract class DataHelper implements Helper
         $returnArray = [];
 
         if (!is_null($string)) {
-            try {
-                $returnArray = self::jsonFixedDecode($string, true);
-            } catch (Exception|JsonException $exception) {
-                if (str_starts_with($string, '-') && str_ends_with($string, '-')) {
-                    $string = mb_substr($string, 1, mb_strlen($string) - 2);
+            $trimmed = trim($string);
+
+            if (str_starts_with($trimmed, '[')) {
+                $decoded = json_decode($trimmed, true);
+                $returnArray = is_array($decoded) ? $decoded : [];
+            } elseif ($trimmed !== '') {
+                if (str_starts_with($trimmed, '-') && str_ends_with($trimmed, '-')) {
+                    $trimmed = mb_substr($trimmed, 1, mb_strlen($trimmed) - 2);
                 }
 
-                $returnArray = explode('-', $string);
-            }
-
-            if (!is_array($returnArray)) {
-                $returnArray = [$returnArray];
+                $returnArray = explode('-', $trimmed);
             }
 
             foreach ($returnArray as $key => $value) {
-                $returnArray[$key] = $value;
-
                 if (is_string($value) && trim($value) === '') {
                     unset($returnArray[$key]);
                 }
@@ -662,5 +594,70 @@ abstract class DataHelper implements Helper
         }
 
         return $value;
+    }
+
+    /** Входит ли IP в список доверенных прокси (TRUSTED_PROXIES — CSV из CIDR или одиночных IP) */
+    private static function isTrustedProxy(string $ip): bool
+    {
+        $trusted = $_ENV['TRUSTED_PROXIES'] ?? '';
+
+        if (!is_string($trusted) || $trusted === '' || $ip === '') {
+            return false;
+        }
+
+        foreach (explode(',', $trusted) as $cidr) {
+            $cidr = trim($cidr);
+
+            if ($cidr !== '' && self::ipInCidr($ip, $cidr)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** Проверка вхождения IP в CIDR-подсеть (IPv4 и IPv6 — через inet_pton, побитовое сравнение) */
+    private static function ipInCidr(string $ip, string $cidr): bool
+    {
+        if (!str_contains($cidr, '/')) {
+            return $ip === $cidr;
+        }
+
+        [$subnet, $maskBitsRaw] = explode('/', $cidr, 2);
+
+        if (filter_var($ip, FILTER_VALIDATE_IP) === false || filter_var($subnet, FILTER_VALIDATE_IP) === false) {
+            return false;
+        }
+
+        $ipBin = inet_pton($ip);
+        $subnetBin = inet_pton($subnet);
+
+        if ($ipBin === false || $subnetBin === false || strlen($ipBin) !== strlen($subnetBin)) {
+            /** разные семейства адресов (IPv4 против IPv6) */
+            return false;
+        }
+
+        $maskBits = (int) $maskBitsRaw;
+
+        if ($maskBits < 0 || $maskBits > strlen($ipBin) * 8) {
+            return false;
+        }
+
+        $fullBytes = intdiv($maskBits, 8);
+        $remainingBits = $maskBits % 8;
+
+        if ($fullBytes > 0 && strncmp($ipBin, $subnetBin, $fullBytes) !== 0) {
+            return false;
+        }
+
+        if ($remainingBits > 0) {
+            $mask = ~(0xFF >> $remainingBits) & 0xFF;
+
+            if ((ord($ipBin[$fullBytes]) & $mask) !== (ord($subnetBin[$fullBytes]) & $mask)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
