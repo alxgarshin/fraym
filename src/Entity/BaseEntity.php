@@ -22,6 +22,7 @@ use Fraym\Interface\{DeletedAt, ElementItem, Response};
 use Fraym\Response\{ArrayResponse, HtmlResponse};
 use Fraym\Service\GlobalTimerService;
 use PDOException;
+use RuntimeException;
 
 abstract class BaseEntity
 {
@@ -1260,6 +1261,12 @@ abstract class BaseEntity
                         }
 
                         if (count($substituteDataArray) > 0) {
+                            foreach ($substituteDataArray as $substituteDataItem) {
+                                if (preg_match('/[\'";\\\\]/', (string) $substituteDataItem[0])) {
+                                    throw new RuntimeException('Unsafe custom sort value in substituteDataArray: ' . $substituteDataItem[0]);
+                                }
+                            }
+
                             if (DB->dbType === DbTypeEnum::POSTGRESQL) {
                                 $count_fields = 0;
                                 $ordField = "CASE";
