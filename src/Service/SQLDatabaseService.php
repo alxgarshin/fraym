@@ -734,15 +734,10 @@ final class SQLDatabaseService implements Database
 
             return $this->preparedQueriesCache[$queryHash];
         } catch (PDOException $e) {
-            ob_start();
-            debug_print_backtrace();
-            $backtrace = ob_get_clean();
             throw new DatabaseQueryException(
-                'PDO prepare error: ' . $query .
-                    ' | Error: ' . $e->getMessage() .
-                    ' | Backtrace: ' . $backtrace,
-                (int) $e->getCode(),
-                $e,
+                'PDO prepare error: ' . $query . ' | Error: ' . $e->getMessage(),
+                code: (int) $e->getCode(),
+                previous: $e,
             );
         }
     }
@@ -871,16 +866,11 @@ final class SQLDatabaseService implements Database
         } catch (PDOException $e) {
             $this->lastQuery = [];
 
-            ob_start();
-            debug_print_backtrace();
-            $backtrace = ob_get_clean();
             throw new DatabaseQueryException(
-                'PDO execute error: ' . $statement->queryString .
-                    ' | Error: ' . $e->getMessage() .
-                    ' | Used data: ' . print_r($preparedData, true) .
-                    ' | Backtrace: ' . $backtrace,
-                (int) $e->getCode(),
-                $e,
+                'PDO execute error: ' . $statement->queryString . ' | Error: ' . $e->getMessage(),
+                parameters: $preparedData,
+                code: (int) $e->getCode(),
+                previous: $e,
             );
         }
     }

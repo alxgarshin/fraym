@@ -22,7 +22,13 @@ use Fraym\Exception\DatabaseConnectionException;
 use Fraym\Kernel;
 
 set_exception_handler(static function (\Throwable $e): void {
-    error_log(get_class($e) . ': ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+    $logMessage = get_class($e) . ': ' . $e->getMessage() . "\n" . $e->getTraceAsString();
+
+    if ($e instanceof \Fraym\Exception\DatabaseQueryException) {
+        $logMessage .= "\nQuery parameters: " . json_encode($e->getMaskedParameters(), JSON_UNESCAPED_UNICODE | JSON_PARTIAL_OUTPUT_ON_ERROR);
+    }
+
+    error_log($logMessage);
     http_response_code(500);
 
     if (($_SERVER['HTTP_FRAYM_REQUEST'] ?? '') === 'true' || ($_SERVER['HTTP_FRAYM_API_REQUEST'] ?? '') === 'true') {
