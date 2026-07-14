@@ -245,7 +245,7 @@ abstract class BaseModel
 
                 if (!is_null($multiselectCreatorAdditionalData)) {
                     foreach ($multiselectCreatorAdditionalData as $multiselectCreatorAdditionalName => $multiselectCreatorAdditionalItem) {
-                        $multiselectCreatorAdditionalData[$multiselectCreatorAdditionalName] = $this->resolveCallback($multiselectCreatorAdditionalItem);
+                        $multiselectCreatorAdditionalData[$multiselectCreatorAdditionalName] = $this->resolveCallback($multiselectCreatorAdditionalItem, false);
                     }
                     $property->getCreator()->setAdditional($multiselectCreatorAdditionalData);
                 }
@@ -352,7 +352,7 @@ abstract class BaseModel
      * модели, — вероятная опечатка в имени коллбека: в DEV бросает исключение (ловит тихие
      * баги), иначе логирует и возвращает строку как литерал (сохраняя прежнее поведение).
      * Null-safe по сервису: модуль без сервиса резолвит коллбек по методу модели без TypeError. */
-    private function resolveCallback(mixed $value): mixed
+    private function resolveCallback(mixed $value, bool $throwOnMissing = true): mixed
     {
         if (!is_string($value)) {
             return $value;
@@ -366,6 +366,12 @@ abstract class BaseModel
 
         if (method_exists($this, $value)) {
             return $this->{$value}();
+        }
+
+        // additional у MultiselectCreator содержит и имена методов, и литералы
+        // (в т.ч. строковые enum-значения вроде '1') — там строка-не-метод легитимна.
+        if (!$throwOnMissing) {
+            return $value;
         }
 
         $message = 'resolveCallback: method "' . $value . '" not found on service or model ' . static::class . ' (probable typo)';
