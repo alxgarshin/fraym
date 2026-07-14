@@ -124,4 +124,9 @@ class Timestamp extends BaseElement
     {
         return $this->getAttribute()->showInObjects;
     }
+
+    public function coerceForSave(mixed $value): mixed
+    {
+        return DateHelper::getNow();
+    }
 }

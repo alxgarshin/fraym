@@ -98,4 +98,6 @@ interface ElementItem
     public function get(): mixed;
 
     public function set(null $fieldValue): static;
+
+    public function coerceForSave(mixed $value): mixed;
 }

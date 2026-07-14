@@ -113,4 +113,11 @@ class Number extends BaseElement
     {
         return $this->getAttribute()->round;
     }
+
+    public function coerceForSave(mixed $value): mixed
+    {
+        $value = is_numeric($value) ? (int) $value : 0;
+
+        return $this->getRound() ? round($value) : $value;
+    }
 }

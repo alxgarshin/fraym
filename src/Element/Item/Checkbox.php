@@ -105,4 +105,9 @@ class Checkbox extends BaseElement
 
         return $this;
     }
+
+    public function coerceForSave(mixed $value): mixed
+    {
+        return DB->dialect->checkboxDbValue($value === 'on');
+    }
 }

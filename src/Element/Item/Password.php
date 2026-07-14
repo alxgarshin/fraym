@@ -15,6 +15,7 @@ namespace Fraym\Element\Item;
 
 use Fraym\Element\Attribute as Attribute;
 use Fraym\Element\Item\Trait\{CloneTrait, MinMaxChar};
+use Fraym\Helper\AuthHelper;
 use Fraym\Interface\ElementAttribute;
 
 /** Пароль */
@@ -96,5 +97,10 @@ class Password extends BaseElement
         $this->fieldValue = $fieldValue;
 
         return $this;
+    }
+
+    public function coerceForSave(mixed $value): mixed
+    {
+        return $value !== null ? AuthHelper::hashPassword($value) : null;
     }
 }

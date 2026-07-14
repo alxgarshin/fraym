@@ -13,9 +13,9 @@ declare(strict_types=1);
 
 namespace Fraym\Entity;
 
-use Fraym\Element\Item\{Calendar, Checkbox, Email, File, H1, Login, Multiselect, Number, Password, Timestamp};
+use Fraym\Element\Item\{File, H1, Login, Multiselect, Password, Timestamp};
 use Fraym\Enum\{ActEnum, ActionEnum, MultiObjectsEntitySubTypeEnum};
-use Fraym\Helper\{AuthHelper, CookieHelper, DataHelper, DateHelper, LocaleHelper, ResponseHelper, TextHelper};
+use Fraym\Helper\{AuthHelper, CookieHelper, DataHelper, LocaleHelper, ResponseHelper, TextHelper};
 use Fraym\Interface\{DeletedAt, ElementItem, Response};
 use PDOException;
 
@@ -575,32 +575,8 @@ trait FraymActionTrait
                             $value = DataHelper::arrayToMultiselect($hasArrayValues ? $value : array_unique($value));
                         }
                     }
-                } elseif ($element instanceof Password) {
-                    $value = $value !== null ? AuthHelper::hashPassword($value) : null;
-                } elseif ($element instanceof Calendar) {
-                    $preppedValue = is_null($value) ? null : (is_numeric($value) ? $value : strtotime($value));
-                    $value = is_null($value) ? null : ($element->getAttribute()->saveAsTimestamp ? $preppedValue : date('Y-m-d H:i:s', $preppedValue));
-                } elseif ($element instanceof Checkbox) {
-                    $value = DB->dialect->checkboxDbValue($value === 'on');
-                } elseif ($element instanceof Number) {
-                    if (!is_numeric($value)) {
-                        $value = 0;
-                    } else {
-                        $value = (int) $value;
-                    }
-
-                    if ($element->getRound()) {
-                        $value = round($value);
-                    }
-                } elseif ($element instanceof Email) {
-                    $value = [$element->name, $value, ['email']];
-                } elseif ($element instanceof Timestamp) {
-                    $value = DateHelper::getNow();
-                } elseif ($element instanceof File) {
-                    if (is_array($value)) {
-                        $formattedValue = implode('', $value);
-                        $value = $formattedValue;
-                    }
+                } else {
+                    $value = $element->coerceForSave($value);
                 }
 
                 if ($element->getAttribute()->saveHtml) {

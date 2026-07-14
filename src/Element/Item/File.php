@@ -146,4 +146,9 @@ class File extends BaseElement
             unlink($filesDirectory . 'thumbnail/' . $fileName);
         }
     }
+
+    public function coerceForSave(mixed $value): mixed
+    {
+        return is_array($value) ? implode('', $value) : $value;
+    }
 }

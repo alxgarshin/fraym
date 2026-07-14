@@ -20,4 +20,9 @@ class Email extends Text
     {
         return filter_var($email, FILTER_VALIDATE_EMAIL);
     }
+
+    public function coerceForSave(mixed $value): mixed
+    {
+        return [$this->name, $value, ['email']];
+    }
 }

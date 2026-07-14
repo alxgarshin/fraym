@@ -136,4 +136,15 @@ class Calendar extends BaseElement
     {
         return $this->getAttribute()->showDatetime;
     }
+
+    public function coerceForSave(mixed $value): mixed
+    {
+        if (is_null($value)) {
+            return null;
+        }
+
+        $preppedValue = is_numeric($value) ? $value : strtotime($value);
+
+        return $this->getAttribute()->saveAsTimestamp ? $preppedValue : date('Y-m-d H:i:s', $preppedValue);
+    }
 }

@@ -156,6 +156,11 @@ abstract class BaseElement implements ElementItem
         return $this->getAttribute()->virtual;
     }
 
+    public function coerceForSave(mixed $value): mixed
+    {
+        return $value;
+    }
+
     public function checkContext(array $context): bool
     {
         foreach ($context as $contextItem) {
