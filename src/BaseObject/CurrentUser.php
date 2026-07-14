@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Fraym\BaseObject;
 
+use Fraym\Enum\{BuiltInRights, PasswordHashVersion};
 use Fraym\Helper\{AuthHelper, CookieHelper, DataHelper, LocaleHelper, ResponseHelper};
 use Fraym\Interface\CurrentUser as CurrentUserInterface;
 
@@ -77,17 +78,17 @@ final class CurrentUser implements CurrentUserInterface
     /** Проверка, забанен ли пользователь перманентно */
     public function isBanned(): bool
     {
-        return $this->checkAllRights('banned');
+        return $this->checkAllRights(BuiltInRights::BANNED->value);
     }
 
     /** Проверка, является ли пользователь администратором */
     public function isAdmin(bool $checkAdminDataAllRights = false): bool
     {
-        return $this->checkAllRights('admin') ||
+        return $this->checkAllRights(BuiltInRights::ADMIN->value) ||
             (
                 $checkAdminDataAllRights &&
                 (CURRENT_USER->getAdminData()['rights'] ?? false) &&
-                DataHelper::inArrayAny(['admin', '1'], CURRENT_USER->getAdminData()['rights'])
+                DataHelper::inArrayAny([BuiltInRights::ADMIN->value, '1'], CURRENT_USER->getAdminData()['rights'])
             );
     }
 
@@ -362,7 +363,7 @@ final class CurrentUser implements CurrentUserInterface
 
         $hashedPassword = AuthHelper::addProjectHashWord($_REQUEST['password']);
 
-        if (($loginData['hash_version'] ?? false) && $loginData['hash_version'] === 'wrapped_v1') {
+        if (($loginData['hash_version'] ?? false) && $loginData['hash_version'] === PasswordHashVersion::WRAPPED_V1->value) {
             if (!password_verify(md5($hashedPassword), $loginData['password_hashed'])) {
                 return false;
             }
@@ -373,7 +374,7 @@ final class CurrentUser implements CurrentUserInterface
                 tableName: 'user',
                 data: [
                     'password_hashed' => $final,
-                    'hash_version'    => 'final_v2',
+                    'hash_version'    => PasswordHashVersion::FINAL_V2->value,
                 ],
                 criteria: [
                     'id' => $loginData['id'],

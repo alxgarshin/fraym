@@ -28,6 +28,9 @@ abstract class BaseEntity
 {
     use PageCounter;
 
+    /** Окно (сек) подавления повторной вставки той же записи при двойном сабмите */
+    private const DOUBLE_SAVE_GRACE_SECONDS = 30;
+
     /** Языковая локаль сущности */
     public ?array $LOCALE {
         get => $this->LOCALE;
@@ -403,7 +406,7 @@ abstract class BaseEntity
                         }
                         $checkDoubledSaveItem = DB->select($this->table, $checkData, true);
 
-                        if (!$checkDoubledSaveItem || (($checkDoubledSaveItem['created_at'] ?? false) && $checkDoubledSaveItem['created_at'] < (time() - 30))) {
+                        if (!$checkDoubledSaveItem || (($checkDoubledSaveItem['created_at'] ?? false) && $checkDoubledSaveItem['created_at'] < (time() - self::DOUBLE_SAVE_GRACE_SECONDS))) {
                             DB->insert($this->table, $stringData);
                             $successfulResultsIds[] = DB->lastInsertId();
 

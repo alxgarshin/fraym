@@ -16,7 +16,6 @@ namespace Fraym\Helper;
 use DateTime;
 use DateTimeImmutable;
 use Exception;
-use Fiber;
 use Fraym\Element\{Attribute as Attribute, Item as Item};
 use Fraym\Entity\BaseEntity;
 use Fraym\Enum\{ActEnum, EscapeModeEnum};
@@ -182,36 +181,39 @@ abstract class DataHelper implements Helper
         return $request;
     }
 
-    /** Логирование действий пользователей */
+    /** Логирование действий пользователей.
+     * Мутация $_REQUEST выполняется синхронно (её читает контроллер того же запроса);
+     * записи в БД реально оффлоудятся: fastcgi_finish_request() отдаёт ответ клиенту, лог пишется после. */
     public static function activityLog(bool $fullLog = false): void
     {
-        $fiber = new Fiber(static function ($fullLog): void {
-            if ($fullLog) {
-                if ('get_new_events' !== ACTION && 'load_tasks' !== ACTION && CURRENT_USER->id() > 0) {
-                    DB->insert('activity_log', [
-                        ['user_id', CURRENT_USER->isLogged() ? CURRENT_USER->id() : null],
-                        ['real_ip', self::getRealIp()],
-                        ['url', self::selfURL()],
-                        ['kind', KIND],
-                        ['id', self::getId()],
-                        ['action', ACTION],
-                        ['obj_type', OBJ_TYPE],
-                        ['obj_id', OBJ_ID],
-                        ['created_at', DateHelper::getNow()],
-                        ['updated_at', DateHelper::getNow()],
-                    ]);
-                }
+        if (CURRENT_USER->id() > 0 && 'profile' === KIND) {
+            $_REQUEST['updated_at'][0] = time() + 20;
+        }
+
+        register_shutdown_function(static function () use ($fullLog): void {
+            if (function_exists('fastcgi_finish_request')) {
+                fastcgi_finish_request();
+            }
+
+            if ($fullLog && 'get_new_events' !== ACTION && 'load_tasks' !== ACTION && CURRENT_USER->id() > 0) {
+                DB->insert('activity_log', [
+                    ['user_id', CURRENT_USER->isLogged() ? CURRENT_USER->id() : null],
+                    ['real_ip', self::getRealIp()],
+                    ['url', self::selfURL()],
+                    ['kind', KIND],
+                    ['id', self::getId()],
+                    ['action', ACTION],
+                    ['obj_type', OBJ_TYPE],
+                    ['obj_id', OBJ_ID],
+                    ['created_at', DateHelper::getNow()],
+                    ['updated_at', DateHelper::getNow()],
+                ]);
             }
 
             if (CURRENT_USER->id() > 0) {
                 DB->update('user', [['updated_at', DateHelper::getNow()]], ['id' => CURRENT_USER->id()]);
-
-                if ('profile' === KIND) {
-                    $_REQUEST['updated_at'][0] = time() + 20;
-                }
             }
         });
-        $fiber->start($fullLog);
     }
 
     /** Исправление http-адреса на корректный */
