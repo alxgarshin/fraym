@@ -21,6 +21,8 @@ use Fraym\Service\{CacheService, EnvService, GlobalTimerService, SQLDatabaseServ
 
 class Kernel
 {
+    public const FRAYM_VERSION = '3.0.0';
+
     public static function init(): void
     {
         define('GLOBALTIMER', new GlobalTimerService());

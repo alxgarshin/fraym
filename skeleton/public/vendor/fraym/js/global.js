@@ -15,6 +15,9 @@ let startTime = new Date().getTime();
 let jwtTokenRefreshing = null;
 const jwtTokenRefreshUrl = `${absolutePath()}/login/action=refresh_token`;
 
+const FRAYM_JS_VERSION = '3.0.0';
+let fraymVersionWarned = false;
+
 /** Переменная локали */
 let LOCALE = {};
 
@@ -2773,6 +2776,11 @@ function updateState(newHref, replacedDiv, form) {
                     }
 
                     showMessagesFromJson(result);
+
+                    if (result.fraymVersion && !fraymVersionWarned && String(result.fraymVersion).split('.')[0] !== FRAYM_JS_VERSION.split('.')[0]) {
+                        fraymVersionWarned = true;
+                        console.warn(`Fraym version mismatch: backend ${result.fraymVersion} vs frontend ${FRAYM_JS_VERSION}. Re-copy global.js and global.min.js.`);
+                    }
 
                     if (result.redirect !== undefined && result.redirect !== '') {
                         updateState(result.redirect, replacedDiv);

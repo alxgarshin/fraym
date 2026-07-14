@@ -127,6 +127,7 @@ if ($RESPONSE_DATA instanceof ArrayResponse) {
                 'pageTitle' => $PAGETITLE,
                 'messages' => $cookieMessages ?? [],
                 'executionTime' => GLOBALTIMER->getTimerDiff(),
+                'fraymVersion' => \Fraym\Kernel::FRAYM_VERSION,
             ],
         );
         ResponseHelper::setCorsHeaders();
