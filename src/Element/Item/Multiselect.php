@@ -175,6 +175,11 @@ class Multiselect extends BaseElement
         return $this->getAttribute()->creator;
     }
 
+    protected function isHiddenWhenEmpty(): bool
+    {
+        return !$this->getValues();
+    }
+
     /** Редактируемый dropfield (чекбоксы/радио + поиск + выбранные опции) */
     private function renderEditableDropfield(array $value, array $values, ?array $images): string
     {

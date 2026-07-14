@@ -174,24 +174,16 @@ abstract class BaseElement implements ElementItem
 
     public function checkVisibility(): bool
     {
-        return
-            !(
-                !$this->getObligatory() &&
-                (
-                    ($this instanceof Select && !$this->getValues()) ||
-                    ($this instanceof Multiselect && !$this->getValues())
-                ) &&
-                (!$this instanceof Select || $this->getHelper() === null)
-            ) &&
-            !($this instanceof Tab);
+        if ($this instanceof Tab) {
+            return false;
+        }
+
+        return !(!$this->getObligatory() && $this->isHiddenWhenEmpty());
     }
 
     public function checkDOMVisibility(): bool
     {
-        return !($this instanceof Hidden) &&
-            !($this instanceof Timestamp && !$this->getShowInObjects()) &&
-            !($this instanceof H1) &&
-            !($this instanceof Tab);
+        return $this->isDOMVisible();
     }
 
     public function checkWritable(?ActEnum $act = null, ?string $objectName = null): ?bool
@@ -299,6 +291,18 @@ abstract class BaseElement implements ElementItem
         }
 
         return $failedValidations;
+    }
+
+    /** Поле скрывается, когда у него нет значений для выбора. Переопределяется Select/Multiselect. */
+    protected function isHiddenWhenEmpty(): bool
+    {
+        return false;
+    }
+
+    /** Виден ли элемент в DOM. Переопределяется структурными/служебными типами (Hidden, H1, Tab, Timestamp). */
+    protected function isDOMVisible(): bool
+    {
+        return true;
     }
 
     private function getContext(?string $objectName = null): array

@@ -100,4 +100,9 @@ class Hidden extends BaseElement
 
         return $this;
     }
+
+    protected function isDOMVisible(): bool
+    {
+        return false;
+    }
 }

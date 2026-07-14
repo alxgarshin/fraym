@@ -129,4 +129,9 @@ class Timestamp extends BaseElement
     {
         return DateHelper::getNow();
     }
+
+    protected function isDOMVisible(): bool
+    {
+        return $this->getShowInObjects();
+    }
 }

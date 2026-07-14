@@ -67,4 +67,9 @@ class H1 extends BaseElement
     {
         return $this;
     }
+
+    protected function isDOMVisible(): bool
+    {
+        return false;
+    }
 }

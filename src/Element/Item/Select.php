@@ -199,4 +199,9 @@ class Select extends BaseElement
     {
         return $this->getAttribute()->helper;
     }
+
+    protected function isHiddenWhenEmpty(): bool
+    {
+        return !$this->getValues() && $this->getHelper() === null;
+    }
 }
