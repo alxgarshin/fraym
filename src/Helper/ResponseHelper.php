@@ -18,18 +18,23 @@ use Fraym\Response\ArrayResponse;
 
 abstract class ResponseHelper implements Helper
 {
+    public static function terminate(): never
+    {
+        exit;
+    }
+
     /** Ответ 401: неавторизован */
     public static function response401(): void
     {
         header("HTTP/1.1 401 Unauthorized");
-        exit;
+        self::terminate();
     }
 
     /** Ответ 403: доступ запрещён (CSRF) */
     public static function response403(): void
     {
         header("HTTP/1.1 403 Forbidden");
-        exit;
+        self::terminate();
     }
 
     /** Установка CORS-заголовков на основе ALLOWED_ORIGINS из .env */
@@ -79,7 +84,7 @@ abstract class ResponseHelper implements Helper
             $response['executionTime'] = GLOBALTIMER->getTimerDiff();
             self::setCorsHeaders();
             print DataHelper::jsonFixedEncode($response);
-            exit;
+            self::terminate();
         } else {
             foreach ($messages as $message) {
                 $response['messages'][] = [$message[0], $message[1]];
@@ -102,7 +107,7 @@ abstract class ResponseHelper implements Helper
         $response = self::response([[$messageType, $message]], null, $fields);
         self::setCorsHeaders();
         print DataHelper::jsonFixedEncode($response->getData());
-        exit;
+        self::terminate();
     }
 
     /** Создание пути для перенаправления браузера пользователя по результатам операции */
@@ -168,7 +173,7 @@ abstract class ResponseHelper implements Helper
             header('Location: ' . $link);
         }
 
-        exit;
+        self::terminate();
     }
 
     /** Создание пути для перенаправления из данных в cookie */
