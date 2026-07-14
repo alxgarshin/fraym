@@ -4215,12 +4215,8 @@ function fraymModalApply(element) {
         },
         function () {
             const self = domElementFromAnything(this);
-            const obj = _(self);
 
-            if (!obj.hasClass('fraymModalApplied')) {
-                obj.addClass('fraymModalApplied');
-                new FraymModal(self, options);
-            }
+            new FraymModal(self, options);
         },
         options
     );
@@ -4240,12 +4236,8 @@ function fraymTabsApply(element) {
         },
         function () {
             const self = domElementFromAnything(this);
-            const obj = _(self);
 
-            if (!obj.hasClass('fraymTabsApplied')) {
-                obj.addClass('fraymTabsApplied');
-                new FraymTabs(self);
-            }
+            new FraymTabs(self);
         }
     );
 }
@@ -4524,12 +4516,8 @@ function fraymAutocompleteApply(element, options) {
         },
         function () {
             const self = domElementFromAnything(this);
-            const obj = _(self);
 
-            if (!obj.hasClass('fraymAutocompleteApplied')) {
-                obj.addClass('fraymAutocompleteApplied');
-                new FraymAutocomplete(self, options);
-            }
+            new FraymAutocomplete(self, options);
         },
         options
     );
@@ -4552,12 +4540,8 @@ function fraymDragDropApply(element, options) {
                 new FraymDragDrop(this.toString(), options);
             } else {
                 const self = domElementFromAnything(this);
-                const obj = _(self);
 
-                if (!obj.hasClass('fraymDragDropApplied')) {
-                    obj.addClass('fraymDragDropApplied');
-                    new FraymDragDrop(self, options);
-                }
+                new FraymDragDrop(self, options);
             }
         },
         options
