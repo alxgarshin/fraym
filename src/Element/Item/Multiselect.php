@@ -28,6 +28,9 @@ class Multiselect extends BaseElement
 
     private Attribute\Multiselect $attribute;
 
+    /** @var array<string, true> Поля, по которым уже выдано DEV-предупреждение о legacy dash за этот запрос */
+    private static array $legacyDashWarned = [];
+
     public function usualAsHTMLRenderer(bool $editableFormat, bool $removeHtmlFromValue = false): string
     {
         $html = '';
@@ -237,6 +240,7 @@ class Multiselect extends BaseElement
 
             if (!is_null($pureValue)) {
                 if (is_string($pureValue)) {
+                    $this->warnOnLegacyDashFormat($pureValue);
                     $pureValue = DataHelper::multiselectToArray($pureValue);
                 } elseif (!is_array(($pureValue))) {
                     $pureValue = [$pureValue];
@@ -308,5 +312,35 @@ class Multiselect extends BaseElement
     public function getCreator(): ?MultiselectCreator
     {
         return $this->getAttribute()->creator;
+    }
+
+    /** DEV-диагностика: поле хранит legacy dash-значение, но без legacySearch — фильтр его не найдёт.
+     *  Одно предупреждение на поле за запрос. */
+    private function warnOnLegacyDashFormat(string $pureValue): void
+    {
+        if (($_ENV['APP_ENV'] ?? '') !== 'DEV' || $this->getLegacySearch()) {
+            return;
+        }
+
+        $trimmed = trim($pureValue);
+
+        if ($trimmed === '' || str_starts_with($trimmed, '[')) {
+            return;
+        }
+
+        $modelClass = is_null($this->model) ? static::class : $this->model::class;
+        $key = $modelClass . '::' . $this->name;
+
+        if (isset(self::$legacyDashWarned[$key])) {
+            return;
+        }
+
+        self::$legacyDashWarned[$key] = true;
+
+        error_log(sprintf(
+            'Multiselect field "%s" in %s holds a legacy dash value but has no legacySearch:true — filters will not match it. Set #[Attribute\Multiselect(legacySearch: true)] or normalize the data (console database:normalize-multiselect).',
+            $this->name,
+            $modelClass,
+        ));
     }
 }
