@@ -119,7 +119,7 @@ trait BaseEntityItem
             foreach ($modelElements as $element) {
                 if ($element->getGroup()) {
                     $groupFieldsPresent = true;
-                    $element->getAttribute()->groupNumber = 0;
+                    $element->setGroupNumber(0);
                     $elementsByGroups[$element->getGroup()][] = $element;
 
                     if ($act !== ActEnum::add) {
@@ -171,7 +171,7 @@ trait BaseEntityItem
                             for ($i = 2; $i <= $groupValue; $i++) {
                                 foreach ($elementsByGroups[$groupKey] as $field) {
                                     $clonedField = clone $field;
-                                    $clonedField->getAttribute()->groupNumber = $i - 1;
+                                    $clonedField->setGroupNumber($i - 1);
                                     $insertedElements[] = $clonedField;
                                 }
                             }

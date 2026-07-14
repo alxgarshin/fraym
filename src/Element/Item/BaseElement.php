@@ -41,6 +41,12 @@ abstract class BaseElement implements ElementItem
 
     public ?Attribute\OnChange $change = null;
 
+    /** Номер строки/группы принадлежит ЭКЗЕМПЛЯРУ поля, а не общему Attribute:
+     *  клоны строк списка шарят Attribute, поэтому запись номера в него перетирала бы соседние строки. */
+    protected ?int $lineNumber = 0;
+
+    protected ?int $groupNumber = null;
+
     /** Проверенные и отфильтрованные контексты для различных объектов */
     /** @var array<string, array> */
     private array $filteredContexts = [];
@@ -86,12 +92,21 @@ abstract class BaseElement implements ElementItem
 
     public function getLineNumber(): ?int
     {
-        return $this->getAttribute()->lineNumber;
+        return $this->lineNumber;
+    }
+
+    public function setLineNumber(?int $lineNumber): static
+    {
+        $this->lineNumber = $lineNumber;
+
+        return $this;
     }
 
     public function getLineNumberWrapped(): string
     {
-        return $this->getAttribute()->lineNumberWrapped;
+        return is_null($this->lineNumber)
+            ? ''
+            : '[' . $this->lineNumber . ']' . (is_null($this->getGroupNumber()) ? '' : '[' . $this->getGroupNumber() . ']');
     }
 
     public function getObligatory(): bool
@@ -111,7 +126,14 @@ abstract class BaseElement implements ElementItem
 
     public function getGroupNumber(): ?int
     {
-        return $this->getAttribute()->groupNumber;
+        return $this->getGroup() ? $this->groupNumber : null;
+    }
+
+    public function setGroupNumber(?int $groupNumber): static
+    {
+        $this->groupNumber = $groupNumber;
+
+        return $this;
     }
 
     public function getHelpClass(): ?string
@@ -220,7 +242,7 @@ abstract class BaseElement implements ElementItem
 
     public function asHTMLWrapped(?int $lineNumber, bool $elementIsWritable, int $elementTabindexNum): string
     {
-        $this->getAttribute()->lineNumber = $lineNumber;
+        $this->lineNumber = $lineNumber;
 
         $FIELD_RESPONSE_DATA = $this->asHTML($elementIsWritable);
 

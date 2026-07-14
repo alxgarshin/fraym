@@ -170,7 +170,7 @@ class MultiObjectsEntity extends BaseEntity
                     $modelElement->set(null);
 
                     if ($modelElement->checkVisibility()) {
-                        $modelElement->getAttribute()->lineNumber = $lineNumber;
+                        $modelElement->setLineNumber($lineNumber);
                         $RESPONSE_DATA .= $isExcel ?
                             $modelElement->asHTML($elementIsWritable) : $modelElement->asHTMLWrapped($lineNumber, $elementIsWritable, $elementTabindexNum);
                     }
@@ -256,7 +256,7 @@ class MultiObjectsEntity extends BaseEntity
                     }
 
                     if ($modelElement->checkVisibility()) {
-                        $modelElement->getAttribute()->lineNumber = $lineNumber;
+                        $modelElement->setLineNumber($lineNumber);
                         $RESPONSE_DATA .= $isExcel ?
                             $modelElement->asHTML($elementIsWritable) : $modelElement->asHTMLWrapped($lineNumber, $elementIsWritable, $elementTabindexNum);
                     }

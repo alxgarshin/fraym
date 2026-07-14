@@ -61,6 +61,8 @@ interface ElementItem
 
     public function getLineNumber(): ?int;
 
+    public function setLineNumber(?int $lineNumber): static;
+
     public function getLineNumberWrapped(): string;
 
     public function getObligatory(): bool;
@@ -70,6 +72,8 @@ interface ElementItem
     public function getGroup(): ?int;
 
     public function getGroupNumber(): ?int;
+
+    public function setGroupNumber(?int $groupNumber): static;
 
     public function getHelpClass(): ?string;
 
