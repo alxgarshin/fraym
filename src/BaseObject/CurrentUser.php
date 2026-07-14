@@ -39,6 +39,9 @@ final class CurrentUser implements CurrentUserInterface
     /** Массив настоящих данных пользователя-администратора при переключении на другой профиль */
     private ?array $adminData = null;
 
+    /** Аутентификация прошла через Authorization: Bearer (внешний API), а не cookie — CSRF пропускается */
+    private bool $authenticatedViaBearer = false;
+
     /** Создание или получение текущего пользователя в константу. По умолчанию: CURRENT_USER */
     public static function getInstance(string $constName = 'CURRENT_USER'): self
     {
@@ -111,16 +114,23 @@ final class CurrentUser implements CurrentUserInterface
     {
         $LOCALE = LocaleHelper::getLocale(['fraym', 'basefunc']);
 
-        /** Сначала мы проверяем запрос на наличие валидного JWT токена в Authorization: Bearer */
-        $jwtTokenPayload = AuthHelper::getAuthTokenPayload();
+        /** JWT проверяем из httpOnly cookie (браузерный SPA), затем из Authorization: Bearer (внешние API).
+         * validateAuthToken проверяет подпись/alg/exp — payload доверенный, но несёт лишь id/sid,
+         * поэтому rights/bazecount/block_* берём свежими из БД (отзыв прав действует немедленно). */
+        $authTokenFromCookie = AuthHelper::getAuthTokenFromCookie();
+        $authToken = $authTokenFromCookie ?? AuthHelper::getAuthTokenFromBearer();
+        $jwtTokenPayload = is_null($authToken) ? null : AuthHelper::validateAuthToken($authToken);
 
         if (!is_null($jwtTokenPayload)) {
-            if ($jwtTokenPayload['exp'] ?? false) {
-                if ((int) $jwtTokenPayload['exp'] > time()) {
-                    CURRENT_USER->authSetUserData($jwtTokenPayload);
-                } else {
-                    /** Токен есть, но он просроченный, возвращаем 401, чтобы приложение ушло с запросом на /login/action=refresh_token */
-                    ResponseHelper::response401();
+            $loginData = DB->select('user', ['id' => $jwtTokenPayload['id'] ?? null], true);
+
+            if ($loginData) {
+                CURRENT_USER->authSetUserData($loginData);
+
+                /** CSRF пропускается только для аутентификации через Bearer (внешние API);
+                 * cookie-аутентифицированный SPA обязан слать X-CSRF-Token. */
+                if (is_null($authTokenFromCookie)) {
+                    CURRENT_USER->setAuthenticatedViaBearer(true);
                 }
             }
         } else {
@@ -135,6 +145,8 @@ final class CurrentUser implements CurrentUserInterface
                     if ($loginData) {
                         if (($loginData['refresh_token_exp'] ?? false) && strtotime($loginData['refresh_token_exp']) > time()) {
                             CURRENT_USER->authSetUserData($loginData);
+                            /** Обновляем JWT-cookie на полной загрузке, чтобы последующие XHR были авторизованы */
+                            AuthHelper::setAuthTokenCookie(AuthHelper::generateAuthToken());
                         } else {
                             /** Cookie есть, но он просроченный, обновляем его */
                             AuthHelper::generateAndSaveRefreshToken();
@@ -149,11 +161,16 @@ final class CurrentUser implements CurrentUserInterface
 
         /** Если ничего не подошло, но действие = login, то проверяем логин и пароль */
         if ('login' === ACTION && isset($_REQUEST['password'])) {
+            if (!AuthHelper::validatePreAuthCsrfToken()) {
+                ResponseHelper::responseOneBlock('error', $LOCALE['wrong_login_or_password']);
+            }
+
             $loginData = $this->checkPassword();
 
             if ($loginData) {
                 CURRENT_USER->authSetUserData($loginData);
                 AuthHelper::generateAndSaveRefreshToken();
+                AuthHelper::setAuthTokenCookie(AuthHelper::generateAuthToken());
             } else {
                 ResponseHelper::responseOneBlock('error', $LOCALE['wrong_login_or_password']);
             }
@@ -313,6 +330,18 @@ final class CurrentUser implements CurrentUserInterface
     public function setAdminData(array $adminData): static
     {
         $this->adminData = $adminData;
+
+        return $this;
+    }
+
+    public function isAuthenticatedViaBearer(): bool
+    {
+        return $this->authenticatedViaBearer;
+    }
+
+    public function setAuthenticatedViaBearer(bool $authenticatedViaBearer): static
+    {
+        $this->authenticatedViaBearer = $authenticatedViaBearer;
 
         return $this;
     }

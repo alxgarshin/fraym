@@ -200,11 +200,11 @@ abstract class BaseEntity
             ResponseHelper::response401();
         }
 
-        /** Проверка CSRF-токена для cookie-авторизованных запросов */
-        if (
-            !REQUEST_TYPE->isApiRequest()
-            && !AuthHelper::validateCsrfToken($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '')
-        ) {
+        /** CSRF пропускается только для внешнего API, аутентифицированного через Bearer.
+         * Cookie-авторизованный SPA (в т.ч. same-origin JS со спуфнутым заголовком) обязан слать X-CSRF-Token. */
+        $skipCsrf = REQUEST_TYPE->isApiRequest() && CURRENT_USER->isAuthenticatedViaBearer();
+
+        if (!$skipCsrf && !AuthHelper::validateCsrfToken($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '')) {
             ResponseHelper::response403();
         }
 

@@ -19,33 +19,60 @@ use Fraym\Interface\Helper;
 
 abstract class AuthHelper implements Helper
 {
-    /** Создание JWT-токена текущего пользователя */
+    /** httpOnly cookie с JWT для браузерного SPA (XSS не может прочитать токен) */
+    public const AUTH_TOKEN_COOKIE = 'authToken';
+
+    /** Cookie double-submit токена для форм неавторизованных пользователей (login/register/reset) */
+    public const PRE_AUTH_CSRF_COOKIE = 'csrf_pre_auth';
+
+    /** Создание JWT-токена текущего пользователя.
+     * Payload несёт только идентификаторы: rights/bazecount/block_* грузятся из БД при auth() —
+     * иначе отзыв прав действовал бы до истечения токена (1ч). */
     public static function generateAuthToken(): string
     {
         $tokenData = [
             "exp" => time() + 3600,
             "id" => CURRENT_USER->id(),
             "sid" => CURRENT_USER->sid(),
-            "rights" => CURRENT_USER->getAllRights(),
-            "bazecount" => CURRENT_USER->getBazeCount(),
-            "block_save_referer" => CURRENT_USER->getBlockSaveReferer(),
-            "block_auto_redirect" => CURRENT_USER->getBlockAutoRedirect(),
         ];
 
         return self::generateJWTAuthToken(["alg" => "HS256", "typ" => "JWT"], $tokenData);
     }
 
-    /** Проверка валидности токена авторизации */
-    public static function getAuthTokenPayload(): ?array
+    /** JWT из httpOnly cookie (SPA-путь) */
+    public static function getAuthTokenFromCookie(): ?string
     {
-        $requestHeaders = getallheaders();
-        $authorization = $requestHeaders['Authorization'] ?? '';
+        $token = CookieHelper::getCookie(self::AUTH_TOKEN_COOKIE);
+
+        return is_string($token) && $token !== '' ? $token : null;
+    }
+
+    /** JWT из заголовка Authorization: Bearer (внешние API-клиенты) */
+    public static function getAuthTokenFromBearer(): ?string
+    {
+        $authorization = function_exists('getallheaders') ? (getallheaders()['Authorization'] ?? '') : '';
+        $authorization = $authorization !== '' ? $authorization : ($_SERVER['HTTP_AUTHORIZATION'] ?? '');
 
         if (!is_string($authorization) || !str_starts_with($authorization, 'Bearer ')) {
             return null;
         }
 
-        $authToken = trim(substr($authorization, 7));
+        $token = trim(substr($authorization, 7));
+
+        return $token !== '' ? $token : null;
+    }
+
+    /** Проверка валидности токена авторизации (cookie приоритетнее Bearer) */
+    public static function getAuthTokenPayload(): ?array
+    {
+        $authToken = self::getAuthTokenFromCookie() ?? self::getAuthTokenFromBearer();
+
+        return is_null($authToken) ? null : self::validateAuthToken($authToken);
+    }
+
+    /** Валидация строки JWT: структура, alg, подпись в постоянном времени, exp */
+    public static function validateAuthToken(string $authToken): ?array
+    {
         $tokenParts = explode('.', $authToken);
 
         if (count($tokenParts) !== 3) {
@@ -141,6 +168,36 @@ abstract class AuthHelper implements Helper
     public static function removeRefreshTokenCookie(): void
     {
         CookieHelper::batchDeleteCookie(['refreshToken']);
+    }
+
+    /** Запись JWT в httpOnly cookie (срок жизни = сроку жизни токена) */
+    public static function setAuthTokenCookie(string $token): void
+    {
+        CookieHelper::batchSetCookie([self::AUTH_TOKEN_COOKIE => $token], time() + 3600);
+    }
+
+    /** Сброс cookie JWT */
+    public static function removeAuthTokenCookie(): void
+    {
+        CookieHelper::batchDeleteCookie([self::AUTH_TOKEN_COOKIE]);
+    }
+
+    /** Генерация double-submit токена: пишет cookie и возвращает значение для скрытого поля формы */
+    public static function generatePreAuthCsrfToken(): string
+    {
+        $token = DataHelper::getRandomStringBin2hex(64);
+        CookieHelper::batchSetCookie([self::PRE_AUTH_CSRF_COOKIE => $token]);
+
+        return $token;
+    }
+
+    /** Валидация double-submit токена формы: значение поля должно совпасть с cookie */
+    public static function validatePreAuthCsrfToken(): bool
+    {
+        $cookie = CookieHelper::getCookie(self::PRE_AUTH_CSRF_COOKIE);
+        $field = $_REQUEST[self::PRE_AUTH_CSRF_COOKIE] ?? '';
+
+        return is_string($cookie) && $cookie !== '' && is_string($field) && hash_equals($cookie, $field);
     }
 
     /** Добавление проеектного хэша к строке */

@@ -33,9 +33,13 @@ enum RequestTypeEnum: string
 
     public static function getRequestType(): static
     {
+        $authorization = function_exists('getallheaders') ? (getallheaders()['Authorization'] ?? '') : '';
+        $authorization = $authorization !== '' ? $authorization : ($_SERVER['HTTP_AUTHORIZATION'] ?? '');
+        $hasBearer = is_string($authorization) && str_starts_with($authorization, 'Bearer ');
+
         return match (true) {
             ($_SERVER['HTTP_FRAYM_REQUEST'] ?? false) === 'true' => self::FRAYM_REQUEST,
-            ($_SERVER['HTTP_FRAYM_API_REQUEST'] ?? false) === 'true' => self::FRAYM_API_REQUEST,
+            $hasBearer => self::FRAYM_API_REQUEST,
             ($_SERVER['HTTP_HX_REQUEST'] ?? false) === 'true' => self::HTMX_REQUEST,
             default => self::NOT_A_DYNAMIC_REQUEST,
         };

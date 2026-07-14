@@ -62,4 +62,8 @@ interface CurrentUser
     public function getAdminData(): ?array;
 
     public function setAdminData(array $adminData): static;
+
+    public function isAuthenticatedViaBearer(): bool;
+
+    public function setAuthenticatedViaBearer(bool $authenticatedViaBearer): static;
 }

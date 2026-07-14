@@ -11,8 +11,7 @@
 const showTimeMode = false;
 let startTime = new Date().getTime();
 
-/** Токен авторизации */
-let jwtToken;
+/** JWT хранится в httpOnly cookie authToken (JS его не видит). Single-flight guard обновления токена. */
 let jwtTokenRefreshing = null;
 const jwtTokenRefreshUrl = `${absolutePath()}/login/action=refresh_token`;
 
@@ -2964,10 +2963,6 @@ async function fetchData(url, options = {}, data = null) {
             'Fraym-Request': true
         };
 
-        if (jwtToken) {
-            headers.Authorization = 'Bearer ' + jwtToken;
-        }
-
         if (window['csrfToken']) {
             headers['X-CSRF-Token'] = window['csrfToken'];
         }
@@ -3015,21 +3010,15 @@ window.fetch = new Proxy(window.fetch, {
             }
         }
 
-        /** Обновление jwtToken (с защитой от параллельных запросов) */
-        const refreshJwtToken = async function (staleToken) {
+        /** JWT в httpOnly cookie authToken (JS его не читает) — refresh-эндпоинт выставляет свежую cookie.
+         *  Single-flight против параллельных refresh на одновременных 401. */
+        const refreshAuthToken = async function () {
             if (jwtTokenRefreshing) {
                 await jwtTokenRefreshing.catch(() => { });
                 return;
             }
 
-            /** Токен уже обновлён параллельным потоком (отличается от использованного) — refresh не нужен. */
-            if (staleToken !== undefined && jwtToken !== staleToken) {
-                return;
-            }
-
             jwtTokenRefreshing = fetch(jwtTokenRefreshUrl, { method: 'GET' })
-                .then(r => r.ok ? r.text() : null)
-                .then(token => { if (token) jwtToken = token; })
                 .finally(() => { jwtTokenRefreshing = null; });
 
             await jwtTokenRefreshing.catch(() => { });
@@ -3041,16 +3030,6 @@ window.fetch = new Proxy(window.fetch, {
         const refreshUrlString = (typeof url === 'string' ? url : url.url);
         const isRefreshRequest = refreshUrlString && refreshUrlString.indexOf(jwtTokenRefreshUrl) === 0;
 
-        if (localUrl && !isRefreshRequest) {
-            if (!jwtToken && !options.headers.Authorization) {
-                await refreshJwtToken();
-            }
-
-            if (jwtToken) {
-                options.headers.Authorization = 'Bearer ' + jwtToken;
-            }
-        }
-
         let response;
         try {
             response = await fetch.apply(thisArg, [url, options]);
@@ -3058,29 +3037,22 @@ window.fetch = new Proxy(window.fetch, {
             return new Response(null, { status: 0, statusText: "NetworkError" });
         }
 
-        /** Если токен протух (401) — сбросить, обновить и повторить запрос один раз */
+        /** Токен протух (401) — обновляем cookie и повторяем запрос один раз */
         if (localUrl && !isRefreshRequest && response.status === 401) {
-            /** Не затираем jwtToken (иначе гонка стирает свежий токен параллельного refresh) —
-             *  вместо этого сравниваем использованный токен с обновлённым. */
-            const usedAuth = options.headers.Authorization;
-            const usedToken = usedAuth ? usedAuth.slice(7) : undefined;
+            await refreshAuthToken();
 
-            await refreshJwtToken(usedToken);
+            try {
+                response = await fetch.apply(thisArg, [url, options]);
+            } catch {
+                return new Response(null, { status: 0, statusText: "NetworkError" });
+            }
 
-            if (jwtToken && ('Bearer ' + jwtToken) !== usedAuth) {
-                options.headers.Authorization = 'Bearer ' + jwtToken;
-
-                try {
-                    response = await fetch.apply(thisArg, [url, options]);
-                } catch {
-                    return new Response(null, { status: 0, statusText: "NetworkError" });
-                }
-            } else {
-                /** Refresh не дал нового токена — сессия истекла: уходим на login (не молча). */
+            /** Refresh не восстановил сессию — уходим на login (не молча). */
+            if (response.status === 401) {
                 const loginUrl = `${absolutePath()}/login/`;
 
                 if (!window.location.href.startsWith(loginUrl)) {
-                    console.warn('JWT refresh failed after 401 — redirecting to login');
+                    console.warn('Auth refresh failed after 401 — redirecting to login');
                     window.location = loginUrl;
                 }
             }

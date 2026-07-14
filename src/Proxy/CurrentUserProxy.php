@@ -157,4 +157,16 @@ final class CurrentUserProxy implements CurrentUser
 
         return $this;
     }
+
+    public function isAuthenticatedViaBearer(): bool
+    {
+        return Container::make('current_user')->isAuthenticatedViaBearer();
+    }
+
+    public function setAuthenticatedViaBearer(bool $authenticatedViaBearer): static
+    {
+        Container::make('current_user')->setAuthenticatedViaBearer($authenticatedViaBearer);
+
+        return $this;
+    }
 }

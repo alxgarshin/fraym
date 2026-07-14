@@ -31,7 +31,7 @@ set_exception_handler(static function (\Throwable $e): void {
     error_log($logMessage);
     http_response_code(500);
 
-    if (($_SERVER['HTTP_FRAYM_REQUEST'] ?? '') === 'true' || ($_SERVER['HTTP_FRAYM_API_REQUEST'] ?? '') === 'true') {
+    if (($_SERVER['HTTP_FRAYM_REQUEST'] ?? '') === 'true' || str_starts_with($_SERVER['HTTP_AUTHORIZATION'] ?? '', 'Bearer ')) {
         header('Content-Type: application/json');
         echo json_encode(['response' => 'error', 'response_text' => 'Internal server error']);
     } else {
@@ -45,7 +45,7 @@ try {
     error_log($e->getMessage());
     http_response_code(503);
 
-    if (($_SERVER['HTTP_FRAYM_REQUEST'] ?? '') === 'true' || ($_SERVER['HTTP_FRAYM_API_REQUEST'] ?? '') === 'true') {
+    if (($_SERVER['HTTP_FRAYM_REQUEST'] ?? '') === 'true' || str_starts_with($_SERVER['HTTP_AUTHORIZATION'] ?? '', 'Bearer ')) {
         header('Content-Type: application/json');
         echo json_encode(['response' => 'error', 'response_text' => 'Database unavailable']);
     } else {
