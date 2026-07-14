@@ -32,7 +32,7 @@ class Wysiwyg extends BaseElement
 
     public function usualAsHTMLRenderer(bool $editableFormat, bool $removeHtmlFromValue = false): string
     {
-        $name = $this->name . $this->getLineNumberWrapped();
+        $name = $this->name . $this->lineNumberWrapped;
         $value = DataHelper::escapeOutput($this->get(), EscapeModeEnum::plainHTML);
 
         if ($editableFormat) {

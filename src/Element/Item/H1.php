@@ -26,7 +26,7 @@ class H1 extends BaseElement
 
     public function usualAsHTMLRenderer(bool $editableFormat, bool $removeHtmlFromValue = false): string
     {
-        return '<h1 class="data_h1"' . (!empty($this->name) ? ' id="field_' . $this->name . $this->getLineNumberWrapped() . '"' : '') . '>' . $this->shownName . '</h1>';
+        return '<h1 class="data_h1"' . (!empty($this->name) ? ' id="field_' . $this->name . $this->lineNumberWrapped . '"' : '') . '>' . $this->shownName . '</h1>';
     }
 
     public function asArray(): array

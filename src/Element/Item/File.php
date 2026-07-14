@@ -32,7 +32,7 @@ class File extends BaseElement
     {
         $html = '';
         $value = $this->get();
-        $name = $this->name . $this->getLineNumberWrapped();
+        $name = $this->name . $this->lineNumberWrapped;
         $uploadNum = $this->getUploadNum();
         $uploadData = $this->getUploadData();
         $uploadedFiles = [];

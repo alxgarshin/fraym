@@ -32,7 +32,7 @@ class Select extends BaseElement
     public function usualAsHTMLRenderer(bool $editableFormat, bool $removeHtmlFromValue = false): string
     {
         $html = '';
-        $name = $this->name . $this->getLineNumberWrapped();
+        $name = $this->name . $this->lineNumberWrapped;
         $value = $this->get();
         $values = $this->getValues();
         $locked = $this->getLocked();

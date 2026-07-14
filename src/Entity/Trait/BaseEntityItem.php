@@ -119,7 +119,7 @@ trait BaseEntityItem
             foreach ($modelElements as $element) {
                 if ($element->getGroup()) {
                     $groupFieldsPresent = true;
-                    $element->setGroupNumber(0);
+                    $element->groupNumber = 0;
                     $elementsByGroups[$element->getGroup()][] = $element;
 
                     if ($act !== ActEnum::add) {
@@ -171,7 +171,7 @@ trait BaseEntityItem
                             for ($i = 2; $i <= $groupValue; $i++) {
                                 foreach ($elementsByGroups[$groupKey] as $field) {
                                     $clonedField = clone $field;
-                                    $clonedField->setGroupNumber($i - 1);
+                                    $clonedField->groupNumber = $i - 1;
                                     $insertedElements[] = $clonedField;
                                 }
                             }
@@ -239,9 +239,9 @@ trait BaseEntityItem
 
                 if (!is_null($elementIsWritable) && $modelElement->checkVisibility()) {
                     if (
-                        $modelElement->getGroupNumber() > 0 &&
+                        $modelElement->groupNumber > 0 &&
                         isset($modelElements[$modelElementKey - 1]) &&
-                        $modelElements[$modelElementKey - 1]->getGroupNumber() < $modelElement->getGroupNumber()
+                        $modelElements[$modelElementKey - 1]->groupNumber < $modelElement->groupNumber
                     ) {
                         $RESPONSE_DATA .= '<div class="field_group_separator"></div>';
                     }

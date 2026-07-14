@@ -184,7 +184,7 @@ class Multiselect extends BaseElement
     private function renderEditableDropfield(array $value, array $values, ?array $images): string
     {
         $html = '';
-        $name = $this->name . $this->getLineNumberWrapped();
+        $name = $this->name . $this->lineNumberWrapped;
         $locked = $this->getLocked();
         $LOC = LocaleHelper::getLocale(['fraym'])['classes']['multiselect'];
 

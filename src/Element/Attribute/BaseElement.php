@@ -22,10 +22,6 @@ abstract class BaseElement implements ElementAttribute
 
     public array $basicElementValidators = [];
 
-    public string $lineNumberWrapped {
-        get => (is_null($this->lineNumber) ? '' : '[' . $this->lineNumber . ']' . (is_null($this->groupNumber) ? '' : '[' . $this->groupNumber . ']'));
-    }
-
     public string $obligatoryStr {
         get => $this->obligatory ? ' obligatory' : '';
     }
@@ -37,14 +33,10 @@ abstract class BaseElement implements ElementAttribute
         public ?bool $obligatory = false,
         public ?string $helpClass = null,
         public ?int $group = null,
-        public ?int $groupNumber = null {
-            get => $this->group ? $this->groupNumber : null;
-        },
         public ?bool $noData = null,
         public ?bool $virtual = null,
         public ?string $linkAtBegin = null,
         public ?string $linkAtEnd = null,
-        public ?int $lineNumber = 0,
         public ?bool $useInFilters = false,
         public string|array $context = [] {
             set => $this->context = $this->flattenContext($value);

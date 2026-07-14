@@ -36,7 +36,7 @@ class Calendar extends BaseElement
 
         if ($editableFormat) {
             $value = $this->get();
-            $name = $this->name . $this->getLineNumberWrapped();
+            $name = $this->name . $this->lineNumberWrapped;
 
             $html = '<input type="date' . ($this->getShowDatetime() ? 'time-local' : '') . '" name="' . $name . '" id="' . $name . '" class="dpkr' . ($this->getShowDatetime() ? '_time' : '') . $this->getObligatoryStr() . '" value="' . $value?->format('Y-m-d' . ($this->getShowDatetime() ? ' H:i' : '')) . '" />';
         } else {

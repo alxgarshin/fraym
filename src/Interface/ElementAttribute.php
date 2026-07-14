@@ -29,9 +29,6 @@ interface ElementAttribute
     /** Номер последовательной группы элемента */
     public ?int $group { get; set; }
 
-    /** В какой части (по номеру) группы находится данный конкретный инстанс элемента? */
-    public ?int $groupNumber { get; set; }
-
     /** Управление элементом нестандартными обработчиками */
     public ?bool $noData { get; set; }
 
@@ -46,12 +43,6 @@ interface ElementAttribute
 
     /** Закрывающая часть ссылки */
     public ?string $linkAtEnd { get; set; }
-
-    /** Строка элемента в наборе данных */
-    public ?int $lineNumber { get; set; }
-
-    /** Обернутая строка элемента в наборе данных */
-    public string $lineNumberWrapped { get; }
 
     /** Использовать элемент в фильтрах */
     public ?bool $useInFilters { get; set; }

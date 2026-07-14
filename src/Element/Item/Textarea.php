@@ -32,7 +32,7 @@ class Textarea extends BaseElement
 
     public function usualAsHTMLRenderer(bool $editableFormat, bool $removeHtmlFromValue = false): string
     {
-        $name = $this->name . $this->getLineNumberWrapped();
+        $name = $this->name . $this->lineNumberWrapped;
         $value = DataHelper::escapeOutput($this->get(), $this->getAttribute()->saveHtml ? EscapeModeEnum::plainHTML : EscapeModeEnum::forHTML);
         $rows = $this->getRows();
 

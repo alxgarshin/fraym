@@ -33,7 +33,7 @@ class Timestamp extends BaseElement
     public function usualAsHTMLRenderer(bool $editableFormat, bool $removeHtmlFromValue = false): string
     {
         $value = $this->get()->getTimestamp();
-        $name = $this->name . $this->getLineNumberWrapped();
+        $name = $this->name . $this->lineNumberWrapped;
         $html = '';
 
         if ($this->getShowInObjects()) {

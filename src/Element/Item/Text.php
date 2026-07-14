@@ -32,7 +32,7 @@ class Text extends BaseElement
 
     public function usualAsHTMLRenderer(bool $editableFormat, bool $removeHtmlFromValue = false): string
     {
-        $name = $this->name . $this->getLineNumberWrapped();
+        $name = $this->name . $this->lineNumberWrapped;
         $value = $this->get();
 
         if ($editableFormat) {

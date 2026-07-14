@@ -42,10 +42,26 @@ abstract class BaseElement implements ElementItem
     public ?Attribute\OnChange $change = null;
 
     /** Номер строки/группы принадлежит ЭКЗЕМПЛЯРУ поля, а не общему Attribute:
-     *  клоны строк списка шарят Attribute, поэтому запись номера в него перетирала бы соседние строки. */
-    protected ?int $lineNumber = 0;
+     *  клоны строк списка шарят Attribute, поэтому запись номера в него перетирала бы соседние строки.
+     *  Дефолт lineNumber — null: вручную созданный и отрисованный (asHTML) элемент идёт без суффикса [n];
+     *  многострочный рендер проставляет номер явно (asHTMLWrapped / прямое присваивание). */
+    public ?int $lineNumber = null;
 
-    protected ?int $groupNumber = null;
+    public ?int $groupNumber = null {
+        get => $this->group ? $this->groupNumber : null;
+    }
+
+    /** Группа — конфиг разработчика, источник истины в Attribute; на Item — живой доступ (нужен хуку groupNumber). */
+    public ?int $group {
+        get => $this->getAttribute()->group;
+    }
+
+    /** Обёрнутый номер строки/группы для имени поля: '' | '[n]' | '[n][g]'. */
+    public string $lineNumberWrapped {
+        get => is_null($this->lineNumber)
+            ? ''
+            : '[' . $this->lineNumber . ']' . (is_null($this->groupNumber) ? '' : '[' . $this->groupNumber . ']');
+    }
 
     /** Проверенные и отфильтрованные контексты для различных объектов */
     /** @var array<string, array> */
@@ -61,12 +77,12 @@ abstract class BaseElement implements ElementItem
             'helpText' => $this->helpText,
             'helpClass' => $this->getHelpClass(),
             'group' => $this->getGroup(),
-            'groupNumber' => $this->getGroupNumber(),
+            'groupNumber' => $this->groupNumber,
             'noData' => $this->getNoData(),
             'virtual' => $this->getVirtual(),
             'linkAtBegin' => $this->getLinkAt()->getLinkAtBegin(),
             'linkAtEnd' => $this->getLinkAt()->getLinkAtEnd(),
-            'lineNumber' => $this->getLineNumber(),
+            'lineNumber' => $this->lineNumber,
         ];
     }
 
@@ -90,25 +106,6 @@ abstract class BaseElement implements ElementItem
         return $defaultValue;
     }
 
-    public function getLineNumber(): ?int
-    {
-        return $this->lineNumber;
-    }
-
-    public function setLineNumber(?int $lineNumber): static
-    {
-        $this->lineNumber = $lineNumber;
-
-        return $this;
-    }
-
-    public function getLineNumberWrapped(): string
-    {
-        return is_null($this->lineNumber)
-            ? ''
-            : '[' . $this->lineNumber . ']' . (is_null($this->getGroupNumber()) ? '' : '[' . $this->getGroupNumber() . ']');
-    }
-
     public function getObligatory(): bool
     {
         return $this->getAttribute()->obligatory ?? false;
@@ -121,19 +118,7 @@ abstract class BaseElement implements ElementItem
 
     public function getGroup(): ?int
     {
-        return $this->getAttribute()->group;
-    }
-
-    public function getGroupNumber(): ?int
-    {
-        return $this->getGroup() ? $this->groupNumber : null;
-    }
-
-    public function setGroupNumber(?int $groupNumber): static
-    {
-        $this->groupNumber = $groupNumber;
-
-        return $this;
+        return $this->group;
     }
 
     public function getHelpClass(): ?string
@@ -247,7 +232,7 @@ abstract class BaseElement implements ElementItem
             $RESPONSE_DATA = '';
 
             if ($FIELD_RESPONSE_DATA !== '' && !is_null($this->shownName)) {
-                $thisName = $this->name . $this->getLineNumberWrapped();
+                $thisName = $this->name . $this->lineNumberWrapped;
 
                 $RESPONSE_DATA .= '<div class="field ' . ObjectsHelper::getClassShortName($this::class) .
                     ($this instanceof Select && $this->getHelper() ? ' full_width' : '') .

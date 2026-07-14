@@ -59,11 +59,9 @@ interface ElementItem
 
     public function checkDefaultValueInServiceFunctions(mixed $defaultValue): mixed;
 
-    public function getLineNumber(): ?int;
+    public ?int $lineNumber { get; set; }
 
-    public function setLineNumber(?int $lineNumber): static;
-
-    public function getLineNumberWrapped(): string;
+    public string $lineNumberWrapped { get; }
 
     public function getObligatory(): bool;
 
@@ -71,9 +69,7 @@ interface ElementItem
 
     public function getGroup(): ?int;
 
-    public function getGroupNumber(): ?int;
-
-    public function setGroupNumber(?int $groupNumber): static;
+    public ?int $groupNumber { get; set; }
 
     public function getHelpClass(): ?string;
 

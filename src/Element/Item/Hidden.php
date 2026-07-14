@@ -30,7 +30,7 @@ class Hidden extends BaseElement
 
     public function usualAsHTMLRenderer(bool $editableFormat, bool $removeHtmlFromValue = false): string
     {
-        return '<input type="hidden" name="' . $this->name . $this->getLineNumberWrapped() . '" value="' . DataHelper::escapeOutput($this->get()) . '" />';
+        return '<input type="hidden" name="' . $this->name . $this->lineNumberWrapped . '" value="' . DataHelper::escapeOutput($this->get()) . '" />';
     }
 
     public function asArray(): array
