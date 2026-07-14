@@ -45,6 +45,8 @@ final class Filters
         get => LocaleHelper::getLocale(['fraym', 'filters']);
     }
 
+    private static ?array $filtersCookieCache = null;
+
     public function __construct(
         /** Сущность */
         private BaseEntity $entity,
@@ -146,11 +148,12 @@ final class Filters
 
     private static function getFiltersCookie(): array
     {
-        return CookieHelper::getCookie('fraym_filters', true) ?? [];
+        return self::$filtersCookieCache ??= CookieHelper::getCookie('fraym_filters', true) ?? [];
     }
 
     private static function setFiltersCookie(array $fraymFilters): void
     {
+        self::$filtersCookieCache = $fraymFilters;
         CookieHelper::batchSetCookie(['fraym_filters' => $fraymFilters]);
     }
 
