@@ -193,7 +193,7 @@ class MultiObjectsEntity extends BaseEntity
             $changeRestrictIdsData = DB->query('SELECT id FROM ' . $this->table . ' WHERE ' . $modelRights->changeRestrict->query, $modelRights->changeRestrict->params);
 
             foreach ($changeRestrictIdsData as $changeRestrictIdsItem) {
-                $changeRestrictIds[] = $changeRestrictIdsItem['id'];
+                $changeRestrictIds[$changeRestrictIdsItem['id']] = true;
             }
         }
 
@@ -203,17 +203,17 @@ class MultiObjectsEntity extends BaseEntity
             $deleteRestrictIdsData = DB->query('SELECT id FROM ' . $this->table . ' WHERE ' . $modelRights->deleteRestrict->query, $modelRights->deleteRestrict->params);
 
             foreach ($deleteRestrictIdsData as $deleteRestrictIdsItem) {
-                $deleteRestrictIds[] = $deleteRestrictIdsItem['id'];
+                $deleteRestrictIds[$deleteRestrictIdsItem['id']] = true;
             }
         }
 
         foreach ($DATA_FILTERED_BY_CONTEXT as $DATA_ITEM) {
             $RESPONSE_DATA .= '<div class="tr string' . ($lineNumber % 2 === 0 ? 2 : 1) .
-                ($modelRights->changeRight && (is_null($modelRights->changeRestrict) || in_array($DATA_ITEM['id'], $changeRestrictIds)) ? '' : ' readonly') .
+                ($modelRights->changeRight && (is_null($modelRights->changeRestrict) || isset($changeRestrictIds[$DATA_ITEM['id']])) ? '' : ' readonly') .
                 '" id="line' . $lineNumber . '" obj_id="' . $DATA_ITEM['id'] . '">';
 
             /** Права на изменения есть, но нет права на изменение данной конкретной строки */
-            if ($modelRights->changeRight && !(is_null($modelRights->changeRestrict) || in_array($DATA_ITEM['id'], $changeRestrictIds))) {
+            if ($modelRights->changeRight && !(is_null($modelRights->changeRestrict) || isset($changeRestrictIds[$DATA_ITEM['id']]))) {
                 $RESPONSE_DATA .= '<input type="hidden" name="readonly[' . $lineNumber . ']" value="' . $DATA_ITEM['id'] . '" />';
             }
 
@@ -222,12 +222,12 @@ class MultiObjectsEntity extends BaseEntity
             }
 
             if ($modelRights->deleteRight) {
-                if (is_null($modelRights->deleteRestrict) || in_array($DATA_ITEM['id'], $deleteRestrictIds)) {
+                if (is_null($modelRights->deleteRestrict) || isset($deleteRestrictIds[$DATA_ITEM['id']])) {
                     $RESPONSE_DATA .= '<div class="td multi_objects_delete"><a class="trash careful" title="' .
                         $GLOBAL_LOCALE['delete'] . ' ' . $this->getObjectName() . '" method="DELETE" href="/' . KIND . '/' . CMSVC . '/' . $DATA_ITEM['id'] .
                         '/page=' . PAGE . '&sorting=' . SORTING . '">' .
                         ($isExcel ? '' : '<span>' . $GLOBAL_LOCALE['delete'] . '</span>') . '</a></div>';
-                } elseif ($isExcel && !in_array($DATA_ITEM['id'], $deleteRestrictIds)) {
+                } elseif ($isExcel && !isset($deleteRestrictIds[$DATA_ITEM['id']])) {
                     $RESPONSE_DATA .= '<div class="td multi_objects_delete"></div>';
                 }
             }
@@ -246,7 +246,7 @@ class MultiObjectsEntity extends BaseEntity
                 if (!is_null($elementIsWritable)) {
                     $elementIsWritable = $elementIsWritable &&
                         $modelRights->changeRight &&
-                        (is_null($modelRights->changeRestrict) || in_array($DATA_ITEM['id'], $changeRestrictIds));
+                        (is_null($modelRights->changeRestrict) || isset($changeRestrictIds[$DATA_ITEM['id']]));
                 }
 
                 if (!is_null($elementIsWritable)) {
