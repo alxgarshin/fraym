@@ -56,7 +56,7 @@ class File extends BaseElement
 <input type="file" id="' . $name . '" name="' . $name . (($uploadData['multiple'] ?? false) ? '[]' : '') . '" class="inputfile' . $this->getObligatoryStr() . '" data-upload-path="' . $_ENV['UPLOADS_PATH'] . '" data-upload-num="' . $uploadNum . '" data-upload-name="' . $uploadData['columnname'] . '"' . (($uploadData['multiple'] ?? false) ? ' multiple' : '') . ($uploadedFiles ? ' data-uploaded-files=\'' . DataHelper::jsonFixedEncode($uploadedFiles) . '\'' : '') . (($uploadData['isimage'] ?? false) ? ' accept="image/*"' : '') . ' />';
         } else {
             foreach ($uploadedFiles as $key => $value) {
-                $html .= '<div class="uploaded_file"><a href="' . $_ENV['UPLOADS_PATH'] . $value['path'] . '" target="_blank">' . $value['name'] . '</a></div>';
+                $html .= '<div class="uploaded_file"><a href="' . $_ENV['UPLOADS_PATH'] . DataHelper::escapeOutput($value['path']) . '" target="_blank">' . DataHelper::escapeOutput($value['name']) . '</a></div>';
             }
         }
 

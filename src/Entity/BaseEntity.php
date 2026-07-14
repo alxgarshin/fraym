@@ -1028,7 +1028,9 @@ abstract class BaseEntity
                 } elseif ($modelElement instanceof Timestamp) {
                     $RESPONSE_DATA .= $modelElement->getAsUsualDateTime();
                 } else {
-                    $RESPONSE_DATA .= $fieldValue;
+                    $RESPONSE_DATA .= $modelElement->getAttribute()->saveHtml === true
+                        ? $fieldValue
+                        : DataHelper::escapeOutput($fieldValue);
                 }
                 unset($fieldValue);
 
