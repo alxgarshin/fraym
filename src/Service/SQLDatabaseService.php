@@ -625,6 +625,14 @@ final class SQLDatabaseService implements Database
 
             $level++;
 
+            /** Индекс детей по (тип+значение) родителя: сохраняет строгое === матчинга,
+             *  но убирает полный проход fullDataArray на каждого родителя каждого уровня. */
+            $childrenByParent = [];
+
+            foreach ($fullDataArray as $fullData) {
+                $childrenByParent[gettype($fullData[$where]) . ':' . $fullData[$where]][] = $fullData;
+            }
+
             /** Выстраиваем нужное дерево */
             while ($level <= $maxlevel) {
                 $noObjectsFoundOnLevel = true;
@@ -633,20 +641,20 @@ final class SQLDatabaseService implements Database
 
                 foreach ($objectsTree as $parentKey => $parentData) {
                     if ($parentData[2] === $level - 1) {
+                        $parentTag = gettype($parentData[0]) . ':' . $parentData[0];
                         $insertData = [];
 
-                        foreach ($fullDataArray as $key => $fullData) {
-                            if ($fullData[$where] === $parentData[0]) {
-                                $insertData[] = [
-                                    DataHelper::checkNumeric($fullData[$id]),
-                                    DataHelper::checkNumeric($fullData[$fieldName]),
-                                    $level,
-                                    ($nodata ? null : $fullData),
-                                ];
-                                unset($fullDataArray[$key]);
-                                $noObjectsFoundOnLevel = false;
-                            }
+                        foreach ($childrenByParent[$parentTag] ?? [] as $fullData) {
+                            $insertData[] = [
+                                DataHelper::checkNumeric($fullData[$id]),
+                                DataHelper::checkNumeric($fullData[$fieldName]),
+                                $level,
+                                ($nodata ? null : $fullData),
+                            ];
+                            $noObjectsFoundOnLevel = false;
                         }
+
+                        unset($childrenByParent[$parentTag]);
 
                         $objectsTree = array_merge(
                             array_slice($objectsTree, 0, (int) $parentKey + 1 + $insertedRows),
@@ -677,46 +685,54 @@ final class SQLDatabaseService implements Database
     ): array {
         $keepItemsIds = [];
 
+        /** Индекс первого вхождения id (тип+значение — сохраняет строгое ===) вместо вложенного
+         *  прохода по всему дереву на каждый искомый id. */
+        $treeKeyById = [];
+
+        foreach ($objectsTree as $key => $objectsTreeItem) {
+            $treeKeyById[gettype($objectsTreeItem[0]) . ':' . $objectsTreeItem[0]] ??= $key;
+        }
+
         foreach ($listOfIds as $idToFind) {
-            foreach ($objectsTree as $key => $objectsTreeItem) {
-                /** Находим ветку, где лежат данные */
-                if ($idToFind === $objectsTreeItem[0]) {
-                    $keepItemsIds[] = $idToFind;
+            $key = $treeKeyById[gettype($idToFind) . ':' . $idToFind] ?? null;
 
-                    /** Находим всех наследующих */
-                    $childKey = $key;
-                    $lookingForChilds = true;
+            if ($key === null) {
+                continue;
+            }
 
-                    while ($lookingForChilds) {
-                        $childKey++;
+            $objectsTreeItem = $objectsTree[$key];
+            $keepItemsIds[] = $idToFind;
 
-                        if (($objectsTree[$childKey] ?? false) && $objectsTree[$childKey][2] > $objectsTreeItem[2]) {
-                            $keepItemsIds[] = $objectsTree[$childKey][0];
-                        } else {
-                            $lookingForChilds = false;
-                        }
+            /** Находим всех наследующих */
+            $childKey = $key;
+            $lookingForChilds = true;
+
+            while ($lookingForChilds) {
+                $childKey++;
+
+                if (($objectsTree[$childKey] ?? false) && $objectsTree[$childKey][2] > $objectsTreeItem[2]) {
+                    $keepItemsIds[] = $objectsTree[$childKey][0];
+                } else {
+                    $lookingForChilds = false;
+                }
+            }
+
+            /** Находим всех родителей */
+            $parentId = $objectsTreeItem[3][$fieldWithParentId];
+            $keepItemsIds[] = $parentId;
+            $parentKey = $key;
+
+            while ($parentId) {
+                $parentKey--;
+
+                if ($objectsTree[$parentKey] ?? false) {
+                    $previousItemData = $objectsTree[$parentKey];
+
+                    if ($parentId === $previousItemData[0]) {
+                        $parentId = $previousItemData[3][$fieldWithParentId] ?? null;
+                        $keepItemsIds[] = $parentId;
                     }
-
-                    /** Находим всех родителей */
-                    $parentId = $objectsTreeItem[3][$fieldWithParentId];
-                    $keepItemsIds[] = $parentId;
-                    $parentKey = $key;
-
-                    while ($parentId) {
-                        $parentKey--;
-
-                        if ($objectsTree[$parentKey] ?? false) {
-                            $previousItemData = $objectsTree[$parentKey];
-
-                            if ($parentId === $previousItemData[0]) {
-                                $parentId = $previousItemData[3][$fieldWithParentId] ?? null;
-                                $keepItemsIds[] = $parentId;
-                            }
-                        } else {
-                            break;
-                        }
-                    }
-
+                } else {
                     break;
                 }
             }

@@ -136,18 +136,20 @@ final class CatalogEntity extends BaseEntity implements CatalogInterface, Tabbed
     {
         $parentField = $this->catalogItemEntity->tableFieldWithParentId;
 
-        $data = DB->select(
-            tableName: $this->table,
-            criteria: [
-                $parentField => $id,
-            ],
-        );
+        $idsToDelete = [];
+        $currentLevel = [$id];
 
-        foreach ($data as $item) {
-            $this->clearDataByParent($item['id']);
+        while ($currentLevel !== []) {
+            $idsToDelete = array_merge($idsToDelete, $currentLevel);
+
+            $children = DB->select($this->table, [[$parentField, $currentLevel]], fieldsSet: ['id']);
+            $currentLevel = $children ? array_column($children, 'id') : [];
         }
 
-        $this->deleteItem($id);
+        /** Удаляем от глубоких уровней к верхним — дети раньше родителей (FK-safe), per-item deleteItem сохранён */
+        foreach (array_reverse($idsToDelete) as $idToDelete) {
+            $this->deleteItem($idToDelete);
+        }
     }
 
     public function detectEntityType(array $data): CatalogEntity|CatalogItemEntity
