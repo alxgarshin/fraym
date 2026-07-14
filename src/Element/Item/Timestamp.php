@@ -132,6 +132,6 @@ class Timestamp extends BaseElement
 
     protected function isDOMVisible(): bool
     {
-        return $this->getShowInObjects();
+        return (bool) $this->getShowInObjects();
     }
 }
