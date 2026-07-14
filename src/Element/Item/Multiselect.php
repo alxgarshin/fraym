@@ -33,13 +33,9 @@ class Multiselect extends BaseElement
 
     public function usualAsHTMLRenderer(bool $editableFormat, bool $removeHtmlFromValue = false): string
     {
-        $html = '';
-        $name = $this->name . $this->getLineNumberWrapped();
         $value = $this->get();
         $values = $this->getValues();
         $images = $this->getImages();
-        $locked = $this->getLocked();
-        $LOCALE = LocaleHelper::getLocale(['fraym']);
 
         if (!is_array($values)) {
             $values = [];
@@ -52,144 +48,9 @@ class Multiselect extends BaseElement
             }
         }
 
-        if ($editableFormat) {
-            $LOC = $LOCALE['classes']['multiselect'];
-
-            $html .= '<div class="dropfield' . $this->getObligatoryStr() . '" id="selected_' . $name . '">';
-            $allSelected = true;
-
-            if (count($value) > 0) {
-                if ($this->getOne()) {
-                    if (in_array(0, $value)) {
-                        $html .= '<div class="options">' . $LOC['do_not_choose'] . '<a rel="' . $name . '[]"></a></div>';
-                    }
-                }
-
-                $possible_duplicates = [];
-
-                foreach ($values as $key => $data) {
-                    if ((in_array($data[0], $value) && !in_array($data[0], $possible_duplicates)) || ($value[$data[0]] ?? '') === 'on') {
-                        $html .= '<div class="options">';
-
-                        if (!is_null($images)) {
-                            if (isset($images[$key]) && $images[$key] !== '') {
-                                if (!str_contains($images[$key][1], '<img')) {
-                                    $html .= '<img src="' . $this->getPath() . $images[$key][1] . '" />';
-                                } else {
-                                    $html .= $images[$key][1];
-                                }
-                            }
-                        }
-                        $html .= $data[1] . '<a rel="' . $name . '[' . $data[0] . ']"></a></div>';
-                        $possible_duplicates[] = $data[0];
-                    } else {
-                        $allSelected = false;
-                    }
-                }
-            } else {
-                $allSelected = false;
-                $html .= '<div>' . $LOC['choose'] . '</div>';
-            }
-            $html .= '</div>';
-            $html .= '<div class="dropfield2" id="choice_' . $name . '">';
-
-            if ($this->getSearch()) {
-                $html .= '<div class="dropfield2_search">' .
-                    (!empty($this->getCreator()) ? '<a class="create">' . $LOC['add'] . '</a>' : '') . '<input type="text" id="search_' . $name . '" placehold="' .
-                    (!empty($this->getCreator()) ? $LOC['for_search_or_create_input_text_here'] : $LOC['for_search_input_text_here']) . '"></div>';
-            }
-
-            if (!$this->getOne()) {
-                if ($allSelected) {
-                    $html .= '<div class="dropfield2_selecter dropfield2_deselect_all"><a>' . $LOC['deselect_all'] . '</a></div>';
-                } else {
-                    $html .= '<div class="dropfield2_selecter dropfield2_select_all"><a>' . $LOC['select_all'] . '</a></div>';
-                }
-            }
-
-            if ($this->getOne() && !$this->getObligatory()) {
-                $html .= '<div class="dropfield2_field" id="dropfield2_field_' . $name . '[0]"><input type="radio" name="' . $name . '" id="' . $name . '[0]" value="" class="inputradio"' .
-                    (in_array(0, $value) ? ' checked' : '') .
-                    '><label for="' . $name . '[0]">' . $LOC['do_not_choose'] . '</label></div>';
-            }
-
-            foreach ($values as $key => $data) {
-                $html .= '<div class="dropfield2_field" id="dropfield2_field_' . $name . '[' . $data[0] . ']"';
-
-                if (isset($data[2]) && $data[2] > 0) {
-                    $html .= ' style="padding-left: ' . ($data[2] * 2) . 'em;" level="' . $data[2] . '"';
-                }
-
-                if ($this->getOne()) {
-                    $html .= '><input type="radio" name="' . $name . '" id="' . $name . '[' . $data[0] . ']" value="' . $data[0] . '" class="inputradio"';
-                } else {
-                    $html .= '><input type="checkbox" name="' . $name . '[' . $data[0] . ']" id="' . $name . '[' . $data[0] . ']" class="inputcheckbox"';
-                }
-
-                if (in_array($data[0], $value) || ($value[$data[0]] ?? '') === 'on') {
-                    $html .= ' checked';
-                }
-
-                $locked_value = false;
-
-                if ($locked[0] ?? false) {
-                    foreach ($locked as $locked_array_value) {
-                        if ((is_array($locked_array_value) && $locked_array_value[0] === $data[0]) || ((is_int($locked_array_value) || is_string($locked_array_value)) && $locked_array_value === $data[0])) {
-                            $html .= ' disabled';
-                            $locked_value = true;
-                        }
-                    }
-                } elseif (is_array($locked) && in_array($data[0], $locked)) {
-                    $html .= ' disabled';
-                    $locked_value = true;
-                }
-                $html .= '><label for="' . $name . '[' . $data[0] . ']">';
-
-                if (!is_null($images)) {
-                    if (isset($images[$key]) && $images[$key] !== '') {
-                        if (!str_contains($images[$key][1], '<img')) {
-                            $html .= '<img src="' . $this->getPath() . $images[$key][1] . '" />';
-                        } else {
-                            $html .= $images[$key][1];
-                        }
-                    }
-                }
-                $html .= $data[1] . '</label></div>';
-
-                if ($locked_value && in_array($data[0], $value)) {
-                    $html .= '<input type="hidden" name="' . $name . '[' . $data[0] . ']" value="on">';
-                }
-            }
-            $html .= '</div>';
-        } else {
-            $linkAtEnd = $this->getLinkAt()->getLinkAtEnd();
-            $first_string = true;
-
-            foreach ($values as $key => $data) {
-                if (in_array($data[0], $value)) {
-                    if ($first_string) {
-                        $first_string = false;
-                    } elseif (!$this->getOne()) {
-                        $html .= '<br />';
-                    }
-                    $linkAtBeginWithValue = $this->getLinkAt()->getLinkAtBeginWithValue($data[0]);
-                    $html .= $linkAtBeginWithValue;
-
-                    if (!is_null($images)) {
-                        if (isset($images[$key]) && $images[$key] !== '') {
-                            if (!str_contains($images[$key][1], '<img')) {
-                                $html .= '<img src="' . $this->getPath() . $images[$key][1] . '" />' . $linkAtEnd . $linkAtBeginWithValue;
-                            } else {
-                                $html .= $images[$key][1] . $linkAtEnd . $linkAtBeginWithValue;
-                            }
-                        }
-                    }
-                    $html .= $data[1] . $linkAtEnd;
-                }
-            }
-        }
-
-        return $html;
+        return $editableFormat
+            ? $this->renderEditableDropfield($value, $values, $images)
+            : $this->renderReadonlyValues($value, $values, $images);
     }
 
     public function asArray(): array
@@ -312,6 +173,157 @@ class Multiselect extends BaseElement
     public function getCreator(): ?MultiselectCreator
     {
         return $this->getAttribute()->creator;
+    }
+
+    /** Редактируемый dropfield (чекбоксы/радио + поиск + выбранные опции) */
+    private function renderEditableDropfield(array $value, array $values, ?array $images): string
+    {
+        $html = '';
+        $name = $this->name . $this->getLineNumberWrapped();
+        $locked = $this->getLocked();
+        $LOC = LocaleHelper::getLocale(['fraym'])['classes']['multiselect'];
+
+        $html .= '<div class="dropfield' . $this->getObligatoryStr() . '" id="selected_' . $name . '">';
+        $allSelected = true;
+
+        if (count($value) > 0) {
+            if ($this->getOne()) {
+                if (in_array(0, $value)) {
+                    $html .= '<div class="options">' . $LOC['do_not_choose'] . '<a rel="' . $name . '[]"></a></div>';
+                }
+            }
+
+            $possible_duplicates = [];
+
+            foreach ($values as $key => $data) {
+                if ((in_array($data[0], $value) && !in_array($data[0], $possible_duplicates)) || ($value[$data[0]] ?? '') === 'on') {
+                    $html .= '<div class="options">';
+
+                    if (!is_null($images)) {
+                        if (isset($images[$key]) && $images[$key] !== '') {
+                            if (!str_contains($images[$key][1], '<img')) {
+                                $html .= '<img src="' . $this->getPath() . $images[$key][1] . '" />';
+                            } else {
+                                $html .= $images[$key][1];
+                            }
+                        }
+                    }
+                    $html .= $data[1] . '<a rel="' . $name . '[' . $data[0] . ']"></a></div>';
+                    $possible_duplicates[] = $data[0];
+                } else {
+                    $allSelected = false;
+                }
+            }
+        } else {
+            $allSelected = false;
+            $html .= '<div>' . $LOC['choose'] . '</div>';
+        }
+        $html .= '</div>';
+        $html .= '<div class="dropfield2" id="choice_' . $name . '">';
+
+        if ($this->getSearch()) {
+            $html .= '<div class="dropfield2_search">' .
+                (!empty($this->getCreator()) ? '<a class="create">' . $LOC['add'] . '</a>' : '') . '<input type="text" id="search_' . $name . '" placehold="' .
+                (!empty($this->getCreator()) ? $LOC['for_search_or_create_input_text_here'] : $LOC['for_search_input_text_here']) . '"></div>';
+        }
+
+        if (!$this->getOne()) {
+            if ($allSelected) {
+                $html .= '<div class="dropfield2_selecter dropfield2_deselect_all"><a>' . $LOC['deselect_all'] . '</a></div>';
+            } else {
+                $html .= '<div class="dropfield2_selecter dropfield2_select_all"><a>' . $LOC['select_all'] . '</a></div>';
+            }
+        }
+
+        if ($this->getOne() && !$this->getObligatory()) {
+            $html .= '<div class="dropfield2_field" id="dropfield2_field_' . $name . '[0]"><input type="radio" name="' . $name . '" id="' . $name . '[0]" value="" class="inputradio"' .
+                (in_array(0, $value) ? ' checked' : '') .
+                '><label for="' . $name . '[0]">' . $LOC['do_not_choose'] . '</label></div>';
+        }
+
+        foreach ($values as $key => $data) {
+            $html .= '<div class="dropfield2_field" id="dropfield2_field_' . $name . '[' . $data[0] . ']"';
+
+            if (isset($data[2]) && $data[2] > 0) {
+                $html .= ' style="padding-left: ' . ($data[2] * 2) . 'em;" level="' . $data[2] . '"';
+            }
+
+            if ($this->getOne()) {
+                $html .= '><input type="radio" name="' . $name . '" id="' . $name . '[' . $data[0] . ']" value="' . $data[0] . '" class="inputradio"';
+            } else {
+                $html .= '><input type="checkbox" name="' . $name . '[' . $data[0] . ']" id="' . $name . '[' . $data[0] . ']" class="inputcheckbox"';
+            }
+
+            if (in_array($data[0], $value) || ($value[$data[0]] ?? '') === 'on') {
+                $html .= ' checked';
+            }
+
+            $locked_value = false;
+
+            if ($locked[0] ?? false) {
+                foreach ($locked as $locked_array_value) {
+                    if ((is_array($locked_array_value) && $locked_array_value[0] === $data[0]) || ((is_int($locked_array_value) || is_string($locked_array_value)) && $locked_array_value === $data[0])) {
+                        $html .= ' disabled';
+                        $locked_value = true;
+                    }
+                }
+            } elseif (is_array($locked) && in_array($data[0], $locked)) {
+                $html .= ' disabled';
+                $locked_value = true;
+            }
+            $html .= '><label for="' . $name . '[' . $data[0] . ']">';
+
+            if (!is_null($images)) {
+                if (isset($images[$key]) && $images[$key] !== '') {
+                    if (!str_contains($images[$key][1], '<img')) {
+                        $html .= '<img src="' . $this->getPath() . $images[$key][1] . '" />';
+                    } else {
+                        $html .= $images[$key][1];
+                    }
+                }
+            }
+            $html .= $data[1] . '</label></div>';
+
+            if ($locked_value && in_array($data[0], $value)) {
+                $html .= '<input type="hidden" name="' . $name . '[' . $data[0] . ']" value="on">';
+            }
+        }
+        $html .= '</div>';
+
+        return $html;
+    }
+
+    /** Только для чтения: перечисление выбранных значений */
+    private function renderReadonlyValues(array $value, array $values, ?array $images): string
+    {
+        $html = '';
+        $linkAtEnd = $this->getLinkAt()->getLinkAtEnd();
+        $first_string = true;
+
+        foreach ($values as $key => $data) {
+            if (in_array($data[0], $value)) {
+                if ($first_string) {
+                    $first_string = false;
+                } elseif (!$this->getOne()) {
+                    $html .= '<br />';
+                }
+                $linkAtBeginWithValue = $this->getLinkAt()->getLinkAtBeginWithValue($data[0]);
+                $html .= $linkAtBeginWithValue;
+
+                if (!is_null($images)) {
+                    if (isset($images[$key]) && $images[$key] !== '') {
+                        if (!str_contains($images[$key][1], '<img')) {
+                            $html .= '<img src="' . $this->getPath() . $images[$key][1] . '" />' . $linkAtEnd . $linkAtBeginWithValue;
+                        } else {
+                            $html .= $images[$key][1] . $linkAtEnd . $linkAtBeginWithValue;
+                        }
+                    }
+                }
+                $html .= $data[1] . $linkAtEnd;
+            }
+        }
+
+        return $html;
     }
 
     /** DEV-диагностика: поле хранит legacy dash-значение, но без legacySearch — фильтр его не найдёт.
