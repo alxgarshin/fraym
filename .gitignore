@@ -1,5 +1,6 @@
 .*/
 !/.gitignore
+!/.github/
 /.gitconfig
 /.bash_history
 /.rnd

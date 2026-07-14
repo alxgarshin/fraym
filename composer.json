@@ -32,6 +32,7 @@
     "scripts": {
         "fix": "php-cs-fixer fix",
         "stan": "phpstan analyse src",
+        "test": "phpunit",
         "lint": [
             "@fix",
             "@stan"
