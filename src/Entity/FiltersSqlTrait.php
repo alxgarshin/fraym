@@ -258,7 +258,7 @@ trait FiltersSqlTrait
                                     $selectbreaks = false;
                                 }
                                 /** Если здесь поставить AND, то при поиске в мультиселектах нужно будет совпадение со всеми поисковыми галочками,
-                                 * выставленными пользователями. Если OR, то хотя бы с одной из них */ elseif ($dataArray[$filtersViewSecondItem->name] === '2') {
+                                 * выставленными пользователями. Если OR, то хотя бы с одной из них */ elseif (($dataArray[$filtersViewSecondItem->name] ?? null) === '2') {
                                     $blockSearchQuerySql .= " AND";
                                 } else {
                                     $blockSearchQuerySql .= " OR";

@@ -41,6 +41,12 @@ interface ElementItem
     /** Данные для замены значения элемента при change */
     public ?Attribute\OnChange $change { get; set; }
 
+    public ?int $lineNumber { get; set; }
+
+    public string $lineNumberWrapped { get; }
+
+    public ?int $groupNumber { get; set; }
+
     public function getAttribute(): ElementAttribute;
 
     public function setAttribute(ElementAttribute $attribute, bool $skipAttributeCheck = false): static;
@@ -59,17 +65,11 @@ interface ElementItem
 
     public function checkDefaultValueInServiceFunctions(mixed $defaultValue): mixed;
 
-    public ?int $lineNumber { get; set; }
-
-    public string $lineNumberWrapped { get; }
-
     public function getObligatory(): bool;
 
     public function getObligatoryStr(): string;
 
     public function getGroup(): ?int;
-
-    public ?int $groupNumber { get; set; }
 
     public function getHelpClass(): ?string;
 
