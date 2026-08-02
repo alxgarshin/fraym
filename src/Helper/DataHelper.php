@@ -401,7 +401,7 @@ abstract class DataHelper implements Helper
 
             foreach ($matches[0] as $key => $value) {
                 if (str_starts_with($matches[1][$key], 'virtual')) {
-                    $result[$matches[1][$key]] = DataHelper::escapeOutput($matches[2][$key]);
+                    $result[$matches[1][$key]] = $matches[2][$key];
                 }
             }
         }
