@@ -14,7 +14,8 @@ declare(strict_types=1);
 namespace Fraym\Entity;
 
 use Fraym\Element\Item\{File, H1, Login, Multiselect, Password, Timestamp};
-use Fraym\Enum\{ActEnum, ActionEnum, MultiObjectsEntitySubTypeEnum};
+use Fraym\Element\Validator\ArrayFormatValidator;
+use Fraym\Enum\{ActEnum, ActionEnum, MultiObjectsEntitySubTypeEnum, ResponseErrorCodeEnum};
 use Fraym\Helper\{AuthHelper, CookieHelper, DataHelper, LocaleHelper, ResponseHelper, TextHelper};
 use Fraym\Interface\{DeletedAt, ElementItem, Response};
 use PDOException;
@@ -87,13 +88,28 @@ trait FraymActionTrait
             $act = ACTION === ActionEnum::create ? ActEnum::add : ActEnum::edit;
 
             foreach ($dataStringsIds as $dataStringId) {
-                $checkReadOnly = $_REQUEST['readonly'][$dataStringId] ?? null;
+                $readOnlyRequestValue = $_REQUEST['readonly'] ?? null;
+                $checkReadOnly = is_array($readOnlyRequestValue) ? ($readOnlyRequestValue[$dataStringId] ?? null) : null;
 
                 if (is_null($checkReadOnly)) {
                     foreach ($activeEntity->model->elementsList as $element) {
                         if ($element->checkWritable($act, $objectName)) {
                             if (!$element->getNoData()) {
-                                $elementValue = $_REQUEST[$element->name][$dataStringId] ?? ($element->getGroup() ? [] : null);
+                                $rawElementValue = $_REQUEST[$element->name] ?? null;
+
+                                if (!$this->checkWireFormat($element, $rawElementValue, $dataStringId)) {
+                                    $globalValidationSuccess = false;
+
+                                    continue;
+                                }
+
+                                $elementValue = $rawElementValue[$dataStringId] ?? ($element->getGroup() ? [] : null);
+
+                                if ($element->getGroup() && !$this->checkWireFormat($element, $elementValue, $dataStringId)) {
+                                    $globalValidationSuccess = false;
+
+                                    continue;
+                                }
 
                                 if ($element->getGroup()) {
                                     /** Определяем максимальные порядковые номера заполненных полей в каждой из групп полей */
@@ -110,7 +126,10 @@ trait FraymActionTrait
                                                 foreach ($this->model->elementsList as $groupCheckField) {
                                                     if ($groupCheckField->getGroup() === $groupElement->getGroup() && !$groupCheckField->getNoData()) {
                                                         $max = 0;
-                                                        $stringsKeys = array_keys($_REQUEST[$groupCheckField->name][$dataStringId] ?? []);
+                                                        $groupCheckFieldRequestValue = $_REQUEST[$groupCheckField->name] ?? null;
+                                                        $groupCheckFieldValues = is_array($groupCheckFieldRequestValue) ? ($groupCheckFieldRequestValue[$dataStringId] ?? []) : [];
+                                                        $groupCheckFieldValues = is_array($groupCheckFieldValues) ? $groupCheckFieldValues : [];
+                                                        $stringsKeys = array_keys($groupCheckFieldValues);
 
                                                         if ($stringsKeys) {
                                                             $max = (int) max($stringsKeys);
@@ -120,7 +139,7 @@ trait FraymActionTrait
                                                          * данного поля реально есть данные: таким образом, отсекаем лишние, полностью пустые группы
                                                          */
                                                         for ($i = $max; $i >= 0; $i--) {
-                                                            if ($_REQUEST[$groupCheckField->name][$dataStringId][$i] ?? false) {
+                                                            if ($groupCheckFieldValues[$i] ?? false) {
                                                                 $max = $i;
                                                                 break;
                                                             }
@@ -128,7 +147,7 @@ trait FraymActionTrait
 
                                                         if (
                                                             $max > $groupsMaxValues[$dataStringId][$groupElement->getGroup()] &&
-                                                            ($_REQUEST[$groupCheckField->name][$dataStringId][$max] ?? false)
+                                                            ($groupCheckFieldValues[$max] ?? false)
                                                         ) {
                                                             $groupsMaxValues[$dataStringId][$groupElement->getGroup()] = $max;
                                                         }
@@ -192,6 +211,7 @@ trait FraymActionTrait
 
             /** Подготовка массива ошибок валидации */
             if (!$globalValidationSuccess) {
+                $this->fraymActionErrorCode = ResponseErrorCodeEnum::validationFailed;
                 $validationErrors = $this->validationErrors;
 
                 foreach ($validationErrors as $validatorClass => $validationError) {
@@ -211,6 +231,8 @@ trait FraymActionTrait
             }
         }
 
+        $successfulResultsIds = [];
+
         if ($globalValidationSuccess) {
             /** Действие */
             $data = $this->dataAfterValidation;
@@ -228,8 +250,6 @@ trait FraymActionTrait
                     }
                 }
             }
-
-            $successfulResultsIds = [];
 
             if (ACTION === ActionEnum::create && $objectRights->addRight) {
                 $hasErrors = false;
@@ -255,6 +275,7 @@ trait FraymActionTrait
                             }
                         } else {
                             $hasErrors = true;
+                            $this->fraymActionErrorCode = ResponseErrorCodeEnum::duplicate;
                             $this->addFraymActionMessage(['error', $FRAYM_ACTIONS_LOCALE['blocked_resave']]);
                         }
                     }
@@ -269,7 +290,16 @@ trait FraymActionTrait
                 foreach ($dataStringsIds as $dataStringId) {
                     if (!in_array($dataStringId, $troubledStrings)) {
                         $stringData = $data[$dataStringId] ?? [];
-                        $id = $_REQUEST['id'][$dataStringId] ?? null;
+                        $idRequestValue = $_REQUEST['id'] ?? null;
+
+                        if (!is_null($idRequestValue) && !is_array($idRequestValue)) {
+                            $this->fraymActionErrorCode = ResponseErrorCodeEnum::wrongDataFormat;
+                            $this->addFraymActionMessage(['error', $FRAYM_ACTIONS_LOCALE['wrong_array_format_in_id']]);
+
+                            continue;
+                        }
+
+                        $id = $idRequestValue[$dataStringId] ?? null;
 
                         if (!is_null($id)) {
                             if (!is_null($objectRights->changeRestrict)) {
@@ -302,10 +332,12 @@ trait FraymActionTrait
                                     $successfulResultsIds[] = $id;
                                     $successfullySavedStringIds[] = $dataStringId + 1;
                                 } catch (PDOException) {
+                                    $this->fraymActionErrorCode = ResponseErrorCodeEnum::internalError;
                                     $this->addFraymActionMessage(['error', sprintf($FRAYM_ACTIONS_LOCALE['update_error'], $dataStringId + 1)]);
                                 }
                             }
                         } else {
+                            $this->fraymActionErrorCode = ResponseErrorCodeEnum::wrongDataFormat;
                             $this->addFraymActionMessage(['error', sprintf($FRAYM_ACTIONS_LOCALE['not_found_id_in_data'], $dataStringId + 1)]);
                         }
                     }
@@ -401,6 +433,7 @@ trait FraymActionTrait
                                     }
                                 }
                             } catch (PDOException) {
+                                $this->fraymActionErrorCode = ResponseErrorCodeEnum::internalError;
                                 $this->addFraymActionMessage(['error', sprintf($FRAYM_ACTIONS_LOCALE['delete_error'], $key + 1)]);
                             }
                         }
@@ -437,7 +470,13 @@ trait FraymActionTrait
                 $troubledStrings :
                 $troubledElements;
 
-            return ResponseHelper::response($messages, $this->fraymActionRedirectPath, $errouneousFields);
+            return ResponseHelper::response(
+                $messages,
+                $this->fraymActionRedirectPath,
+                $errouneousFields,
+                $successfulResultsIds,
+                $this->fraymActionErrorCode,
+            );
         }
 
         return null;
@@ -594,19 +633,35 @@ trait FraymActionTrait
         }
     }
 
+    /** Проверка формата провода: значение приходит с индексом объекта (name[0]), а внутри группы —
+     *  с вложенным (field[0][g]). Это не валидация поля, а проверка конверта запроса, поэтому она не
+     *  может быть обычным additionalValidator: тот получает значение уже после среза по индексу, когда
+     *  скаляр неотличим от законного односимвольного значения. Проверять нужно до среза. */
+    private function checkWireFormat(ElementItem $element, mixed $value, int $dataStringId): bool
+    {
+        if (ArrayFormatValidator::validate($element, $value, [])) {
+            return true;
+        }
+
+        $this->appendValidationErrors(ArrayFormatValidator::getName(), $dataStringId, -1, $element);
+
+        return false;
+    }
+
     /** Подготовка параметров валидации в зависимости от типа объекта */
     private function prepareValidationOptions(ElementItem $element, int $stringId, ?int $groupId = null): array
     {
         $options = [];
 
-        $currentId = $_REQUEST['id'][$stringId] ?? null;
+        $currentId = is_array($_REQUEST['id'] ?? null) ? ($_REQUEST['id'][$stringId] ?? null) : null;
 
         if ($element instanceof Password && $element->getAttribute()->repeatPasswordFieldName) {
             $repeatPasswordFieldName = $element->getAttribute()->repeatPasswordFieldName;
-            $compareValue = $_REQUEST[$repeatPasswordFieldName][$stringId] ?? null;
+            $repeatPasswordRequestValue = $_REQUEST[$repeatPasswordFieldName] ?? null;
+            $compareValue = is_array($repeatPasswordRequestValue) ? ($repeatPasswordRequestValue[$stringId] ?? null) : null;
 
             if (!is_null($groupId)) {
-                $compareValue = $compareValue[$groupId] ?? null;
+                $compareValue = is_array($compareValue) ? ($compareValue[$groupId] ?? null) : null;
             }
 
             if ($compareValue === '') {

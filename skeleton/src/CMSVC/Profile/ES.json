@@ -22,5 +22,13 @@
       "Información de la cuenta modificada correctamente.",
       "Información de la cuenta eliminada correctamente."
     ]
+  },
+  "fraym_actions": {
+    "verify_em": {
+      "description": "Confirmar la dirección de correo con el enlace del mensaje.",
+      "params": {
+        "verify_id": "Código de confirmación del mensaje"
+      }
+    }
   }
 }

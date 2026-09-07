@@ -15,7 +15,7 @@ namespace Fraym\Entity;
 
 use Fraym\BaseObject\{BaseController, BaseModel, BaseView};
 use Fraym\Entity\Trait\PageCounter;
-use Fraym\Enum\{ActEnum};
+use Fraym\Enum\{ActEnum, ResponseErrorCodeEnum};
 use Fraym\Helper\{LocaleHelper, TextHelper};
 use Fraym\Response\{ArrayResponse, HtmlResponse};
 
@@ -67,6 +67,9 @@ abstract class BaseEntity
 
     /** Путь, по которому нужно перенаправить пользователя по завершению стандартного действия */
     public ?string $fraymActionRedirectPath = null;
+
+    /** Машинный код ошибки стандартного действия: клиент по нему решает, чинить запрос или повторять */
+    public ?ResponseErrorCodeEnum $fraymActionErrorCode = null;
 
     public ?BaseModel $model {
         get => $this->view->model;

@@ -13,7 +13,8 @@ declare(strict_types=1);
 
 use Fraym\BaseObject\CurrentUser;
 use Fraym\Container;
-use Fraym\Proxy\CurrentUserProxy;
+use Fraym\Proxy\{CacheProxy, CurrentUserProxy};
+use Fraym\Service\CacheService;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
@@ -25,9 +26,20 @@ if (!defined('ABSOLUTE_PATH')) {
     define('ABSOLUTE_PATH', 'https://fraym.test');
 }
 
+/** Константы, которые в проде разбирает Kernel::init(): из них читают global-параметры ApiParam */
+if (!defined('PAGE')) {
+    define('PAGE', 0);
+}
+
 /** CURRENT_USER как в проде — прокси поверх Container-бинда; тесты меняют id/sid через сеттеры */
 Container::bind('current_user', CurrentUser::forceCreate());
 
 if (!defined('CURRENT_USER')) {
     define('CURRENT_USER', new CurrentUserProxy());
+}
+
+Container::bind('cache', CacheService::forceCreate());
+
+if (!defined('CACHE')) {
+    define('CACHE', new CacheProxy());
 }

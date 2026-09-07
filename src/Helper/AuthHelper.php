@@ -13,9 +13,9 @@ declare(strict_types=1);
 
 namespace Fraym\Helper;
 
-use DateTime;
 use Exception;
 use Fraym\Interface\Helper;
+use Fraym\Service\AuthTokenService;
 
 abstract class AuthHelper implements Helper
 {
@@ -121,12 +121,11 @@ abstract class AuthHelper implements Helper
         return $payload;
     }
 
-    /** Генерация криптографичного уникального токена для обновления токена авторизации */
+    /** Новый refresh-токен для текущего устройства. Токены остальных устройств пользователя
+     *  остаются рабочими: их у него может быть сколько угодно. */
     public static function generateAndSaveRefreshToken(): void
     {
-        $refreshToken = DataHelper::getRandomStringBin2hex();
-        DB->update('user', ['refresh_token' => $refreshToken, 'refresh_token_exp' => new DateTime('+30 days')], ['id' => CURRENT_USER->id()]);
-        CookieHelper::batchSetCookie(['refreshToken' => $refreshToken]);
+        CookieHelper::batchSetCookie(['refreshToken' => AuthTokenService::issueRefreshToken(CURRENT_USER->id())]);
     }
 
     /** Получение cookie refreshToken */

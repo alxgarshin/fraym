@@ -13,9 +13,10 @@ declare(strict_types=1);
 
 namespace Fraym\BaseObject;
 
-use Fraym\Enum\{BuiltInRights, PasswordHashVersion};
+use Fraym\Enum\{BuiltInRights, PasswordHashVersion, ResponseErrorCodeEnum};
 use Fraym\Helper\{AuthHelper, CookieHelper, DataHelper, LocaleHelper, ResponseHelper};
 use Fraym\Interface\CurrentUser as CurrentUserInterface;
+use Fraym\Service\AuthTokenService;
 
 final class CurrentUser implements CurrentUserInterface
 {
@@ -98,9 +99,15 @@ final class CurrentUser implements CurrentUserInterface
         return in_array($right_id, $this->allRights);
     }
 
-    /** Разлогинивание пользователя */
+    /** Разлогинивание пользователя на текущем устройстве: токены остальных его устройств живут дальше */
     public function authLogout(?string $byeMessage = null): void
     {
+        $refreshToken = AuthHelper::getRefreshTokenCookie();
+
+        if (!is_null($refreshToken)) {
+            AuthTokenService::revokeRefreshToken($refreshToken);
+        }
+
         CookieHelper::deleteAllCookies();
 
         if (!is_null($byeMessage)) {
@@ -141,17 +148,15 @@ final class CurrentUser implements CurrentUserInterface
             if (!is_null($refreshToken)) {
                 if (!REQUEST_TYPE->isDynamicRequest()) {
                     /** Если это не динамический запрос (т.е. просто загружается страница по адресу) */
-                    $loginData = DB->select('user', ['refresh_token' => $refreshToken], true);
+                    $loginData = AuthTokenService::findUserByRefreshToken($refreshToken);
 
-                    if ($loginData) {
-                        if (($loginData['refresh_token_exp'] ?? false) && strtotime($loginData['refresh_token_exp']) > time()) {
-                            CURRENT_USER->authSetUserData($loginData);
-                            /** Обновляем JWT-cookie на полной загрузке, чтобы последующие XHR были авторизованы */
-                            AuthHelper::setAuthTokenCookie(AuthHelper::generateAuthToken());
-                        } else {
-                            /** Cookie есть, но он просроченный, обновляем его */
-                            AuthHelper::generateAndSaveRefreshToken();
-                        }
+                    if (!is_null($loginData)) {
+                        CURRENT_USER->authSetUserData($loginData);
+                        /** Обновляем JWT-cookie на полной загрузке, чтобы последующие XHR были авторизованы */
+                        AuthHelper::setAuthTokenCookie(AuthHelper::generateAuthToken());
+                    } else {
+                        /** Токен просрочен или отозван: новый выдаётся только по паролю */
+                        AuthHelper::removeRefreshTokenCookie();
                     }
                 } else {
                     /** Это динамический запрос и куки есть, но токена нет, выдаем 401 */
@@ -163,17 +168,27 @@ final class CurrentUser implements CurrentUserInterface
         /** Если ничего не подошло, но действие = login, то проверяем логин и пароль */
         if ('login' === ACTION && isset($_REQUEST['password'])) {
             if (!AuthHelper::validatePreAuthCsrfToken()) {
-                ResponseHelper::responseOneBlock('error', $LOCALE['wrong_login_or_password']);
+                ResponseHelper::responseOneBlock('error', $LOCALE['wrong_login_or_password'], [], ResponseErrorCodeEnum::forbidden);
+            }
+
+            $login = is_string($_REQUEST['login'] ?? null) ? $_REQUEST['login'] : '';
+            $retryAfter = AuthTokenService::getRetryAfter($login);
+
+            if (!is_null($retryAfter)) {
+                header('Retry-After: ' . $retryAfter);
+                ResponseHelper::responseOneBlock('error', $LOCALE['too_many_auth_attempts'], [], ResponseErrorCodeEnum::rateLimited);
             }
 
             $loginData = $this->checkPassword();
 
             if ($loginData) {
+                AuthTokenService::clearAttempts($login);
                 CURRENT_USER->authSetUserData($loginData);
                 AuthHelper::generateAndSaveRefreshToken();
                 AuthHelper::setAuthTokenCookie(AuthHelper::generateAuthToken());
             } else {
-                ResponseHelper::responseOneBlock('error', $LOCALE['wrong_login_or_password']);
+                AuthTokenService::registerFailedAttempt($login);
+                ResponseHelper::responseOneBlock('error', $LOCALE['wrong_login_or_password'], [], ResponseErrorCodeEnum::unauthorized);
             }
         }
 
@@ -347,12 +362,22 @@ final class CurrentUser implements CurrentUserInterface
         return $this;
     }
 
-    private function checkPassword(): array|false
+    public function authenticateForApi(string $login, string $password): ?array
     {
+        $loginData = $this->checkPassword($login, $password);
+
+        return $loginData === false ? null : $loginData;
+    }
+
+    private function checkPassword(?string $login = null, ?string $password = null): array|false
+    {
+        $login = $login ?? $_REQUEST['login'];
+        $password = $password ?? $_REQUEST['password'];
+
         $loginData = DB->select(
             'user',
             [
-                'login' => $_REQUEST['login'],
+                'login' => $login,
             ],
             true,
         );
@@ -361,7 +386,7 @@ final class CurrentUser implements CurrentUserInterface
             return false;
         }
 
-        $hashedPassword = AuthHelper::addProjectHashWord($_REQUEST['password']);
+        $hashedPassword = AuthHelper::addProjectHashWord($password);
 
         if (($loginData['hash_version'] ?? false) && $loginData['hash_version'] === PasswordHashVersion::WRAPPED_V1->value) {
             if (!password_verify(md5($hashedPassword), $loginData['password_hashed'])) {

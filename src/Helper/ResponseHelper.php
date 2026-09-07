@@ -13,28 +13,104 @@ declare(strict_types=1);
 
 namespace Fraym\Helper;
 
+use Fraym\Enum\ResponseErrorCodeEnum;
 use Fraym\Interface\Helper;
 use Fraym\Response\ArrayResponse;
 
 abstract class ResponseHelper implements Helper
 {
+    /** Служебные ключи конверта: всё остальное в теле ответа считается данными и уезжает в response_data */
+    private const ENVELOPE_KEYS = [
+        'response',
+        'response_text',
+        'response_data',
+        'response_error_code',
+        'ids',
+        'fields',
+        'messages',
+        'redirect',
+        'executionTime',
+        'fraymVersion',
+    ];
+
     public static function terminate(): never
     {
         exit;
     }
 
     /** Ответ 401: неавторизован */
-    public static function response401(): void
+    public static function response401(): never
     {
-        header("HTTP/1.1 401 Unauthorized");
-        self::terminate();
+        self::responseWithErrorCode(ResponseErrorCodeEnum::unauthorized);
     }
 
     /** Ответ 403: доступ запрещён (CSRF) */
-    public static function response403(): void
+    public static function response403(): never
     {
-        header("HTTP/1.1 403 Forbidden");
-        self::terminate();
+        self::responseWithErrorCode(ResponseErrorCodeEnum::forbidden);
+    }
+
+    /** Ответ 404: объект не найден */
+    public static function response404(): never
+    {
+        self::responseWithErrorCode(ResponseErrorCodeEnum::notFound);
+    }
+
+    /** Приведение любого тела ответа к единому конверту.
+     *  Идемпотентно: применяется и в момент печати, и после дозаполнения сообщений в роутере. */
+    public static function buildEnvelope(array $payload, bool $setHttpStatus = true): array
+    {
+        $data = $payload['response_data'] ?? null;
+
+        foreach ($payload as $key => $value) {
+            if (!in_array($key, self::ENVELOPE_KEYS, true)) {
+                $data = is_array($data) ? array_merge($data, [$key => $value]) : [$key => $value];
+                unset($payload[$key]);
+            }
+        }
+
+        $errorCode = $payload['response_error_code'] ?? null;
+        $errorCode = $errorCode instanceof ResponseErrorCodeEnum ? $errorCode : ResponseErrorCodeEnum::tryFrom((string) $errorCode);
+
+        $messages = $payload['messages'] ?? [];
+        $hasErrorMessage = false;
+
+        foreach ($messages as $message) {
+            if (($message[0] ?? null) === 'error') {
+                $hasErrorMessage = true;
+                break;
+            }
+        }
+
+        $response = $payload['response'] ?? (!is_null($errorCode) || $hasErrorMessage ? 'error' : 'success');
+
+        $envelope = ['response' => $response];
+
+        if (!is_null($errorCode)) {
+            $envelope['response_error_code'] = $errorCode->value;
+
+            if ($setHttpStatus && !headers_sent()) {
+                header('HTTP/1.1 ' . $errorCode->getHttpStatusLine());
+            }
+        }
+
+        $responseText = $payload['response_text'] ?? self::joinMessages($messages, $response);
+
+        if ($responseText !== '') {
+            $envelope['response_text'] = $responseText;
+        }
+
+        if (!is_null($data)) {
+            $envelope['response_data'] = $data;
+        }
+
+        foreach (['ids', 'fields', 'messages', 'redirect', 'executionTime', 'fraymVersion'] as $key) {
+            if (isset($payload[$key])) {
+                $envelope[$key] = $payload[$key];
+            }
+        }
+
+        return $envelope;
     }
 
     /** Установка CORS-заголовков на основе ALLOWED_ORIGINS из .env */
@@ -67,8 +143,18 @@ abstract class ResponseHelper implements Helper
         array $messages,
         ?string $redirectPath = null,
         array $fields = [],
+        array $ids = [],
+        ?ResponseErrorCodeEnum $errorCode = null,
     ): ArrayResponse {
         $response = [];
+
+        if (!is_null($errorCode)) {
+            $response['response_error_code'] = $errorCode->value;
+        }
+
+        if ($ids !== []) {
+            $response['ids'] = array_values($ids);
+        }
 
         if (!is_null($redirectPath)) {
             foreach ($messages as $message) {
@@ -83,7 +169,7 @@ abstract class ResponseHelper implements Helper
             $response['redirect'] = $redirectPath;
             $response['executionTime'] = GLOBALTIMER->getTimerDiff();
             self::setCorsHeaders();
-            print DataHelper::jsonFixedEncode($response);
+            print DataHelper::jsonFixedEncode(self::buildEnvelope($response));
             self::terminate();
         } else {
             foreach ($messages as $message) {
@@ -103,10 +189,14 @@ abstract class ResponseHelper implements Helper
         string $messageType,
         string $message,
         array $fields = [],
+        ?ResponseErrorCodeEnum $errorCode = null,
     ): void {
-        $response = self::response([[$messageType, $message]], null, $fields);
+        $errorCode = $errorCode ?? ($messageType === 'error' ? ResponseErrorCodeEnum::validationFailed : null);
+        $response = self::response([[$messageType, $message]], null, $fields, [], $errorCode);
+        $responseData = $response->getData();
+        $responseData['executionTime'] = GLOBALTIMER->getTimerDiff();
         self::setCorsHeaders();
-        print DataHelper::jsonFixedEncode($response->getData());
+        print DataHelper::jsonFixedEncode(self::buildEnvelope($responseData));
         self::terminate();
     }
 
@@ -225,6 +315,40 @@ abstract class ResponseHelper implements Helper
     public static function info(string $str): void
     {
         self::addMessage('information', $str);
+    }
+
+    /** Завершение запроса машинным кодом ошибки: динамическому клиенту отдаём конверт, обычной загрузке — только статус */
+    private static function responseWithErrorCode(ResponseErrorCodeEnum $errorCode): never
+    {
+        if (!headers_sent()) {
+            header('HTTP/1.1 ' . $errorCode->getHttpStatusLine());
+        }
+
+        if (REQUEST_TYPE->isDynamicRequest()) {
+            self::setCorsHeaders();
+
+            print DataHelper::jsonFixedEncode(self::buildEnvelope([
+                'response_error_code' => $errorCode->value,
+                'executionTime' => GLOBALTIMER->getTimerDiff(),
+            ], false));
+        }
+
+        self::terminate();
+    }
+
+    /** Склейка текстов сообщений, соответствующих итоговому типу ответа */
+    private static function joinMessages(array $messages, string $response): string
+    {
+        $suitableTypes = $response === 'error' ? ['error'] : ['success', 'information'];
+        $texts = [];
+
+        foreach ($messages as $message) {
+            if (in_array($message[0] ?? null, $suitableTypes, true) && ($message[1] ?? '') !== '') {
+                $texts[] = (string) $message[1];
+            }
+        }
+
+        return implode(' ', $texts);
     }
 
     /** Добавление сообщения в cookie-массив */

@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\CMSVC\User;
 
-use Fraym\BaseObject\{BaseController, CMSVC, IsAccessible};
+use Fraym\BaseObject\{ApiAction, ApiParam, BaseController, CMSVC, IsAccessible};
+use Fraym\Enum\ApiParamTypeEnum;
 use Fraym\Interface\Response;
 
 /** @extends BaseController<UserService> */
@@ -21,29 +22,40 @@ class UserController extends BaseController
     }
 
     #[IsAccessible]
+    #[ApiAction(mutating: true, params: [
+        new ApiParam('deviceId', ApiParamTypeEnum::string, obligatory: true),
+        new ApiParam('endpoint', ApiParamTypeEnum::string, obligatory: true),
+        new ApiParam('p256dh', ApiParamTypeEnum::string, obligatory: true),
+        new ApiParam('auth', ApiParamTypeEnum::string, obligatory: true),
+        new ApiParam('contentEncoding', ApiParamTypeEnum::string, default: 'aesgcm'),
+    ])]
     public function webpushSubscribe(): ?Response
     {
         return $this->asArray(
             $this->service->webpushSubscribe(
-                $_REQUEST['deviceId'] ?? null,
-                $_REQUEST['endpoint'] ?? null,
-                $_REQUEST['p256dh'] ?? null,
-                $_REQUEST['auth'] ?? null,
-                $_REQUEST['contentEncoding'] ?? null,
+                $this->param('deviceId'),
+                $this->param('endpoint'),
+                $this->param('p256dh'),
+                $this->param('auth'),
+                $this->param('contentEncoding'),
             ),
         );
     }
 
     #[IsAccessible]
+    #[ApiAction(mutating: true, params: [
+        new ApiParam('deviceId', ApiParamTypeEnum::string, obligatory: true),
+    ])]
     public function webpushUnsubscribe(): ?Response
     {
         return $this->asArray(
             $this->service->webpushUnsubscribe(
-                $_REQUEST['deviceId'] ?? null,
+                $this->param('deviceId'),
             ),
         );
     }
 
+    #[ApiAction(mutating: true)]
     public function getCaptcha(): ?Response
     {
         return $this->asArray(
@@ -52,6 +64,7 @@ class UserController extends BaseController
     }
 
     #[IsAccessible]
+    #[ApiAction(mutating: true)]
     public function reverifyEm(): ?Response
     {
         return $this->asArray(

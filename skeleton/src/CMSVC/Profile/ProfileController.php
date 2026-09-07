@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\CMSVC\Profile;
 
 use App\CMSVC\User\{UserModel, UserService};
-use Fraym\BaseObject\{BaseController, CMSVC, IsAccessible};
-use Fraym\Enum\ActEnum;
+use Fraym\BaseObject\{ApiAction, ApiParam, BaseController, CMSVC, IsAccessible};
+use Fraym\Enum\{ActEnum, ApiParamTypeEnum};
 use Fraym\Helper\{CMSVCHelper, ResponseHelper};
 use Fraym\Interface\Response;
 use Fraym\Response\HtmlResponse;
@@ -22,11 +22,14 @@ use Fraym\Response\HtmlResponse;
 )]
 class ProfileController extends BaseController
 {
+    #[ApiAction(mutating: true, params: [
+        new ApiParam('verify_id', ApiParamTypeEnum::string, obligatory: true),
+    ])]
     public function verifyEm(): ?Response
     {
-        $verifyId = $_REQUEST['verify_id'] ?? false;
+        $verifyId = $this->param('verify_id');
 
-        if ($verifyId) {
+        if (!is_null($verifyId)) {
             $LOCALE = $this->LOCALE;
 
             /** @var UserService $userService */
@@ -46,6 +49,7 @@ class ProfileController extends BaseController
 
         return $this->Default();
     }
+
     protected function Default(): ?Response
     {
         $responseData = $this->entity->view(ActEnum::edit, CURRENT_USER->id());

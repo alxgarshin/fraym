@@ -17,16 +17,21 @@
     "old_data_in_field": "Your data is out of date. Reload the page before re-inserting the data.<br>It's possible that someone is also changing it at the moment.",
     "not_found_id_in_data": "Could not find id or record in string №%s: it is impossible to operate without it.",
     "update_error": "Update data error in string №%s.",
-    "delete_error": "Delete data error in string №%s."
+    "delete_error": "Delete data error in string №%s.",
+    "wrong_array_format_in_field": "A value must be sent with an object index (for example, name[0]). Field:",
+    "wrong_array_format_in_fields": "Values must be sent with an object index (for example, name[0]). Fields:",
+    "wrong_array_format_in_id": "A record identifier must be sent with an object index: id[0]."
   },
   "basefunc": {
     "wrong_login_or_password": "Wrong e-mail or password!",
+    "too_many_auth_attempts": "Too many sign-in attempts. Try again later.",
     "must_revalidate_user": "Session has expired. You need to log in again!",
     "wrong_locale": "This language is not supported.",
     "switched_to_your_profile": "Switched to your account information.",
     "switched_to_other_user": "Switched to user №%s.",
     "top_level": "Top level",
-    "not_set": "Not set"
+    "not_set": "Not set",
+    "wrong_action": "The section has no such action."
   },
   "filters": {
     "search_in_all_text_fields": "Search in text fields",

@@ -31,6 +31,8 @@ interface CurrentUser
 
     public function authSetUserData(array $userData): void;
 
+    public function authenticateForApi(string $login, string $password): ?array;
+
     public function getId(): int|string|null;
 
     public function setId(int|string|null $id): static;

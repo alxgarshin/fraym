@@ -64,6 +64,11 @@ final class CurrentUserProxy implements CurrentUser
         Container::make('current_user')->authSetUserData($userData);
     }
 
+    public function authenticateForApi(string $login, string $password): ?array
+    {
+        return Container::make('current_user')->authenticateForApi($login, $password);
+    }
+
     public function getId(): int|string|null
     {
         return Container::make('current_user')->getId();

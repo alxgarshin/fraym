@@ -810,7 +810,7 @@ async function fraymInit(withDocumentEvents, updateHash) {
                                 method: 'DELETE'
                             }).then(function (result) {
 
-                                for (let key in result) {
+                                for (let key in responseData(result)) {
                                     _(`a[href$="${key}"]`).parent().remove();
                                 }
 
@@ -1084,7 +1084,7 @@ async function fraymInit(withDocumentEvents, updateHash) {
 
                     let addedOptions = false;
 
-                    _each(jsonData, (value) => {
+                    _each(responseData(jsonData), (value) => {
                         if (value['id'] !== undefined && value['value'] !== undefined) {
                             target.insert(`<option value="${value['id']}">${value['value']}</option>`, 'end');
                             addedOptions = true;
@@ -4497,6 +4497,13 @@ function showMessages() {
         });
     }
     messages = [];
+}
+
+/** Данные из конверта ответа: служебные ключи лежат в корне, полезная нагрузка — в response_data **/
+function responseData(jsonData) {
+    return jsonData !== null && typeof jsonData === 'object' && jsonData['response_data'] !== undefined
+        ? jsonData['response_data']
+        : jsonData;
 }
 
 /** Вывод сообщений-нотификаций из JSON-ответа **/

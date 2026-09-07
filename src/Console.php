@@ -389,6 +389,14 @@ class " . $CMSVCName . "View extends BaseView
         "shownName": ""
       }
     }
+  },
+  "fraym_actions": {
+    "some_action_name": {
+      "description": "",
+      "params": {
+        "obj_id": ""
+      }
+    }
   }
 }';
 
@@ -594,6 +602,11 @@ class Fixture" . $migrationDate . " extends BaseFixture
         $iterator = new RecursiveIteratorIterator($dirIterator, RecursiveIteratorIterator::SELF_FIRST);
 
         $destination = rtrim($destination, '/\\') . DIRECTORY_SEPARATOR;
+
+        if (!is_dir($destination)) {
+            mkdir($destination, 0755, true);
+            $this->echoResult("Directory " . $destination . " created.");
+        }
 
         foreach ($iterator as $item) {
             /** @disregard */

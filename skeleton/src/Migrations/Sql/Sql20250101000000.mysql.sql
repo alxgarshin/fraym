@@ -18,6 +18,33 @@ CREATE TABLE `activity_log` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
+DROP TABLE IF EXISTS `auth_attempt`;
+CREATE TABLE `auth_attempt` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `attempt_key` varchar(64) NOT NULL,
+  `attempts` int(11) NOT NULL DEFAULT 0,
+  `window_started_at` int(11) DEFAULT NULL,
+  `created_at` int(11) DEFAULT NULL,
+  `updated_at` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_auth_attempt_key` (`attempt_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+DROP TABLE IF EXISTS `auth_token`;
+CREATE TABLE `auth_token` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) DEFAULT NULL,
+  `refresh_token` varchar(255) NOT NULL,
+  `refresh_token_exp` int(11) DEFAULT NULL,
+  `created_at` int(11) DEFAULT NULL,
+  `updated_at` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_auth_token_refresh_token` (`refresh_token`),
+  KEY `user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
 DROP TABLE IF EXISTS `article`;
 CREATE TABLE `article` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -172,15 +199,12 @@ CREATE TABLE `user` (
   `block_save_referer` enum('0','1') NOT NULL DEFAULT '0',
   `block_auto_redirect` enum('0','1') NOT NULL DEFAULT '0',
   `last_activity` int(11) DEFAULT NULL,
-  `refresh_token` text,
-  `refresh_token_exp` timestamp NULL DEFAULT NULL,
   `created_at` int(11) DEFAULT NULL,
   `deleted_at` int(11) DEFAULT NULL,
   `updated_at` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `sid` (`sid`) USING BTREE,
-  KEY `subs_type` (`subs_type`),
-  FULLTEXT KEY `user_refresh_token_IDX` (`refresh_token`)
+  KEY `subs_type` (`subs_type`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS `user__push_subscriptions`;

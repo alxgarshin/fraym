@@ -371,7 +371,7 @@ trait EntityViewTrait
         $this->listOfFoundIds = $LIST_OF_FOUND_IDS;
 
         if (REQUEST_TYPE->isApiRequest()) {
-            return $this->asArray($RESPONSE_ARRAY);
+            return $this->asArray(['response_data' => $RESPONSE_ARRAY]);
         }
 
         if ($RESPONSE_DATA !== '') {

@@ -24,8 +24,10 @@ async function projectInit(withDocumentEvents, updateHash) {
         /** ДИНАМИЧЕСКИЕ ДЕЙСТВИЯ */
 
         _arSuccess('get_captcha', function (jsonData, params, target) {
-            _('input[name="hash[0]"]').val(jsonData['hash']);
-            _('div[id="field_regstamp[0]"]').find('img')?.attr('src', `/scripts/captcha/hash=${jsonData['hash']}`);
+            const hash = responseData(jsonData)['hash'];
+
+            _('input[name="hash[0]"]').val(hash);
+            _('div[id="field_regstamp[0]"]').find('img')?.attr('src', `/scripts/captcha/hash=${hash}`);
         })
     }
 

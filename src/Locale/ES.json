@@ -17,16 +17,21 @@
     "old_data_in_field": "Sus datos están desactualizados. Recargue la página antes de volver a insertarlos.<br>Es posible que alguien los esté modificando.",
     "not_found_id_in_data": "No se pudo encontrar el ID ni el registro en la cadena №%s: es imposible operar sin él.",
     "update_error": "Actualizar datos Error en la cadena №%s.",
-    "delete_error": "Eliminar error de datos en la cadena №%s."
+    "delete_error": "Eliminar error de datos en la cadena №%s.",
+    "wrong_array_format_in_field": "El valor debe enviarse con un índice de objeto (por ejemplo, name[0]). Campo:",
+    "wrong_array_format_in_fields": "Los valores deben enviarse con un índice de objeto (por ejemplo, name[0]). Campos:",
+    "wrong_array_format_in_id": "El identificador del registro debe enviarse con un índice de objeto: id[0]."
   },
   "basefunc": {
     "wrong_login_or_password": "¡Correo electrónico o contraseña incorrectos!",
+    "too_many_auth_attempts": "Demasiados intentos de inicio de sesión. Inténtalo más tarde.",
     "must_revalidate_user": "¡La sesión ha expirado. ¡Necesita volver a iniciar sesión!",
     "wrong_locale": "Este idioma no es compatible.",
     "switched_to_your_profile": "Se ha cambiado la información de su cuenta.",
     "switched_to_other_user": "Se ha cambiado al usuario №%s.",
     "top_level": "Nivel superior",
-    "not_set": "No establecido"
+    "not_set": "No establecido",
+    "wrong_action": "La sección no tiene esa acción."
   },
   "filters": {
     "search_in_all_text_fields": "Buscar en campos de texto",

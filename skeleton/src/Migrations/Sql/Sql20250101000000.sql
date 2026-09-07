@@ -24,6 +24,36 @@ CREATE INDEX "idx_activity_log_obj_type" ON "activity_log" ("obj_type");
 CREATE INDEX "idx_activity_log_action" ON "activity_log" ("action");
 
 -- ----------------------------
+-- Table structure for auth_attempt
+-- ----------------------------
+DROP TABLE IF EXISTS "auth_attempt";
+CREATE TABLE "auth_attempt" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "attempt_key" VARCHAR(64) NOT NULL,
+  "attempts" INTEGER NOT NULL DEFAULT 0,
+  "window_started_at" BIGINT DEFAULT NULL,
+  "created_at" BIGINT DEFAULT NULL,
+  "updated_at" BIGINT DEFAULT NULL,
+  CONSTRAINT "uniq_auth_attempt_key" UNIQUE ("attempt_key")
+);
+
+-- ----------------------------
+-- Table structure for auth_token
+-- ----------------------------
+DROP TABLE IF EXISTS "auth_token";
+CREATE TABLE "auth_token" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "user_id" UUID DEFAULT NULL,
+  "refresh_token" VARCHAR(255) NOT NULL,
+  "refresh_token_exp" BIGINT DEFAULT NULL,
+  "created_at" BIGINT DEFAULT NULL,
+  "updated_at" BIGINT DEFAULT NULL,
+  CONSTRAINT "uniq_auth_token_refresh_token" UNIQUE ("refresh_token")
+);
+
+CREATE INDEX "idx_auth_token_user_id" ON "auth_token" ("user_id");
+
+-- ----------------------------
 -- Table structure for article
 -- ----------------------------
 DROP TABLE IF EXISTS "article";
@@ -196,8 +226,6 @@ CREATE TABLE "user" (
   "block_save_referer" BOOLEAN NOT NULL DEFAULT FALSE,
   "block_auto_redirect" BOOLEAN NOT NULL DEFAULT FALSE,
   "last_activity" BIGINT DEFAULT NULL,
-  "refresh_token" TEXT,
-  "refresh_token_exp" TIMESTAMP DEFAULT NULL,
   "created_at" BIGINT DEFAULT NULL,
   "deleted_at" BIGINT DEFAULT NULL,
   "updated_at" BIGINT DEFAULT NULL,
@@ -205,7 +233,6 @@ CREATE TABLE "user" (
 );
 
 CREATE INDEX "idx_user_subs_type" ON "user" ("subs_type");
-CREATE INDEX "idx_user_refresh_token_gin" ON "user" USING GIN (to_tsvector('english', "refresh_token"));
 
 -- ----------------------------
 -- Table structure for user__push_subscriptions
