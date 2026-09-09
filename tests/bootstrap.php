@@ -31,6 +31,10 @@ if (!defined('PAGE')) {
     define('PAGE', 0);
 }
 
+if (!defined('ACTION')) {
+    define('ACTION', null);
+}
+
 /** CURRENT_USER как в проде — прокси поверх Container-бинда; тесты меняют id/sid через сеттеры */
 Container::bind('current_user', CurrentUser::forceCreate());
 

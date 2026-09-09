@@ -13,12 +13,16 @@ declare(strict_types=1);
 
 namespace Fraym\BaseObject;
 
+use Fraym\BaseObject\Trait\ApiActionTrait;
+use Fraym\Enum\ActionEnum;
 use Fraym\Helper\LocaleHelper;
 use Fraym\Interface\Response;
 use Fraym\Response\ArrayResponse;
 
 abstract class BaseHelper
 {
+    use ApiActionTrait;
+
     protected ?array $LOCALE = null;
 
     public function __construct()
@@ -47,5 +51,14 @@ abstract class BaseHelper
     public function asArray(?array $data): ?ArrayResponse
     {
         return !is_null($data) ? new ArrayResponse($data) : null;
+    }
+
+    /** У хелпера запрос обычно приходит без action (/helper_users_list/input=Ива),
+     *  и обрабатывает его Response() — на нём же объявляются параметры. */
+    protected function getDefaultApiActionName(): string
+    {
+        $actionName = ActionEnum::getAsString(ACTION);
+
+        return $actionName !== '' ? $actionName : 'Response';
     }
 }

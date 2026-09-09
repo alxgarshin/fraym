@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Fraym\BaseObject;
 
-use Fraym\BaseObject\Trait\InitDependencyInjectionsTrait;
+use Fraym\BaseObject\Trait\{ApiActionTrait, InitDependencyInjectionsTrait};
 use Fraym\Entity\BaseEntity;
 use Fraym\Enum\{ActEnum, ActionEnum};
 use Fraym\Helper\{AuthHelper, DataHelper, LocaleHelper, ObjectsHelper, ResponseHelper};
@@ -22,15 +22,12 @@ use Fraym\Response\{ArrayResponse, HtmlResponse};
 use ReflectionClass;
 use ReflectionMethod;
 use ReflectionObject;
-use RuntimeException;
 
 /** @template T of BaseService */
 abstract class BaseController
 {
+    use ApiActionTrait;
     use InitDependencyInjectionsTrait;
-
-    /** Тип кэша разобранных рефлексией #[ApiAction]: ключ — класс контроллера и имя экшена */
-    private const API_ACTION_CACHE_TYPE = '_APIACTIONPARAMS';
 
     public ?array $LOCALE = null {
         get => $this->LOCALE;
@@ -126,50 +123,6 @@ abstract class BaseController
     public function asArray(?array $data): ?ArrayResponse
     {
         return !is_null($data) ? new ArrayResponse($data) : null;
-    }
-
-    public function param(string $name, ?string $actionName = null): mixed
-    {
-        $actionName = $actionName ?? ActionEnum::getAsString(ACTION);
-        $apiAction = $this->getApiAction($actionName);
-
-        $apiParam = $apiAction?->getParam($name);
-
-        if (is_null($apiParam)) {
-            throw new RuntimeException(
-                sprintf('Не найден ApiParam для param(\'%s\') в action %s::%s', $name, static::class, $actionName),
-            );
-        }
-
-        return $apiParam->getValue();
-    }
-
-    public function getApiAction(?string $actionName = null): ?ApiAction
-    {
-        $actionName = $actionName ?? ActionEnum::getAsString(ACTION);
-        $cacheId = static::class . '::' . $actionName;
-
-        $cached = CACHE->getFromCache(self::API_ACTION_CACHE_TYPE, $cacheId);
-
-        if (!is_null($cached)) {
-            return $cached[0];
-        }
-
-        $apiAction = null;
-        $reflectionClass = new ReflectionClass(static::class);
-
-        if ($actionName !== '' && $reflectionClass->hasMethod($actionName)) {
-            $attributes = $reflectionClass->getMethod($actionName)->getAttributes(ApiAction::class);
-
-            if ($attributes[0] ?? false) {
-                /** @var ApiAction $apiAction */
-                $apiAction = $attributes[0]->newInstance();
-            }
-        }
-
-        CACHE->setToCache(self::API_ACTION_CACHE_TYPE, $cacheId, [$apiAction]);
-
-        return $apiAction;
     }
 
     public function checkIfIsAccessible(?string $methodName = null): bool

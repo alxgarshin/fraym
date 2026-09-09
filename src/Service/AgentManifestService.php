@@ -75,8 +75,12 @@ final class AgentManifestService
         ];
 
         if ($controller instanceof BaseHelper) {
+            $customActions = self::describeCustomActions($controller, $manifest['path'], $moduleLocale);
+
+            /** Неразмеченный хелпер отдаёт прежний синтетический lookup: проекты, не дошедшие
+             *  до #[ApiAction], не должны терять модуль из манифеста. */
             $manifest['type'] = 'helper';
-            $manifest['actions'] = [self::describeHelperLookup($manifest['path'])];
+            $manifest['actions'] = $customActions !== [] ? $customActions : [self::describeHelperLookup($manifest['path'])];
 
             return $manifest;
         }
@@ -420,7 +424,7 @@ final class AgentManifestService
     }
 
     /** Действия, объявленные через #[ApiAction]. Метод без атрибута в манифест не попадает. */
-    private static function describeCustomActions(BaseController $controller, string $path, array $moduleLocale): array
+    private static function describeCustomActions(BaseController|BaseHelper $controller, string $path, array $moduleLocale): array
     {
         $actionsLocale = $moduleLocale['fraym_actions'] ?? [];
         $actions = [];
@@ -444,12 +448,15 @@ final class AgentManifestService
                 );
             }
 
+            /** Response() хелпера — его единственный вход, обращение к нему идёт по пути без action= */
+            $isHelperEntryPoint = $controller instanceof BaseHelper && $methodName === 'Response';
+
             $actions[] = [
                 'name' => $localeKey,
-                'kind' => 'custom',
+                'kind' => $isHelperEntryPoint ? 'lookup' : 'custom',
                 'mutating' => $apiAction->mutating,
                 'method' => $apiAction->mutating ? 'POST' : 'GET',
-                'path' => $path . 'action=' . $localeKey,
+                'path' => $isHelperEntryPoint ? $path : $path . 'action=' . $localeKey,
                 'description' => $actionLocale['description'] ?? null,
                 'params' => $params,
             ];
