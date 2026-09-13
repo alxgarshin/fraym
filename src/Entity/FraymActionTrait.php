@@ -52,9 +52,23 @@ trait FraymActionTrait
             ResponseHelper::response403();
         }
 
-        /** Определяем последовательные номера всех блоков пришедших значений. Если используется $useFixedId = true, то берем данные из $_REQUEST[0] */
-        $dataStringsIds = $useFixedId ? [0] : array_keys(ID ?? []);
-        $dataStringsIds = $dataStringsIds === [] ? [0] : $dataStringsIds;
+        if (ACTION === ActionEnum::create) {
+            $dataStringsIds = [];
+
+            foreach ($this->model->elementsList as $element) {
+                $rawElementValue = $_REQUEST[$element->name] ?? null;
+
+                if (is_array($rawElementValue)) {
+                    $dataStringsIds = array_merge($dataStringsIds, array_keys($rawElementValue));
+                }
+            }
+
+            $dataStringsIds = $dataStringsIds === [] ? [0] : array_values(array_unique($dataStringsIds));
+        } else {
+            /** Определяем последовательные номера всех блоков пришедших значений. Если используется $useFixedId = true, то берем данные из $_REQUEST[0] */
+            $dataStringsIds = $useFixedId ? [0] : array_keys(ID ?? []);
+            $dataStringsIds = $dataStringsIds === [] ? [0] : $dataStringsIds;
+        }
 
         /** Предействие из сервиса, если есть */
         if (!is_null($service)) {
