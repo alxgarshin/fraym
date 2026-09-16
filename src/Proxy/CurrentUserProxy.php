@@ -17,10 +17,10 @@ use Fraym\Container;
 use Fraym\Interface\CurrentUser;
 
 /**
- * Прокси-объект для константы CURRENT_USER.
- * Делегирует все вызовы в Container::make('current_user').
- * Setter-методы мутируют реальный объект и возвращают $this (прокси),
- * чтобы цепочки вызовов оставались на прокси.
+ * Proxy object for the CURRENT_USER constant.
+ * Delegates all calls to Container::make('current_user').
+ * Setter methods mutate the real object and return $this (the proxy),
+ * so that call chains stay on the proxy.
  */
 final class CurrentUserProxy implements CurrentUser
 {

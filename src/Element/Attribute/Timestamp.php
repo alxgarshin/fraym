@@ -16,7 +16,7 @@ namespace Fraym\Element\Attribute;
 use Attribute;
 use Fraym\Element\Validator\{ObligatoryValidator, TimestampValidator};
 
-/** Отметка времени */
+/** Timestamp */
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class Timestamp extends BaseElement
 {
@@ -26,7 +26,7 @@ class Timestamp extends BaseElement
     ];
 
     public function __construct(
-        /** Показывать ли данный таймстамп в соответствующей колонке при представлении данных сущности в виде много-объектной страницы? */
+        /** Whether to show this timestamp in the corresponding column when the entity data is presented as a multi-object page */
         public ?bool $showInObjects = null,
         ?bool $obligatory = null,
         ?string $helpClass = null,

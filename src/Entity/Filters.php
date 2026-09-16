@@ -23,24 +23,24 @@ final class Filters
     use FiltersSqlTrait;
     use FiltersHtmlTrait;
 
-    /** Строка, добавляемая в sql-запросы для фильтрации */
+    /** String added to sql queries for filtering */
     private ?string $searchQuerySql = null;
 
-    /** Параметры для строки sql-запроса для фильтрации */
+    /** Parameters of the filtering sql query string */
     private ?array $searchQueryParams = null;
 
-    /** Прегенерированная ссылка на данный набор фильтров */
+    /** Pregenerated link to this set of filters */
     private ?string $currentFiltersLink = null;
 
-    /** Массив преподготовленных значений для cookie */
+    /** Prepared values for the cookie */
     private array $cookieValues = [];
 
-    /** Массив "блоков" фильтров: каждый блок состоит из фильтруемого элемента и вспомогательных элементов, определяющих конкретику фильтрации
+    /** Filter "blocks": each block consists of the filtered element and helper elements defining the filtering specifics
      * @var array<int, FiltersBlock> $filtersBlocks
      */
     private array $filtersBlocks = [];
 
-    /** Получение локали фильтров */
+    /** Get the filters locale */
     private ?array $LOCALE {
         get => LocaleHelper::getLocale(['fraym', 'filters']);
     }
@@ -48,12 +48,12 @@ final class Filters
     private static ?array $filtersCookieCache = null;
 
     public function __construct(
-        /** Сущность */
+        /** Entity */
         private BaseEntity $entity,
     ) {
     }
 
-    /** Очистка данных по фильтрам в cookie сущности */
+    /** Clear the filters data in the entity cookie */
     public function clearEntityFiltersData(): void
     {
         $fraymFilters = self::getFiltersCookie();
@@ -69,13 +69,13 @@ final class Filters
         self::setFiltersCookie($fraymFilters);
     }
 
-    /** Проверка видимости панели фильтров */
+    /** Check the visibility of the filters panel */
     public function getFiltersState(): bool
     {
         return !($this->getPreparedSearchQuerySql() === '' && !(in_array(ACTION, ActionEnum::getFilterValues())));
     }
 
-    /** Получение ранее подготовленной SQL-инъекции по фильтрам */
+    /** Get the previously prepared SQL injection for filters */
     public function getPreparedSearchQuerySql(string $kind = KIND): string
     {
         if (!$this->getSearchQuerySql()) {
@@ -85,7 +85,7 @@ final class Filters
         return $this->getSearchQuerySql() ?? '';
     }
 
-    /** Получение ранее подготовленных параметров SQL-инъекции по фильтрам */
+    /** Get the previously prepared SQL injection parameters for filters */
     public function getPreparedSearchQueryParams(string $kind = KIND): array
     {
         if ($this->getSearchQueryParams() === []) {
@@ -95,7 +95,7 @@ final class Filters
         return $this->getSearchQueryParams();
     }
 
-    /** Получение ранее подготовленной ссылки на текущий набор фильтров */
+    /** Get the previously prepared link to the current set of filters */
     public function getPreparedCurrentFiltersLink(string $kind = KIND): string
     {
         if (!$this->getCurrentFiltersLink()) {
@@ -105,19 +105,19 @@ final class Filters
         return $this->getCurrentFiltersLink() ?? '';
     }
 
-    /** Проверка наличия cookie фильтров */
+    /** Check whether the filters cookie exists */
     public static function hasFiltersCookie(string $entityName, string $kind = KIND): bool
     {
         return count(self::getFiltersCookie()[$kind][$entityName] ?? []) > 0;
     }
 
-    /** Получение параметра фильтра из куки соответствующей entity и, опционально, kind */
+    /** Get a filter parameter from the cookie of the corresponding entity and, optionally, kind */
     public static function getFiltersCookieParameterByName(string $parameterName, string $entityName, string $kind = KIND): mixed
     {
         return self::getFiltersCookie()[$kind][$entityName][$parameterName] ?? null;
     }
 
-    /** Получение соответствующего item'а из набора item'ов FilterBlock'а по названию элемента во вьюшке */
+    /** Get the matching item from the FilterBlock's items by the element name in the view */
     private function getCorrespondingItem(string $name, FiltersBlock $filtersBlock): ?ElementItem
     {
         $name = str_ireplace(['search_', 'search2_'], '', $name);

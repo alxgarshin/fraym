@@ -20,12 +20,12 @@ use Fraym\Element\Item\Trait\CloneTrait;
 use Fraym\Helper\{DateHelper};
 use Fraym\Interface\ElementAttribute;
 
-/** Календарь в формате "дата" или "дата+время" */
+/** Calendar in "date" or "date+time" format */
 class Calendar extends BaseElement
 {
     use CloneTrait;
 
-    /** Значение */
+    /** Value */
     private ?DateTimeImmutable $fieldValue;
 
     private Attribute\Calendar $attribute;

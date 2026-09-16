@@ -18,12 +18,12 @@ use Fraym\Element\Item\Trait\CloneTrait;
 use Fraym\Helper\DataHelper;
 use Fraym\Interface\ElementAttribute;
 
-/** Скрытое поле */
+/** Hidden field */
 class Hidden extends BaseElement
 {
     use CloneTrait;
 
-    /** Значение */
+    /** Value */
     private null|int|string $fieldValue;
 
     private Attribute\Hidden $attribute;

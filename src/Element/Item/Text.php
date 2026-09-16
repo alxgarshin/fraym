@@ -19,13 +19,13 @@ use Fraym\Enum\EscapeModeEnum;
 use Fraym\Helper\DataHelper;
 use Fraym\Interface\ElementAttribute;
 
-/** Текстовая строка */
+/** Text string */
 class Text extends BaseElement
 {
     use CloneTrait;
     use MinMaxChar;
 
-    /** Значение */
+    /** Value */
     private ?string $fieldValue;
 
     private Attribute\Text $attribute;

@@ -18,17 +18,17 @@ use Fraym\Element\Item\Trait\CloneTrait;
 use Fraym\Helper\{DataHelper, LocaleHelper};
 use Fraym\Interface\ElementAttribute;
 
-/** Множественный выбор */
+/** Multiple choice */
 class Multiselect extends BaseElement
 {
     use CloneTrait;
 
-    /** Значение */
+    /** Value */
     private array $fieldValue;
 
     private Attribute\Multiselect $attribute;
 
-    /** @var array<string, true> Поля, по которым уже выдано DEV-предупреждение о legacy dash за этот запрос */
+    /** @var array<string, true> Fields that have already received a DEV warning about legacy dash during this request */
     private static array $legacyDashWarned = [];
 
     public function usualAsHTMLRenderer(bool $editableFormat, bool $removeHtmlFromValue = false): string
@@ -180,7 +180,7 @@ class Multiselect extends BaseElement
         return !$this->getValues();
     }
 
-    /** Редактируемый dropfield (чекбоксы/радио + поиск + выбранные опции) */
+    /** Editable dropfield (checkboxes/radios + search + selected options) */
     private function renderEditableDropfield(array $value, array $values, ?array $images): string
     {
         $html = '';
@@ -298,7 +298,7 @@ class Multiselect extends BaseElement
         return $html;
     }
 
-    /** Только для чтения: перечисление выбранных значений */
+    /** Read-only: list of selected values */
     private function renderReadonlyValues(array $value, array $values, ?array $images): string
     {
         $html = '';
@@ -331,8 +331,8 @@ class Multiselect extends BaseElement
         return $html;
     }
 
-    /** DEV-диагностика: поле хранит legacy dash-значение, но без legacySearch — фильтр его не найдёт.
-     *  Одно предупреждение на поле за запрос. */
+    /** DEV diagnostics: the field stores a legacy dash value but has no legacySearch — the filter won't find it.
+     *  One warning per field per request. */
     private function warnOnLegacyDashFormat(string $pureValue): void
     {
         if (($_ENV['APP_ENV'] ?? '') !== 'DEV' || $this->getLegacySearch()) {

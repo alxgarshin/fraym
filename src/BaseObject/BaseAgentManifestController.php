@@ -18,15 +18,15 @@ use Fraym\Interface\Response;
 use Fraym\Service\AgentManifestService;
 
 /**
- * Выдача манифеста.
+ * Manifest output.
  *
- * Адреса: /agent_manifest — индекс, /agent_manifest/cmsvc=article — детализация по модулю.
+ * Addresses: /agent_manifest — index, /agent_manifest/cmsvc=article — module details.
  */
 abstract class BaseAgentManifestController extends BaseController
 {
     public function Response(): ?Response
     {
-        /** Kernel уже разобрал и проверил cmsvc; при его отсутствии константа равна KIND */
+        /** Kernel has already parsed and checked cmsvc; if it is absent, the constant equals KIND */
         $cmsvcName = is_string(CMSVC) ? CMSVC : KIND;
 
         if ($cmsvcName === KIND) {

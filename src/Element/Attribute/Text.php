@@ -19,7 +19,7 @@ use Fraym\Element\Validator\{MinMaxCharValidator, ObligatoryValidator};
 use Fraym\Interface\{HasDefaultValue, MinMaxChar as InterfaceMinMaxChar};
 use InvalidArgumentException;
 
-/** Текстовая строка */
+/** Text string */
 /** @implements HasDefaultValue<null|string> */
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class Text extends BaseElement implements InterfaceMinMaxChar, HasDefaultValue
@@ -31,7 +31,7 @@ class Text extends BaseElement implements InterfaceMinMaxChar, HasDefaultValue
         MinMaxCharValidator::class,
     ];
 
-    /** Значение по умолчанию */
+    /** Default value */
     public mixed $defaultValue {
         get => $this->_val;
         set {

@@ -120,7 +120,7 @@ abstract class BaseView
 
             $propertiesWithListContext = [];
 
-            /** В мультиобъектных сущностях в контекст :list выводятся все поля, потому что кроме list у них и нет других определяющих контекстов */
+            /** In multi-object entities, the :list context outputs all fields, because they have no defining contexts other than list */
             if (!($entity instanceof MultiObjectsEntity)) {
                 $entitySortingItems = $entity->sortingData;
 
@@ -128,7 +128,7 @@ abstract class BaseView
                     $propertiesWithListContext[] = $entitySortingItem->tableFieldName;
                 }
 
-                /** В каталогах и наследующих объектах нам также нужны технические поля, определяющие родителя и является поле каталогом или наследником */
+                /** Catalogs and descendant objects also need the technical fields that define the parent and whether the item is a catalog or a descendant */
                 if ($entity instanceof CatalogEntity) {
                     /** @var CatalogItemEntity $itemEntity */
                     $itemEntity = $entity->catalogItemEntity;

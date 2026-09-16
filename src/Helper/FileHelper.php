@@ -17,7 +17,7 @@ use Fraym\Interface\Helper;
 
 abstract class FileHelper implements Helper
 {
-    /** Получение upload_num'а на основе типа объекта */
+    /** Get upload_num based on the object type */
     public static function getUploadNumByType(string $objType): ?int
     {
         $objType = DataHelper::clearBraces($objType);
@@ -28,7 +28,7 @@ abstract class FileHelper implements Helper
         };
     }
 
-    /** Проверка доступности предпросмотра по расширению */
+    /** Check whether preview is available by extension */
     public static function checkForPreview(string $filename): bool
     {
         $previewExtensions = [
@@ -58,7 +58,7 @@ abstract class FileHelper implements Helper
         return false;
     }
 
-    /** Проверяет, является ли URL внешней ссылкой на реальное изображение */
+    /** Checks whether the URL is an external link to an actual image */
     public static function checkExternalImageExists(?string $url): bool
     {
         if (!$url || !filter_var($url, FILTER_VALIDATE_URL)) {
@@ -92,7 +92,7 @@ abstract class FileHelper implements Helper
         return ($httpCode === 200 && strpos((string) $contentType, 'image/') === 0);
     }
 
-    /** Беглая проверка существования картинки по указанному пути (рекомендуется использовать ТОЛЬКО для внутренних ресурсов) */
+    /** Quick check that an image exists at the given path (recommended ONLY for internal resources) */
     public static function checkImageExists(?string $filePath): bool
     {
         if (!$filePath) {
@@ -102,7 +102,7 @@ abstract class FileHelper implements Helper
         return (bool) getimagesize($filePath);
     }
 
-    /** Получение полного пути до хранимого файла */
+    /** Get the full path to a stored file */
     public static function getFileFullPath(
         string $filePath,
         int $uploadsType,
@@ -112,7 +112,7 @@ abstract class FileHelper implements Helper
         return ($returnWithInnerPath ? INNER_PATH . 'public' : ABSOLUTE_PATH . ($thumbnail ? '/thumbnails' : '')) . $_ENV['UPLOADS_PATH'] . $_ENV['UPLOADS'][$uploadsType]['path'] . $filePath;
     }
 
-    /** Получение пути файла из зашифрованного вида в БД */
+    /** Get the file path from its encoded form in the DB */
     public static function getImagePath(
         ?string $attachmentsString,
         ?int $uploadsType = null,
@@ -133,7 +133,7 @@ abstract class FileHelper implements Helper
         return null;
     }
 
-    /** Подсчет и вывод размера файла в человекочитаемом формате */
+    /** Calculate and output the file size in a human-readable format */
     public static function getFileSize(string $file): string
     {
         $LOCALE_FRAYM = LocaleHelper::getLocale(['fraym']);
@@ -141,9 +141,9 @@ abstract class FileHelper implements Helper
         if (file_exists($file)) {
             $bytes = filesize($file);
             $decimals = 0;
-            $sz = ['Б', 'К', 'М', 'Г'];
-            $factor = (int) floor(($bytes - 1) / 3);
-            $result = sprintf("%.{$decimals}f", $bytes / pow(1024, $factor)) . ' ' . $sz[$factor] . ($factor > 0 ? 'б' : '');
+            $units = $LOCALE_FRAYM['file']['size_units'];
+            $factor = min((int) floor((strlen((string) $bytes) - 1) / 3), count($units) - 1);
+            $result = sprintf("%.{$decimals}f", $bytes / pow(1024, $factor)) . ' ' . $units[$factor];
         } else {
             $result = $LOCALE_FRAYM['file']['size_not_counted'];
         }
@@ -151,19 +151,19 @@ abstract class FileHelper implements Helper
         return $result;
     }
 
-    /** Получение отформатированного времени последнего изменения файла */
+    /** Get the formatted last modification time of a file */
     public static function getModifiedTimeFormatted(string $filename, string $format = 'Ymd_Hi'): string
     {
         return date($format, self::getModifiedTime($filename) ?? time());
     }
 
-    /** Получение времени последнего изменения файла */
+    /** Get the last modification time of a file */
     public static function getModifiedTime(string $filename): ?int
     {
         return !filemtime($filename) ? null : (int) filemtime($filename);
     }
 
-    /** Получение типа файла на основе его расширения */
+    /** Get the file type based on its extension */
     public static function getFileTypeByExtension(string $filename): string
     {
         $filetype = 'file';

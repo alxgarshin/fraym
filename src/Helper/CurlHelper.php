@@ -18,7 +18,7 @@ use Fraym\Interface\Helper;
 
 abstract class CurlHelper implements Helper
 {
-    /** Асинхронный curl-запрос */
+    /** Asynchronous curl request */
     public static function curlPostAsync(string $url, array $params): void
     {
         if ($_ENV['APP_ENV'] === 'prod') {

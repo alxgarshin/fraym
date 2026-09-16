@@ -15,7 +15,7 @@ namespace Fraym\Entity\Trait;
 
 use Fraym\Helper\LocaleHelper;
 
-/** Пагинатор */
+/** Paginator */
 trait PageCounter
 {
     public function drawPageCounter(

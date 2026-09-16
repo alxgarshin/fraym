@@ -17,7 +17,7 @@ use Fraym\Element\Item\Tab;
 
 trait Tabs
 {
-    /** @var Tab[] Список закладок из элементов Tab, прикрепленных к объекту */
+    /** @var Tab[] List of tabs from Tab elements attached to the object */
     public ?array $tabs = null;
 
     public function addTab(Tab $baseTab): static

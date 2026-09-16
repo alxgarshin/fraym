@@ -22,7 +22,7 @@ require INNER_PATH.'vendor/phpmailer/src/SMTP.php'; */
 
 abstract class EmailHelper implements Helper
 {
-    /** Отправка email-сообщений на основе библиотеки PHPmailer */
+    /** Send email messages using the PHPMailer library */
     public static function sendMail(
         string $fromName,
         string $fromEmail,
@@ -106,7 +106,7 @@ abstract class EmailHelper implements Helper
     }
 
     /**
-     * Email-рассылка
+     * Email mailing
      *
      * @return bool[]
      */

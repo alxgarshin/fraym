@@ -53,8 +53,8 @@ abstract class BaseHelper
         return !is_null($data) ? new ArrayResponse($data) : null;
     }
 
-    /** У хелпера запрос обычно приходит без action (/helper_users_list/input=Ива),
-     *  и обрабатывает его Response() — на нём же объявляются параметры. */
+    /** A helper request usually comes without an action (/helper_users_list/input=John),
+     *  and is handled by Response() — which is also where the parameters are declared. */
     protected function getDefaultApiActionName(): string
     {
         $actionName = ActionEnum::getAsString(ACTION);

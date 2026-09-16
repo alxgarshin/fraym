@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Fraym\Enum;
 
-/** Замкнутый список машинных кодов ошибки ответа */
+/** Closed list of machine-readable response error codes */
 enum ResponseErrorCodeEnum: string
 {
     case validationFailed = 'validation_failed';

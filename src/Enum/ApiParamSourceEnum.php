@@ -17,6 +17,6 @@ enum ApiParamSourceEnum: string
 {
     case request = 'request';
 
-    /** Значение уже разобрано Kernel::init() в одноимённую константу (OBJ_ID, ID, PAGE, SORTING, OBJ_TYPE) */
+    /** The value has already been parsed by Kernel::init() into the constant of the same name (OBJ_ID, ID, PAGE, SORTING, OBJ_TYPE) */
     case global = 'global';
 }

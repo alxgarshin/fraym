@@ -18,12 +18,12 @@ use Fraym\Enum\ActionEnum;
 use ReflectionClass;
 use RuntimeException;
 
-/** Механика #[ApiAction]: чтение объявленных параметров экшена и доступ к их значениям.
- *  Подключается и контроллерами, и хелперами — у последних нет общего предка с BaseController,
- *  но точно так же нужно объявлять параметры внешнего API. */
+/** #[ApiAction] mechanics: reading the declared action parameters and accessing their values.
+ *  Used by both controllers and helpers — the latter have no common ancestor with BaseController,
+ *  but need to declare external API parameters in exactly the same way. */
 trait ApiActionTrait
 {
-    /** Тип кэша разобранных рефлексией #[ApiAction]: ключ — класс контроллера и имя экшена */
+    /** Cache type for #[ApiAction] parsed via reflection: the key is the controller class and the action name */
     private const API_ACTION_CACHE_TYPE = '_APIACTIONPARAMS';
 
     public function param(string $name, ?string $actionName = null): mixed
@@ -35,7 +35,7 @@ trait ApiActionTrait
 
         if (is_null($apiParam)) {
             throw new RuntimeException(
-                sprintf('Не найден ApiParam для param(\'%s\') в action %s::%s', $name, static::class, $actionName),
+                sprintf('ApiParam not found for param(\'%s\') in action %s::%s', $name, static::class, $actionName),
             );
         }
 
@@ -70,7 +70,7 @@ trait ApiActionTrait
         return $apiAction;
     }
 
-    /** Экшен, к которому относится вызов param() без явного имени */
+    /** The action that a param() call without an explicit name refers to */
     protected function getDefaultApiActionName(): string
     {
         return ActionEnum::getAsString(ACTION);

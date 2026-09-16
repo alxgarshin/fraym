@@ -103,7 +103,7 @@ class ArticleController extends BaseController
             $article_section_id = $section_data['id'];
         }
 
-        /** Составляем корректный путь до статьи */
+        /** Build the correct path to the article */
         $article_path = '';
 
         if (($section_data['parent'] ?? false) > 0) {
@@ -201,7 +201,7 @@ class ArticleController extends BaseController
             $text = preg_replace('#font-size:\s*15.6px;*#', '', $text);
             $RESPONSE_DATA .= '<div class="article_content">' . $text . '</div>';
 
-            // заглушка для добавления видео-файлов
+            // stub for adding video files
             if (str_contains($RESPONSE_DATA, 'video')) {
                 $video = '';
 

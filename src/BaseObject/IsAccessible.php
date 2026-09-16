@@ -18,7 +18,7 @@ use Exception;
 use Fraym\Interface\Helper;
 use ReflectionClass;
 
-/** Атрибут для методов, указывающий недоступность незалогиненному пользователю */
+/** Method attribute: not accessible to a user who isn't logged in */
 #[Attribute(Attribute::TARGET_METHOD | Attribute::TARGET_CLASS)]
 final class IsAccessible
 {

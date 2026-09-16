@@ -17,13 +17,13 @@ use Fraym\Interface\Cache;
 
 final class CacheService implements Cache
 {
-    //TODO: привести в соответствие с https://github.com/php-fig/cache
+    //TODO: align with https://github.com/php-fig/cache
 
     private $_CACHE = [
         '_LOCALE' => ['id' => [0 => []]],
     ];
 
-    /** Создание или получение кэша в константу. По умолчанию: CACHE */
+    /** Create or get the cache into a constant. Default: CACHE */
     public static function getInstance(string $constName = 'CACHE'): self
     {
         if (defined($constName)) {
@@ -33,13 +33,13 @@ final class CacheService implements Cache
         }
     }
 
-    /** Принудительное создание кэша */
+    /** Forced cache creation */
     public static function forceCreate(): self
     {
         return new self();
     }
 
-    /** Получение переменной из кэша */
+    /** Get a variable from the cache */
     public function getFromCache(string $objType, string|int|null $objId, string $idColumnName = 'id'): mixed
     {
         if (isset($this->_CACHE[$objType])) {
@@ -55,7 +55,7 @@ final class CacheService implements Cache
         return null;
     }
 
-    /** Установка переменной в кэш */
+    /** Set a variable in the cache */
     public function setToCache(string $objType, string|int $objId, mixed $value, string $idColumnName = 'id'): array
     {
         $this->_CACHE[$objType][$idColumnName][$objId] = $value;

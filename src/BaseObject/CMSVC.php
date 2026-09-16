@@ -18,17 +18,17 @@ use Exception;
 use Fraym\Entity\CatalogEntity;
 use Fraym\Helper\{ObjectsHelper, TextHelper};
 
-/** Атрибут универсального хранения ссылок на: controller, model, service, view, context */
+/** Attribute that universally stores references to: controller, model, service, view, context */
 #[Attribute(Attribute::TARGET_CLASS)]
 final class CMSVC
 {
-    /** Название объекта / сущности */
+    /** Object / entity name */
     public ?string $objectName = null {
         get => $this->objectName;
         set => $this->objectName = TextHelper::mb_lcfirst($value);
     }
 
-    /** Контроллер объекта */
+    /** Object controller */
     public BaseController|string|null $controller = null {
         get {
             $controller = $this->controller;
@@ -45,7 +45,7 @@ final class CMSVC
         set => $this->controller = $value;
     }
 
-    /** Шаблон модели объекта */
+    /** Object model template */
     public BaseModel|string|null $model = null {
         get {
             $model = $this->model;
@@ -69,7 +69,7 @@ final class CMSVC
         }
     }
 
-    /** Сервис объекта */
+    /** Object service */
     public BaseService|string|null $service = null {
         get {
             $service = $this->service;
@@ -86,7 +86,7 @@ final class CMSVC
         set => $this->service = $value;
     }
 
-    /** Вьюшка объекта */
+    /** Object view */
     public BaseView|string|null $view = null {
         get {
             $view = $this->view;
@@ -109,7 +109,7 @@ final class CMSVC
         BaseService|string|null $service = null,
         BaseView|string|null $view = null,
 
-        /** Контекст объекта */
+        /** Object context */
         public array $context = [],
     ) {
         $this->controller = $controller;
@@ -223,7 +223,7 @@ final class CMSVC
             $modelInstance->modelData = $data;
 
             if (is_null($id)) {
-                /** Находим самый большой ключ с частью "mockModel_" и берём следующий за ним */
+                /** Find the largest key containing "mockModel_" and take the next one */
                 $modelInstancesForModel = CACHE->getFromCache('_MODELINSTANCES', null, $modelClass);
                 $modelInstancesKeys = array_keys($modelInstancesForModel ?? []);
                 $highestKey = -1;

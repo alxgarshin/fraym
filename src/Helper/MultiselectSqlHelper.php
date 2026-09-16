@@ -16,19 +16,19 @@ namespace Fraym\Helper;
 use Fraym\Interface\Helper;
 
 /**
- * Хелпер для работы с multiselect-колонками, хранящими JSON-массив значений
- * (например, '["group1","all2",1,2]'). Делегирует SQL-генерацию в DB->dialect,
- * чтобы выражение корректно работало и для MySQL, и для PostgreSQL.
+ * Helper for multiselect columns that store a JSON array of values
+ * (e.g. '["group1","all2",1,2]'). Delegates SQL generation to DB->dialect,
+ * so that the expression works correctly for both MySQL and PostgreSQL.
  */
 abstract class MultiselectSqlHelper implements Helper
 {
     /**
-     * SQL-выражение «колонка содержит значение» для multiselect JSON-колонок.
+     * SQL expression "column contains the value" for multiselect JSON columns.
      *
-     * $needle — либо bind-плейсхолдер (":bind_name"), либо SQL-литерал с JSON
-     * внутри (см. jsonLiteral()).
+     * $needle — either a bind placeholder (":bind_name") or an SQL literal with JSON
+     * inside (see jsonLiteral()).
      *
-     * Пример:
+     * Example:
      *   MultiselectSqlHelper::contains('project_group_ids', ':group_id')
      *     => MySQL:      JSON_CONTAINS(IFNULL(NULLIF(project_group_ids, ''), '[]'), :group_id)
      *     => PostgreSQL: COALESCE(NULLIF(project_group_ids, ''), '[]')::jsonb @> :group_id::jsonb
@@ -38,21 +38,21 @@ abstract class MultiselectSqlHelper implements Helper
         return DB->dialect->jsonContainsExpression($column, $needle, negate: false);
     }
 
-    /** SQL-выражение «колонка НЕ содержит значение» для multiselect JSON-колонок */
+    /** SQL expression "column does NOT contain the value" for multiselect JSON columns */
     public static function notContains(string $column, string $needle): string
     {
         return DB->dialect->jsonContainsExpression($column, $needle, negate: true);
     }
 
     /**
-     * PHP-значение → SQL-литерал, внутри которого лежит валидный JSON.
-     * Подходит для прямой подстановки вторым аргументом в contains()/notContains(),
-     * когда bind-параметр не используется.
+     * PHP value → SQL literal containing valid JSON.
+     * Suitable for direct substitution as the second argument of contains()/notContains(),
+     * when no bind parameter is used.
      *
      *   jsonLiteral(5)        => "'5'"
      *   jsonLiteral('group1') => "'\"group1\"'"
      *
-     * Для пользовательского ввода предпочтительнее bind-параметр через contains(':name').
+     * For user input, a bind parameter via contains(':name') is preferred.
      */
     public static function jsonLiteral(int|string $value): string
     {
@@ -62,7 +62,7 @@ abstract class MultiselectSqlHelper implements Helper
     }
 
     /**
-     * PHP-значение → строка для bind'а в prepared statement.
+     * PHP value → string for binding in a prepared statement.
      *   bindValue(5)        => '5'
      *   bindValue('group1') => '"group1"'
      */

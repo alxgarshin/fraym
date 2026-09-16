@@ -34,7 +34,7 @@ final class MySQLDialect implements DatabaseDialect
 
     public function extractLastInsertId(array|false $queryResult): string|false|null
     {
-        /** MySQL не поддерживает RETURNING — вернуть null, чтобы вызывающая сторона использовала PDO::lastInsertId() */
+        /** MySQL doesn't support RETURNING — return null so the caller uses PDO::lastInsertId() */
         return null;
     }
 
@@ -112,7 +112,7 @@ final class MySQLDialect implements DatabaseDialect
         ];
     }
 
-    /** Для checkbox в MySQL используется Enum('0', '1') */
+    /** In MySQL, checkbox uses Enum('0', '1') */
     public function checkboxDbValue(bool $value): string
     {
         return $value ? '1' : '0';

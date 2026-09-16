@@ -17,7 +17,7 @@ class Fixture20250101000000 extends BaseFixture
         (1,NULL,'Tag',NULL,1,1213954236,1213954236);
 
     INSERT INTO `user` (sid,login,password_hashed,full_name,em,em_verified,bazecount,subs_type,subs_objects,rights,agreement,block_save_referer,block_auto_redirect,created_at,updated_at) VALUES
-        (1,'admin@fraym.loc','\$argon2id\$v=19\$m=131072,t=3,p=1\$RHlIYkZSNkhOcWhSMEJOdA\$v4sEEExvnM+rIFE8WZIQa0n0lyCrn3bgDEAoWnJBFUs','Админ','admin@fraym.loc','1',50,1,'-{conversation}-','-admin-help-','1','0','0',1758395113,1758310785)
+        (1,'admin@fraym.loc','\$argon2id\$v=19\$m=131072,t=3,p=1\$RHlIYkZSNkhOcWhSMEJOdA\$v4sEEExvnM+rIFE8WZIQa0n0lyCrn3bgDEAoWnJBFUs','Admin','admin@fraym.loc','1',50,1,'-{conversation}-','-admin-help-','1','0','0',1758395113,1758310785)
 SQL;
         } else {
             $SQL =
@@ -27,7 +27,7 @@ SQL;
             sid, login, password_hashed, full_name, em, em_verified, bazecount, subs_type, subs_objects, rights,
             agreement, block_save_referer, block_auto_redirect, created_at, updated_at
         ) VALUES (
-            1, 'admin@fraym.loc', '\$argon2id\$v=19\$m=131072,t=3,p=1\$RHlIYkZSNkhOcWhSMEJOdA\$v4sEEExvnM+rIFE8WZIQa0n0lyCrn3bgDEAoWnJBFUs', 'Админ', 'admin@fraym.loc', TRUE,
+            1, 'admin@fraym.loc', '\$argon2id\$v=19\$m=131072,t=3,p=1\$RHlIYkZSNkhOcWhSMEJOdA\$v4sEEExvnM+rIFE8WZIQa0n0lyCrn3bgDEAoWnJBFUs', 'Admin', 'admin@fraym.loc', TRUE,
             50, 1, '-{conversation}-', '-admin-help-', TRUE, FALSE, FALSE, 1758395113, 1758310785
         )
         RETURNING id

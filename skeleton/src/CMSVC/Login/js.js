@@ -1,4 +1,4 @@
-/** Логин */
+/** Login */
 
 if (el('div.mainpage_login')) {
     _('#btn_make_remind').disable();

@@ -18,13 +18,13 @@ use Fraym\Interface\Database;
 use Generator;
 
 /**
- * Прокси-объект для константы DB.
- * Делегирует все вызовы в Container::make('db'), что позволяет
- * подменять реализацию (тесты, persistent workers) без изменения кода.
+ * Proxy object for the DB constant.
+ * Delegates all calls to Container::make('db'), which allows
+ * replacing the implementation (tests, persistent workers) without changing the code.
  */
 final class DatabaseProxy implements Database
 {
-    /** Проброс обращений к публичным свойствам (dialect, dbType и др.) */
+    /** Forwarding of access to public properties (dialect, dbType, etc.) */
     public function __get(string $name): mixed
     {
         return Container::make('db')->$name;

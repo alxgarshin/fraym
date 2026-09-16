@@ -17,7 +17,7 @@ use Fraym\Enum\ResponseErrorCodeEnum;
 use Fraym\Helper\ResponseHelper;
 use PHPUnit\Framework\TestCase;
 
-/** Единый конверт ответа: агент отличает данные от метаданных и получает машинный код ошибки */
+/** Unified response envelope: the agent tells data from metadata and gets a machine-readable error code */
 final class ResponseEnvelopeTest extends TestCase
 {
     public function testSuccessWithoutMessages(): void

@@ -15,7 +15,7 @@ namespace Fraym\Element\Attribute;
 
 use Attribute;
 
-/** Заголовок */
+/** Heading */
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class H1 extends BaseElement
 {

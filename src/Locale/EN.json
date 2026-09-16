@@ -166,16 +166,16 @@
         "4": "File for upload was not identified!",
         "6": "Temporary folder is absent!",
         "7": "File recording to the disk failed!",
-        "8": "PHP extention stopped file upload!",
+        "8": "PHP extension stopped the file upload!",
         "post_max_size": "Uploaded file exceeds the limit of upload size!",
         "max_file_size": "File is too big!",
         "min_file_size": "File is too small!",
-        "accept_file_types": "Filed of this type cannot be uploaded!",
+        "accept_file_types": "Files of this type cannot be uploaded!",
         "max_number_of_files": "Maximum number of files is reached!",
-        "max_width": "Image width is bigger than required!!",
-        "min_width": "Image width is less than required!!",
-        "max_height": "Image hight is bigger than required!",
-        "min_height": "Image hight is less than required!"
+        "max_width": "Image width exceeds the allowed maximum!",
+        "min_width": "Image width is below the allowed minimum!",
+        "max_height": "Image height exceeds the allowed maximum!",
+        "min_height": "Image height is below the allowed minimum!"
       }
     }
   },
@@ -258,6 +258,12 @@
   },
   "file": {
     "size_not_counted": "Can't get size",
+    "size_units": [
+      "B",
+      "KB",
+      "MB",
+      "GB"
+    ],
     "messages": {
       "file_add_success": "File successfully added to the library.",
       "file_add_fail": "You don't have rights to add a file to the library.",

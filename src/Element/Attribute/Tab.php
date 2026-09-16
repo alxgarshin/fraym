@@ -15,7 +15,7 @@ namespace Fraym\Element\Attribute;
 
 use Attribute;
 
-/** Вкладка */
+/** Tab */
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class Tab extends BaseElement
 {

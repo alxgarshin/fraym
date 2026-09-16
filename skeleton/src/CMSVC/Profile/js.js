@@ -1,7 +1,7 @@
-/** Профиль */
+/** Profile */
 
 if (el('form#form_profile')) {
-    /** Уведомления в браузере */
+    /** Browser notifications */
     if (el('input[name^="messaging_active"]')) {
         _('input[name^="messaging_active"]').checked(localStorage.getItem('webpush') === 'true');
 

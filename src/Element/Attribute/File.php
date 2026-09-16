@@ -16,7 +16,7 @@ namespace Fraym\Element\Attribute;
 use Attribute;
 use Fraym\Element\Validator\FilesValidator;
 
-/** Файл */
+/** File */
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class File extends BaseElement
 {
@@ -25,7 +25,7 @@ class File extends BaseElement
     ];
 
     public function __construct(
-        /** Номер конфига в CFG['uploads'] */
+        /** Config number in CFG['uploads'] */
         public ?int $uploadNum = null,
         ?bool $obligatory = null,
         ?string $helpClass = null,

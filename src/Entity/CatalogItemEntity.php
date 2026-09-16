@@ -21,17 +21,17 @@ use Fraym\Enum\ActEnum;
 use Fraym\Helper\{TextHelper};
 use Fraym\Interface\TabbedEntity;
 
-/** Наследующая сущность каталога "родительская сущность + наследующая", например: разделы сайта и текстовые страницы */
+/** Descendant entity of a "parent entity + descendant" catalog, e.g.: site sections and text pages */
 #[Attribute(Attribute::TARGET_CLASS)]
 final class CatalogItemEntity extends BaseEntity implements CatalogInterface, TabbedEntity
 {
     use BaseEntityItem;
     use Tabs;
 
-    /** Модель сущности */
+    /** Entity model */
     public ?BaseModel $catalogItemModel = null;
 
-    /** Родительская сущность */
+    /** Parent entity */
     public CatalogEntity $catalogEntity;
 
     public ?BaseModel $model {
@@ -55,13 +55,13 @@ final class CatalogItemEntity extends BaseEntity implements CatalogInterface, Ta
         string $name,
         string $table,
 
-        /** Класс модели сущности */
+        /** Entity model class */
         public string $catalogItemModelClass,
 
-        /** В каком столбце хранится id родителя наследующего объекта? */
+        /** Which column stores the parent id of the descendant object? */
         public string $tableFieldWithParentId,
 
-        /** В каком столбце хранится содержимое объекта, позволяющее отличить родителя от наследника? Например: у страниц = текст, а у разделов = null. */
+        /** Which column stores the object content that distinguishes a parent from a descendant? E.g.: for pages = text, for sections = null. */
         public string $tableFieldToDetectType,
 
         /** @var EntitySortingItem[] $entitySortingData */

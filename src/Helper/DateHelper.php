@@ -20,13 +20,13 @@ use Fraym\Interface\Helper;
 
 abstract class DateHelper implements Helper
 {
-    /** Получение текущей даты в нужной форме: сейчас это timestamp, но будет DateTime */
+    /** Get the current date in the required form: a timestamp for now, DateTime in the future */
     public static function getNow(): int
     {
         return time();
     }
 
-    /** Преобразование даты из строки в DateTimeImmutable */
+    /** Convert a date from a string to DateTimeImmutable */
     public static function convertToDateTime(
         DateTimeImmutable|int|string|null $dateTime,
         DateTimeZone|string|null $dateTimeZone = null,
@@ -59,7 +59,7 @@ abstract class DateHelper implements Helper
         return $dateTime;
     }
 
-    /** Получение стандартной для локали строки даты */
+    /** Get the locale's standard date string */
     public static function date(
         DateTimeImmutable|int|string|null $dateTime,
         DateTimeZone|string|null $dateTimeZone = null,
@@ -75,7 +75,7 @@ abstract class DateHelper implements Helper
         return $dateTime->format($LOCALE_FRAYM['datetime']['formats']['date']);
     }
 
-    /** Получение стандартной для локали строки даты и времени */
+    /** Get the locale's standard date and time string */
     public static function dateTime(
         DateTimeImmutable|int|string|null $dateTime,
         DateTimeZone|string|null $dateTimeZone = null,
@@ -91,7 +91,7 @@ abstract class DateHelper implements Helper
         return $dateTime->format($LOCALE_FRAYM['datetime']['formats']['datetime']);
     }
 
-    /** Получение строки даты и времени в формате ATOM */
+    /** Get the date and time string in ATOM format */
     public static function atom(
         DateTimeImmutable|int|string|null $dateTime,
         DateTimeZone|string|null $dateTimeZone = null,
@@ -105,7 +105,7 @@ abstract class DateHelper implements Helper
         return $dateTime->format(DateTimeInterface::ATOM);
     }
 
-    /** Получение строки даты и времени в формате timestamp */
+    /** Get the date and time string in timestamp format */
     public static function timestamp(
         DateTimeImmutable|int|string|null $dateTime,
         DateTimeZone|string|null $dateTimeZone = null,
@@ -119,13 +119,13 @@ abstract class DateHelper implements Helper
         return $dateTime->getTimestamp();
     }
 
-    /** Самый простой из возможных выводов даты и времени */
+    /** The simplest possible date and time output */
     public static function basicShowDateTime(int|string|null $timestamp): ?string
     {
         return self::dateTime($timestamp);
     }
 
-    /** Вывод даты новости */
+    /** News item date output */
     public static function dateFromTo(array $newsItem): array
     {
         $LOCALE_FRAYM = LocaleHelper::getLocale(['fraym']);
@@ -173,7 +173,7 @@ abstract class DateHelper implements Helper
         return $result;
     }
 
-    /** Получение названия месяца на основе порядкового номера */
+    /** Get the month name by its sequence number */
     public static function monthname(string|int $num, bool $short = false, bool $base = false): string
     {
         $LOCALE_FRAYM = LocaleHelper::getLocale(['fraym']);

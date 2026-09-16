@@ -21,7 +21,7 @@ use RuntimeException;
 
 class ParamTestHelper extends BaseHelper
 {
-    /** Локаль хелперу здесь не нужна, а её загрузка требует окружения запроса */
+    /** The helper doesn't need a locale here, and loading it requires a request environment */
     public function __construct()
     {
     }
@@ -46,7 +46,7 @@ class ParamTestHelper extends BaseHelper
     }
 }
 
-/** У хелпера в запросе нет action: param() без имени экшена читает атрибут с Response() */
+/** A helper request has no action: param() without an action name reads the attribute from Response() */
 final class HelperParamTest extends TestCase
 {
     public function testParamsAreReadFromResponseWithoutActionName(): void
@@ -68,7 +68,7 @@ final class HelperParamTest extends TestCase
         $_REQUEST['term'] = 'Ива';
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage("Не найден ApiParam для param('term')");
+        $this->expectExceptionMessage("ApiParam not found for param('term')");
 
         (new ParamTestHelper())->param('term');
     }

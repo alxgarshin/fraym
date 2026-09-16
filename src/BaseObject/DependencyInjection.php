@@ -15,7 +15,7 @@ namespace Fraym\BaseObject;
 
 use Attribute;
 
-/** Атрибут для Dependency Injection любого класса (рекомендуются только наследники BaseService) к ПУБЛИЧНОМУ свойству (с ReflectionNamedType) любого из объектов CMSVC */
+/** Attribute for Dependency Injection of any class (only BaseService descendants are recommended) into a PUBLIC property (with ReflectionNamedType) of any CMSVC object */
 #[Attribute(Attribute::TARGET_PROPERTY)]
 final class DependencyInjection
 {

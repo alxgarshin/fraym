@@ -30,7 +30,7 @@ trait FraymActionTrait
 
         $objectRights = $this->view->viewRights;
 
-        /** Проверка авторизации пользователя */
+        /** Check user authorization */
         if (
             match (ACTION) {
                 ActionEnum::create => !$objectRights->addRight,
@@ -44,8 +44,8 @@ trait FraymActionTrait
             ResponseHelper::response401();
         }
 
-        /** CSRF пропускается только для внешнего API, аутентифицированного через Bearer.
-         * Cookie-авторизованный SPA (в т.ч. same-origin JS со спуфнутым заголовком) обязан слать X-CSRF-Token. */
+        /** CSRF is skipped only for the external API authenticated via Bearer.
+         * A cookie-authorized SPA (including same-origin JS with a spoofed header) must send X-CSRF-Token. */
         $skipCsrf = REQUEST_TYPE->isApiRequest() && CURRENT_USER->isAuthenticatedViaBearer();
 
         if (!$skipCsrf && !AuthHelper::validateCsrfToken($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '')) {
@@ -65,12 +65,12 @@ trait FraymActionTrait
 
             $dataStringsIds = $dataStringsIds === [] ? [0] : array_values(array_unique($dataStringsIds));
         } else {
-            /** Определяем последовательные номера всех блоков пришедших значений. Если используется $useFixedId = true, то берем данные из $_REQUEST[0] */
+            /** Determine the sequential numbers of all incoming value blocks. If $useFixedId = true, take the data from $_REQUEST[0] */
             $dataStringsIds = $useFixedId ? [0] : array_keys(ID ?? []);
             $dataStringsIds = $dataStringsIds === [] ? [0] : $dataStringsIds;
         }
 
-        /** Предействие из сервиса, если есть */
+        /** Pre-action from the service, if any */
         if (!is_null($service)) {
             match (ACTION) {
                 ActionEnum::create => $service->preCreate ? $service->{$service->preCreate}() : null,
@@ -80,7 +80,7 @@ trait FraymActionTrait
             };
         }
 
-        /** Валидация */
+        /** Validation */
         $globalValidationSuccess = true;
         $troubledStrings = [];
         $troubledElements = [];
@@ -126,10 +126,10 @@ trait FraymActionTrait
                                 }
 
                                 if ($element->getGroup()) {
-                                    /** Определяем максимальные порядковые номера заполненных полей в каждой из групп полей */
+                                    /** Determine the maximum sequence numbers of filled fields in each field group */
                                     foreach ($this->model->elementsList as $groupElement) {
                                         if (!is_null($groupElement->getGroup())) {
-                                            /** Сначала выясняем количество непустых строк (максимальный id строки) в группе */
+                                            /** First find out the number of non-empty rows (the maximum row id) in the group */
                                             if (!($groupsMaxValues[$dataStringId] ?? false)) {
                                                 $groupsMaxValues[$dataStringId] = [];
                                             }
@@ -149,8 +149,8 @@ trait FraymActionTrait
                                                             $max = (int) max($stringsKeys);
                                                         }
 
-                                                        /** Проверяем реверсивно все поступившие значения по ключам, чтобы понять, в какой самой большой строке у
-                                                         * данного поля реально есть данные: таким образом, отсекаем лишние, полностью пустые группы
+                                                        /** Check all incoming values by key in reverse order to find the largest row in which
+                                                         * this field actually has data: this way we cut off extra, completely empty groups
                                                          */
                                                         for ($i = $max; $i >= 0; $i--) {
                                                             if ($groupCheckFieldValues[$i] ?? false) {
@@ -223,7 +223,7 @@ trait FraymActionTrait
                 }
             }
 
-            /** Подготовка массива ошибок валидации */
+            /** Prepare the validation errors array */
             if (!$globalValidationSuccess) {
                 $this->fraymActionErrorCode = ResponseErrorCodeEnum::validationFailed;
                 $validationErrors = $this->validationErrors;
@@ -248,7 +248,7 @@ trait FraymActionTrait
         $successfulResultsIds = [];
 
         if ($globalValidationSuccess) {
-            /** Действие */
+            /** Action */
             $data = $this->dataAfterValidation;
 
             if (ACTION !== ActionEnum::delete) {
@@ -459,7 +459,7 @@ trait FraymActionTrait
                 }
             }
 
-            /** Постдействие из сервиса, если есть */
+            /** Post-action from the service, if any */
             if (!is_null($service)) {
                 match (ACTION) {
                     ActionEnum::create => $service->postCreate ? $service->{$service->postCreate}($successfulResultsIds) : null,
@@ -470,7 +470,7 @@ trait FraymActionTrait
             }
         }
 
-        /** Вывод сообщений и указателей на проблемные строки-объекты (если есть), если вывод не заблокирован параметром $doNotUseActionResponse */
+        /** Output messages and pointers to problematic object rows (if any), unless output is blocked by $doNotUseActionResponse */
         if (!$doNotUseActionResponse) {
             $messages = $this->fraymActionMessages;
             $cookieMessages = CookieHelper::getCookie('messages', true);
@@ -496,7 +496,7 @@ trait FraymActionTrait
         return null;
     }
 
-    /** Удаление / мягкое удаление объекта */
+    /** Delete / soft delete an object */
     public function deleteItem(string|int $id): void
     {
         $model = $this->model;
@@ -548,7 +548,7 @@ trait FraymActionTrait
         }
     }
 
-    /** Перевод значений полей в нужный формат для дальнейшего сохранения */
+    /** Convert field values into the required format for saving */
     private function appendDataAfterValidation(string|int $dataStringId, ElementItem $element, mixed $value, ActEnum $act, bool $groupedValue = false): void
     {
         if (!$element instanceof H1 && !$element->getNoData()) {
@@ -647,10 +647,10 @@ trait FraymActionTrait
         }
     }
 
-    /** Проверка формата провода: значение приходит с индексом объекта (name[0]), а внутри группы —
-     *  с вложенным (field[0][g]). Это не валидация поля, а проверка конверта запроса, поэтому она не
-     *  может быть обычным additionalValidator: тот получает значение уже после среза по индексу, когда
-     *  скаляр неотличим от законного односимвольного значения. Проверять нужно до среза. */
+    /** Wire format check: a value arrives with an object index (name[0]), and inside a group —
+     *  with a nested one (field[0][g]). This isn't field validation but a check of the request envelope, so it can't
+     *  be a regular additionalValidator: that one receives the value already sliced by index, when
+     *  a scalar is indistinguishable from a legitimate single-character value. The check must happen before slicing. */
     private function checkWireFormat(ElementItem $element, mixed $value, int $dataStringId): bool
     {
         if (ArrayFormatValidator::validate($element, $value, [])) {
@@ -662,7 +662,7 @@ trait FraymActionTrait
         return false;
     }
 
-    /** Подготовка параметров валидации в зависимости от типа объекта */
+    /** Prepare validation parameters depending on the object type */
     private function prepareValidationOptions(ElementItem $element, int $stringId, ?int $groupId = null): array
     {
         $options = [];
@@ -695,7 +695,7 @@ trait FraymActionTrait
         return $options;
     }
 
-    /** Добавление ошибки валидации в массив ошибок */
+    /** Add a validation error to the errors array */
     private function appendValidationErrors(string $validatorName, int $stringId, int $groupId, ElementItem $element): self
     {
         $validationErrors = $this->validationErrors;

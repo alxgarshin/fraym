@@ -17,10 +17,10 @@ use Throwable;
 
 class DatabaseQueryException extends DatabaseException
 {
-    /** Подстроки имён параметров (case-insensitive), значения которых маскируются в логах */
+    /** Substrings of parameter names (case-insensitive) whose values are masked in logs */
     private const SENSITIVE_KEY_SUBSTRINGS = ['password', 'pass', 'refresh_token', 'token', 'csrf', 'secret', 'hash'];
 
-    /** @param array<int|string, mixed> $parameters PDO-параметры запроса — хранятся приватно, наружу отдаются только маскированными */
+    /** @param array<int|string, mixed> $parameters PDO query parameters — stored privately, exposed only masked */
     public function __construct(
         string $message,
         private readonly array $parameters = [],
@@ -30,7 +30,7 @@ class DatabaseQueryException extends DatabaseException
         parent::__construct($message, $code, $previous);
     }
 
-    /** Параметры запроса с замаскированными чувствительными значениями — безопасно для логов.
+    /** Query parameters with sensitive values masked — safe for logs.
      * @return array<int|string, mixed> */
     public function getMaskedParameters(): array
     {

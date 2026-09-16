@@ -18,7 +18,7 @@ use Fraym\Helper\{TextHelper};
 
 trait FiltersHtmlTrait
 {
-    /** Вывод HTML-кода панели фильтров */
+    /** Output the HTML code of the filters panel */
     public function getFiltersHtml(): string
     {
         if (REQUEST_TYPE->isApiRequest()) {
@@ -101,7 +101,7 @@ trait FiltersHtmlTrait
         return $filtersContent;
     }
 
-    /** Подготовка набора item'ов на основе параметра useInFilters из сущности
+    /** Prepare a set of items based on the entity's useInFilters parameter
      * @return array<int, FiltersBlock>
      */
     private function prepareEntityItemsSet(): array
@@ -109,7 +109,7 @@ trait FiltersHtmlTrait
         $entity = $this->entity;
         $LOC = $this->LOCALE;
 
-        /** Выбираем все item'ы модели с useInFilters, видимые в list текущей entity */
+        /** Select all model items with useInFilters that are visible in the list of the current entity */
         $modelItems = $entity->model->elementsList;
 
         foreach ($modelItems as $key => $modelItem) {
@@ -118,7 +118,7 @@ trait FiltersHtmlTrait
             }
         }
 
-        /** Если это модель класса каталог, добавляем поля для поиска из наследующей сущности, но только если сущность отличается от базовой, т.е. не является просто необходимой заглушкой */
+        /** If this is a catalog model, add search fields from the descendant entity, but only if that entity differs from the base one, i.e. isn't just a required stub */
         if ($entity instanceof CatalogEntity) {
             $catalogItemEntity = $entity->catalogItemEntity;
 

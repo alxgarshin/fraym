@@ -6,7 +6,7 @@ namespace App\CMSVC\Trait;
 
 use Fraym\Element\Item;
 
-/** Кастомная отрисовка даты и времени обновления вместе с автором обновления */
+/** Custom rendering of the update date and time together with the author of the update */
 trait GetUpdatedAtCustomAsHTMLRendererTrait
 {
     use UserServiceTrait;

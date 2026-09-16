@@ -15,12 +15,12 @@ namespace Fraym\Entity;
 
 use Attribute;
 
-/** Функция перед OnChange. Добавляется в Service */
+/** Function before OnChange. Added to the Service */
 #[Attribute(Attribute::TARGET_CLASS)]
 class PreChange
 {
     public function __construct(
-        /** Имя функции  */
+        /** Function name */
         public string $callback = 'preChange',
     ) {
     }

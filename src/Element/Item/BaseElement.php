@@ -41,29 +41,29 @@ abstract class BaseElement implements ElementItem
 
     public ?Attribute\OnChange $change = null;
 
-    /** Номер строки/группы принадлежит ЭКЗЕМПЛЯРУ поля, а не общему Attribute:
-     *  клоны строк списка шарят Attribute, поэтому запись номера в него перетирала бы соседние строки.
-     *  Дефолт lineNumber — null: вручную созданный и отрисованный (asHTML) элемент идёт без суффикса [n];
-     *  многострочный рендер проставляет номер явно (asHTMLWrapped / прямое присваивание). */
+    /** The line/group number belongs to the field INSTANCE, not to the shared Attribute:
+     *  list row clones share the Attribute, so writing the number there would overwrite neighboring rows.
+     *  lineNumber defaults to null: a manually created and rendered (asHTML) element has no [n] suffix;
+     *  multi-line rendering sets the number explicitly (asHTMLWrapped / direct assignment). */
     public ?int $lineNumber = null;
 
     public ?int $groupNumber = null {
         get => $this->group ? $this->groupNumber : null;
     }
 
-    /** Группа — конфиг разработчика, источник истины в Attribute; на Item — живой доступ (нужен хуку groupNumber). */
+    /** Group is developer config, the source of truth is in Attribute; on Item it's live access (needed by the groupNumber hook). */
     public ?int $group {
         get => $this->getAttribute()->group;
     }
 
-    /** Обёрнутый номер строки/группы для имени поля: '' | '[n]' | '[n][g]'. */
+    /** Wrapped line/group number for the field name: '' | '[n]' | '[n][g]'. */
     public string $lineNumberWrapped {
         get => is_null($this->lineNumber)
             ? ''
             : '[' . $this->lineNumber . ']' . (is_null($this->groupNumber) ? '' : '[' . $this->groupNumber . ']');
     }
 
-    /** Проверенные и отфильтрованные контексты для различных объектов */
+    /** Checked and filtered contexts for various objects */
     /** @var array<string, array> */
     private array $filteredContexts = [];
 
@@ -278,13 +278,13 @@ abstract class BaseElement implements ElementItem
         return $failedValidations;
     }
 
-    /** Поле скрывается, когда у него нет значений для выбора. Переопределяется Select/Multiselect. */
+    /** The field is hidden when it has no values to choose from. Overridden by Select/Multiselect. */
     protected function isHiddenWhenEmpty(): bool
     {
         return false;
     }
 
-    /** Виден ли элемент в DOM. Переопределяется структурными/служебными типами (Hidden, H1, Tab, Timestamp). */
+    /** Whether the element is visible in the DOM. Overridden by structural/service types (Hidden, H1, Tab, Timestamp). */
     protected function isDOMVisible(): bool
     {
         return true;
@@ -339,7 +339,7 @@ abstract class BaseElement implements ElementItem
             ];
         }
 
-        /** Убираем все контексты, которые не общие и не принадлежат к запрашивающему объекту */
+        /** Remove all contexts that are neither common nor belong to the requesting object */
         foreach ($context as &$contextArray) {
             foreach ($contextArray as $contextKey => $contextItem) {
                 if (!str_starts_with($contextItem, ':') && !str_starts_with($contextItem, $objectName . ':')) {

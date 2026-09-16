@@ -27,17 +27,17 @@ class Kernel
     {
         define('GLOBALTIMER', new GlobalTimerService());
 
-        /** Определяем внутренний путь сервера */
+        /** Determine the server's internal path */
         $_ENV['INNER_PATH'] = __DIR__ . '/../../../../';
         define('INNER_PATH', $_ENV['INNER_PATH']);
 
-        /** Парсим основной .env-файл Fraym'а */
+        /** Parse Fraym's main .env file */
         (new EnvService(INNER_PATH . '.env.fraym'))->load();
 
-        /** Парсим основной .env-файл проекта */
+        /** Parse the project's main .env file */
         (new EnvService(INNER_PATH . '.env'))->load();
 
-        /** Парсим дополнительные .env-файлы */
+        /** Parse additional .env files */
         if (file_exists(INNER_PATH . '.env.dev')) {
             (new EnvService(INNER_PATH . '.env.dev'))->load();
         } elseif (file_exists(INNER_PATH . '.env.stage')) {
@@ -46,7 +46,7 @@ class Kernel
             (new EnvService(INNER_PATH . '.env.prod'))->load();
         }
 
-        /** Устанавливаем глобальные переменные */
+        /** Set global variables */
         define('REQUEST_TYPE', RequestTypeEnum::getRequestType());
 
         if (REQUEST_TYPE->isApiRequest()) {
@@ -90,7 +90,7 @@ class Kernel
         $objId = ($_REQUEST['obj_id'] ?? false) ? (is_array($_REQUEST['obj_id']) ? $_REQUEST['obj_id'][0] : $_REQUEST['obj_id']) : null;
         define('OBJ_ID', is_numeric($objId) ? (int) $objId : $objId);
 
-        /** Выставляем рекомендуемые базовые настройки */
+        /** Apply the recommended base settings */
         mb_internal_encoding('UTF-8');
         date_default_timezone_set($_ENV['TIMEZONE']);
 
@@ -101,23 +101,23 @@ class Kernel
         ini_set("memory_limit", "500M");
         set_time_limit(60);
 
-        /** Инициализируем кэш */
+        /** Initialize the cache */
         Container::bind('cache', CacheService::forceCreate());
         /** @var CacheProxy */
         define('CACHE', new CacheProxy());
 
-        /** Подключаемся к базе данных */
+        /** Connect to the database */
         Container::bind('db', SQLDatabaseService::forceCreate());
         /** @var DatabaseProxy */
         define('DB', new DatabaseProxy());
 
-        /** Инициализируем пользователя */
+        /** Initialize the user */
         Container::bind('current_user', CurrentUser::forceCreate());
         /** @var CurrentUserProxy */
         define('CURRENT_USER', new CurrentUserProxy());
         CURRENT_USER->auth();
 
-        /** Перепроверяем настройки локали и меняем их, если нужно */
+        /** Re-check the locale settings and change them if needed */
         $LOCALES_LIST = LocaleHelper::getLocalesList();
 
         if ($_REQUEST['locale'] ?? false) {

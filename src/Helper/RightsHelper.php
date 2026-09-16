@@ -17,19 +17,19 @@ use Fraym\Interface\Helper;
 
 abstract class RightsHelper implements Helper
 {
-    /** Получение массива BANNED_TYPES */
+    /** Get the BANNED_TYPES array */
     public static function getBannedTypes(): array
     {
         return $_ENV['BANNED_TYPES'];
     }
 
-    /** Поиск id объекта на основе данных о правах */
+    /** Find an object id based on rights data */
     public static function findOneByRights(
         string|array|null $type,
         string $obj_type_to,
         int|string|null $obj_id_to = null,
         string $obj_type_from = '{user}',
-        int|string|false|null $obj_id_from = null, //false необходим для того, чтобы искать по всем пользователям, а не только по текущему, когда $obj_type_from = '{user}'
+        int|string|false|null $obj_id_from = null, //false is needed to search across all users, not just the current one, when $obj_type_from = '{user}'
         ?string $comment = null,
     ): int|string|null {
         $data = self::findByRights(
@@ -45,13 +45,13 @@ abstract class RightsHelper implements Helper
         return $data;
     }
 
-    /** Поиск id объектов на основе данных о правах */
+    /** Find object ids based on rights data */
     public static function findByRights(
         string|array|null $type,
         string $obj_type_to,
         int|string|null $obj_id_to = null,
         string $obj_type_from = '{user}',
-        int|string|false|null $obj_id_from = null, //false необходим для того, чтобы искать по всем пользователям, а не только по текущему, когда $obj_type_from = '{user}'
+        int|string|false|null $obj_id_from = null, //false is needed to search across all users, not just the current one, when $obj_type_from = '{user}'
         int $limit = 0,
         ?string $comment = null,
     ): array|int|null {
@@ -129,7 +129,7 @@ abstract class RightsHelper implements Helper
         return null;
     }
 
-    /** Проверка наличия любых прав / связей кроме BANNED_TYPES от одного объекта к другому */
+    /** Check for any rights / relations other than BANNED_TYPES from one object to another */
     public static function checkAnyRights(
         string $obj_type_to,
         int|string $obj_id_to,
@@ -173,7 +173,7 @@ abstract class RightsHelper implements Helper
         return $rights_found;
     }
 
-    /** Проверка наличия тех или иных прав / связей у одного объекта к другому */
+    /** Check whether one object has certain rights / relations to another */
     public static function checkRights(
         string|array $type,
         string $obj_type_to,
@@ -227,7 +227,7 @@ abstract class RightsHelper implements Helper
         return is_array($result) && ($result[0] ?? 0) > 0;
     }
 
-    /** Установка права / связи */
+    /** Set a right / relation */
     public static function addRights(
         string $type,
         string $obj_type_to,
@@ -266,7 +266,7 @@ abstract class RightsHelper implements Helper
         return true;
     }
 
-    /** Удаление права / связи */
+    /** Delete a right / relation */
     public static function deleteRights(
         ?string $type = null,
         ?string $obj_type_to = null,
@@ -284,11 +284,11 @@ abstract class RightsHelper implements Helper
         }
         $obj_type_from = DataHelper::addBraces($obj_type_from);
 
-        //если не указать obj_type_from и obj_id_from право/связь удалится у текущего пользователю. Если указать, то у соответствующего объекта.
-        //если не указать type, будут стерты все права/связи данной пары
-        //если не указать obj_type_to, будут стерты все связи, соответствующие type, со всеми возможными сочетаниями объектов
-        //если не указать obj_id_to, будут стерты связи со всеми объектами указанного типа
-        //если не указать obj_id_from, будут стерты связи от всех объектов указанного типа
+        //if obj_type_from and obj_id_from aren't specified, the right/relation is deleted for the current user. If specified, for the corresponding object.
+        //if type isn't specified, all rights/relations of this pair are deleted
+        //if obj_type_to isn't specified, all relations of this type with all possible object combinations are deleted
+        //if obj_id_to isn't specified, relations with all objects of the given type are deleted
+        //if obj_id_from isn't specified, relations from all objects of the given type are deleted
         if (is_null($obj_id_from) && $obj_type_from === '{user}') {
             $obj_id_from = CURRENT_USER->id();
         }

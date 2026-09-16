@@ -19,12 +19,12 @@ use Fraym\Enum\EscapeModeEnum;
 use Fraym\Helper\DataHelper;
 use Fraym\Interface\ElementAttribute;
 
-/** Число */
+/** Number */
 class Number extends BaseElement
 {
     use CloneTrait;
 
-    /** Значение */
+    /** Value */
     private ?int $fieldValue;
 
     private Attribute\Number $attribute;

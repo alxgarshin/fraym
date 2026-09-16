@@ -15,7 +15,7 @@ namespace Fraym\BaseObject;
 
 use Attribute;
 
-/** Атрибут для методов, указывающий недоступность не администраторам */
+/** Method attribute: not accessible to non-administrators */
 #[Attribute(Attribute::TARGET_METHOD | Attribute::TARGET_CLASS)]
 final class IsAdmin
 {

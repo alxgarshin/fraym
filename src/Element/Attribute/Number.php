@@ -18,7 +18,7 @@ use Fraym\Element\Validator\ObligatoryValidator;
 use Fraym\Interface\HasDefaultValue;
 use InvalidArgumentException;
 
-/** Число */
+/** Number */
 /** @implements HasDefaultValue<null|string|int> */
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class Number extends BaseElement implements HasDefaultValue
@@ -27,7 +27,7 @@ class Number extends BaseElement implements HasDefaultValue
         ObligatoryValidator::class,
     ];
 
-    /** Значение по умолчанию */
+    /** Default value */
     public mixed $defaultValue {
         get => $this->_val;
         set {
@@ -44,7 +44,7 @@ class Number extends BaseElement implements HasDefaultValue
     public function __construct(
         mixed $defaultValue = null,
 
-        /** Принудительное округление чисел в данном поле */
+        /** Forced rounding of numbers in this field */
         public bool $round = false,
         ?bool $obligatory = null,
         ?string $helpClass = null,

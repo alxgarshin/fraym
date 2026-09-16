@@ -33,7 +33,7 @@ class ParamTestController extends BaseController
     }
 }
 
-/** param() читает только объявленные ApiParam, а рефлексия отрабатывает один раз на экшен */
+/** param() reads only declared ApiParams, and reflection runs once per action */
 final class ControllerParamTest extends TestCase
 {
     public function testDeclaredParamsAreCastAndDefaulted(): void
@@ -54,7 +54,7 @@ final class ControllerParamTest extends TestCase
         $_REQUEST['search_string'] = 'anything';
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage("Не найден ApiParam для param('search_string')");
+        $this->expectExceptionMessage("ApiParam not found for param('search_string')");
 
         (new ParamTestController())->param('search_string', 'loadConversation');
     }

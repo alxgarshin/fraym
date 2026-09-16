@@ -18,12 +18,12 @@ use Fraym\Element\Item\Trait\CloneTrait;
 use Fraym\Helper\DataHelper;
 use Fraym\Interface\ElementAttribute;
 
-/** Файл */
+/** File */
 class File extends BaseElement
 {
     use CloneTrait;
 
-    /** Значение */
+    /** Value */
     private ?string $fieldValue = null;
 
     private Attribute\File $attribute;

@@ -18,13 +18,13 @@ use Fraym\BaseObject\BaseService;
 class MultiselectCreator
 {
     public function __construct(
-        /** Таблица, куда вносить */
+        /** Table to insert into */
         private ?string $table,
 
-        /** В какое поле вносить */
+        /** Field to insert into */
         private ?string $name,
 
-        /** Массив предустановленных значений других полей таблицы в формате [название_поля]=>'значение' */
+        /** Preset values of other table fields in the format [field_name]=>'value' */
         private ?array $additional,
     ) {
     }

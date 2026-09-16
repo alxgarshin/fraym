@@ -20,7 +20,7 @@ use Fraym\Interface\ElementItem;
 
 trait FiltersSqlTrait
 {
-    /** Подготовка SQL-инъекции в запросы сущности и ссылки на набор фильтров
+    /** Prepare the SQL injection into entity queries and the link to the set of filters
      * @return array{0: ?string, 1: array, 2: ?string}
      */
     public function prepareSearchSqlAndFiltersLink(bool $getDataFromCookies = false, string $kind = KIND): array
@@ -41,7 +41,7 @@ trait FiltersSqlTrait
         $searchQuerySql = is_null($entity->view->viewRights->viewRestrict) ? " WHERE" : "";
         $cond = new SqlCondition();
 
-        /** Символ-обёртка значения в LIKE-паттерне при поиске внутри JSON-групп */
+        /** Wrapper character for the value in a LIKE pattern when searching inside JSON groups */
         $groupFieldsQuerySign = DB->dialect->getGroupFieldQuerySign();
 
         $firstSearchQuery = true;
@@ -96,7 +96,7 @@ trait FiltersSqlTrait
                         $allTextFieldsQuery = '';
                     }
 
-                    /** Защита от лишних символов */
+                    /** Protection against extra characters */
                     $allTextFieldsQuery = str_replace(['|', '*'], '', $allTextFieldsQuery);
 
                     $allTextFields = explode(' ', $allTextFieldsQuery);
@@ -257,8 +257,8 @@ trait FiltersSqlTrait
                                     $blockSearchQuerySql .= " AND (";
                                     $selectbreaks = false;
                                 }
-                                /** Если здесь поставить AND, то при поиске в мультиселектах нужно будет совпадение со всеми поисковыми галочками,
-                                 * выставленными пользователями. Если OR, то хотя бы с одной из них */ elseif (($dataArray[$filtersViewSecondItem->name] ?? null) === '2') {
+                                /** Putting AND here would require multiselect searches to match all search checkboxes
+                                 * set by users. With OR, at least one of them */ elseif (($dataArray[$filtersViewSecondItem->name] ?? null) === '2') {
                                     $blockSearchQuerySql .= " AND";
                                 } else {
                                     $blockSearchQuerySql .= " OR";
@@ -432,7 +432,7 @@ trait FiltersSqlTrait
                     $hasNull = false;
 
                     if (str_contains($dataArray[$filtersViewSecondItem->name], ',')) {
-                        /** Это ряд значений через запятую */
+                        /** This is a comma-separated series of values */
                         $searchvals = explode(",", $dataArray[$filtersViewSecondItem->name]);
 
                         foreach ($searchvals as $key => $value) {
@@ -535,7 +535,7 @@ trait FiltersSqlTrait
         }
 
         if (!in_array($searchQuerySql, [" WHERE", ""], true)) {
-            /** Ссылка на текущий набор фильтров */
+            /** Link to the current set of filters */
             $currentFiltersLink = ABSOLUTE_PATH . '/' . $kind . '/object=' . TextHelper::camelCaseToSnakeCase($entity->name) . '&action=setFilters';
 
             foreach ($filtersBlocks as $filtersBlock) {
@@ -604,7 +604,7 @@ trait FiltersSqlTrait
         ];
     }
 
-    /** Формирование SQL-уточнения для поиска в зависимости от того, является объект частью родительской или наследующей сущности CatalogEntity
+    /** Build the SQL refinement for search depending on whether the object is part of the parent or descendant CatalogEntity
      * @return array{bool, string}
      */
     private function getCatalogEntitySql(

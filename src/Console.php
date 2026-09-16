@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-/** Файл основных команд Fraym из командной строки.
+/** Main Fraym command line commands.
  *
- * Основной синтаксис:
+ * Basic syntax:
  * ./vendor/bin/console install[:force]
  * ./vendor/bin/console make:cmsvc --cmsvc=TestObject
  * ./vendor/bin/console make:migration
@@ -35,11 +35,11 @@ class Console
 {
     public function run(int $argc, array $argv): void
     {
-        /** Определяем внутренний путь сервера */
+        /** Determine the server's internal path */
         $_ENV['INNER_PATH'] = __DIR__ . '/../../../../';
         define('INNER_PATH', $_ENV['INNER_PATH']);
 
-        /** Возможный набор действий */
+        /** Possible set of actions */
         $allowedActions = [
             'install',
             'install:force',
@@ -51,7 +51,7 @@ class Console
             'database:migrate:down',
         ];
 
-        /** Разбираем параметры запуска скрипта */
+        /** Parse the script launch parameters */
         $CMSVCName = null;
         $action = null;
         $migrationFile = null;
@@ -111,10 +111,10 @@ class Console
             exit;
         }
 
-        /** Парсим основной .env-файл */
+        /** Parse the main .env file */
         (new EnvService(INNER_PATH . '.env'))->load();
 
-        /** Парсим дополнительные .env-файлы */
+        /** Parse additional .env files */
         if (file_exists(INNER_PATH . '.env.dev')) {
             (new EnvService(INNER_PATH . '.env.dev'))->load();
         } elseif (file_exists(INNER_PATH . '.env.stage')) {
@@ -131,7 +131,7 @@ class Console
             (new EnvService(INNER_PATH . '.env.test'))->load();
         }
 
-        /** Соединение с БД должно предполагать, что БД еще не существует (например, она удалена в результате drop до этого) */
+        /** The DB connection must assume the DB doesn't exist yet (e.g. it was deleted by a previous drop) */
         $dbType = DbTypeEnum::init();
         $dbNameQuoted = $dbType->quoteIdentifier($_ENV['DATABASE_NAME']);
         $userNameQuoted = $dbType->quoteIdentifier($_ENV['DATABASE_USER']);
@@ -154,7 +154,7 @@ class Console
             unset($databasePassword);
 
             if ($action === 'database:drop') {
-                /** Полный сброс базы данных в dev и test окружениях */
+                /** Full database reset in dev and test environments */
                 $terminateSql = ROOT_DB->dialect->terminateConnectionsSql($_ENV['DATABASE_NAME']);
 
                 if ($terminateSql !== null) {
@@ -169,7 +169,7 @@ class Console
 
                 exit;
             } elseif (str_starts_with($action, 'database:migrate')) {
-                /** Проверка на наличие и создание в случае необходимости базы данных */
+                /** Check whether the database exists and create it if necessary */
                 $result = ROOT_DB->query(
                     ROOT_DB->dialect->checkDatabaseExistsSql($_ENV['DATABASE_NAME']),
                     [],
@@ -178,7 +178,7 @@ class Console
                 $dbExists = !empty($result);
 
                 if (!$dbExists) {
-                    /** Создаём/обновляем пользователя */
+                    /** Create/update the user */
                     $userExists = ROOT_DB->query(
                         ROOT_DB->dialect->checkUserExistsSql($_ENV['DATABASE_USER']),
                         [],
@@ -197,13 +197,13 @@ class Console
                         );
                     }
 
-                    /** Создаём базу данных */
+                    /** Create the database */
                     ROOT_DB->query(
                         'CREATE DATABASE ' . $dbNameQuoted . ROOT_DB->dialect->createDatabaseOwnerSuffix($userNameQuoted),
                         [],
                     );
 
-                    /** Выдаём привилегии */
+                    /** Grant privileges */
                     ROOT_DB->query(
                         ROOT_DB->dialect->grantPrivilegesSql($dbNameQuoted, $userNameQuoted, $_ENV['DATABASE_USER']),
                         [],
@@ -283,7 +283,7 @@ class Console
 
                 $pathToCMSVC = INNER_PATH . 'src/CMSVC/' . $CMSVCName . '/';
 
-                /** Контроллер */
+                /** Controller */
                 $controllerCode = "<?php
 
 namespace App\CMSVC\\" . $CMSVCName . ";
@@ -301,7 +301,7 @@ class " . $CMSVCName . "Controller extends BaseController
 }";
                 $this->createFile($pathToCMSVC, $CMSVCName . 'Controller', 'php', $controllerCode);
 
-                /** Модель */
+                /** Model */
                 $modelCode = "<?php
 
 namespace App\CMSVC\\" . $CMSVCName . ";
@@ -320,7 +320,7 @@ class " . $CMSVCName . "Model extends BaseModel
 }";
                 $this->createFile($pathToCMSVC, $CMSVCName . 'Model', 'php', $modelCode);
 
-                /** Сервис */
+                /** Service */
                 $serviceCode = "<?php
 
 namespace App\CMSVC\\" . $CMSVCName . ";
@@ -334,7 +334,7 @@ class " . $CMSVCName . "Service extends BaseService
 }";
                 $this->createFile($pathToCMSVC, $CMSVCName . 'Service', 'php', $serviceCode);
 
-                /** Вьюшка */
+                /** View */
                 $viewCode = "<?php
 
 namespace App\CMSVC\\" . $CMSVCName . ";
@@ -372,7 +372,7 @@ class " . $CMSVCName . "View extends BaseView
 }";
                 $this->createFile($pathToCMSVC, $CMSVCName . 'View', 'php', $viewCode);
 
-                /** Json-файлы локалей */
+                /** Locale json files */
                 $localeCode = '{
   "global": {
     "title": ""
@@ -404,7 +404,7 @@ class " . $CMSVCName . "View extends BaseView
                     $this->createFile($pathToCMSVC, $localeIso, 'json', $localeCode);
                 }
 
-                /** Javascript-файл */
+                /** Javascript file */
                 $jsCode = "if (withDocumentEvents) {
     _arSuccess('some_action_name', function (jsonData, params, target) {
         showMessageFromJsonData(jsonData);
@@ -416,7 +416,7 @@ class " . $CMSVCName . "View extends BaseView
 }";
                 $this->createFile($pathToCMSVC, 'js', 'js', $jsCode);
 
-                /** Css-файл */
+                /** Css file */
                 $cssCode = 'div.kind_' . TextHelper::camelCaseToSnakeCase($CMSVCName) . ' {
     opacity: 1;
 }';
@@ -427,10 +427,10 @@ class " . $CMSVCName . "View extends BaseView
             if ($action === 'make:migration') {
                 $pathToMigrations = INNER_PATH . 'src/Migrations/';
 
-                /** Название для миграции-фикстуры-sql */
+                /** Name for the migration-fixture-sql */
                 $migrationDate = date("YmdHis");
 
-                /** Миграция */
+                /** Migration */
                 $migrationCode = "<?php
 
 namespace App\Migrations;
@@ -451,7 +451,7 @@ class Migration" . date("YmdHis") . " extends BaseMigration
 }";
                 $this->createFile($pathToMigrations, "Migration" . $migrationDate, 'php', $migrationCode);
 
-                /** Фикстура */
+                /** Fixture */
                 $fixtureCode = "<?php
 
 namespace App\Migrations\Fixtures;
@@ -468,7 +468,7 @@ class Fixture" . $migrationDate . " extends BaseFixture
 }";
                 $this->createFile($pathToMigrations . 'Fixtures/', "Fixture" . $migrationDate, 'php', $fixtureCode);
 
-                /** SQL-файл */
+                /** SQL file */
                 $sqlCode = "";
                 $this->createFile($pathToMigrations . 'Sql/', "Sql" . $migrationDate, 'sql', $sqlCode);
             }
@@ -506,7 +506,7 @@ class Fixture" . $migrationDate . " extends BaseFixture
 
     private function executeMigration(string $migrationFile, string $migrationDirection): void
     {
-        /** Отрабатываем класс миграции */
+        /** Run the migration class */
         $migrationClassName = 'App\\Migrations\\' . str_replace('.php', '', $migrationFile);
         $migration = new $migrationClassName();
 
@@ -535,7 +535,7 @@ class Fixture" . $migrationDate . " extends BaseFixture
                 ]);
 
                 if ($migrationDirection === 'up') {
-                    /** Отрабатываем класс фикстуры, только если мы в dev или test окружении */
+                    /** Run the fixture class only in the dev or test environment */
                     if (in_array($_ENV['APP_ENV'], ['DEV', 'TEST'])) {
                         $migrationRecordData = MIGRATE_DB->select(
                             'migration',
@@ -593,12 +593,12 @@ class Fixture" . $migrationDate . " extends BaseFixture
 
     private function copyDirectory(string $source, string $destination, bool $force = false): void
     {
-        // Создаем итератор, который будет ходить по файлам
-        // SKIP_DOTS пропускает виртуальные папки "." и ".."
+        // Create an iterator that walks over the files
+        // SKIP_DOTS skips the virtual folders "." and ".."
         $dirIterator = new RecursiveDirectoryIterator($source, RecursiveDirectoryIterator::SKIP_DOTS);
 
-        // SELF_FIRST важен: сначала выдаст папку, потом файлы в ней.
-        // Это нужно, чтобы мы успели создать папку до того, как начнем копировать в неё файлы.
+        // SELF_FIRST matters: it yields a folder first, then the files in it.
+        // This way we create the folder before we start copying files into it.
         $iterator = new RecursiveIteratorIterator($dirIterator, RecursiveIteratorIterator::SELF_FIRST);
 
         $destination = rtrim($destination, '/\\') . DIRECTORY_SEPARATOR;

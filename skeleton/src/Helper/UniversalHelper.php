@@ -10,7 +10,7 @@ use Fraym\Interface\Helper;
 
 abstract class UniversalHelper implements Helper
 {
-    /** Создание hash для капчи */
+    /** Create a hash for the captcha */
     public static function getCaptcha(): array
     {
         $clear = time() - (60 * 60);

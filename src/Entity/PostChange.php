@@ -15,12 +15,12 @@ namespace Fraym\Entity;
 
 use Attribute;
 
-/** Функция после OnChange. Добавляется в Service */
+/** Function after OnChange. Added to the Service */
 #[Attribute(Attribute::TARGET_CLASS)]
 class PostChange
 {
     public function __construct(
-        /** Имя функции  */
+        /** Function name */
         public string $callback = 'postChange',
     ) {
     }

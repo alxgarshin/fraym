@@ -19,13 +19,13 @@ use Fraym\Enum\EscapeModeEnum;
 use Fraym\Helper\DataHelper;
 use Fraym\Interface\ElementAttribute;
 
-/** Большое текстовое поле */
+/** Large text field */
 class Textarea extends BaseElement
 {
     use CloneTrait;
     use MinMaxChar;
 
-    /** Значение */
+    /** Value */
     private ?string $fieldValue;
 
     private Attribute\Textarea $attribute;

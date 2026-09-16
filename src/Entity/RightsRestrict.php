@@ -15,22 +15,22 @@ namespace Fraym\Entity;
 
 use Fraym\Entity\Filters\SqlCondition;
 
-/** DTO ограничения прав доступа */
+/** Access rights restriction DTO */
 final class RightsRestrict
 {
     public function __construct(
-        /** Строка запроса, идущая в WHERE при выборке объекта */
+        /** Query string that goes into WHERE when selecting the object */
         public string $query = '',
 
-        /** Параметры запроса */
+        /** Query parameters */
         public array $params = [],
 
-        /** Признак проверки получения ограничения из одноименной функции в сервисе */
+        /** Flag to get the restriction from the service function of the same name */
         public bool $serviceCheck = false,
 
-        /** Ограничение в формате constructWhere (['field' => value] / [['field', value]]).
-         *  Предпочтительнее строкового query: алиас таблицы навешивается декларативно, без regex,
-         *  ломающегося на JOIN/подзапросах. При заданном criteria строковый query игнорируется. */
+        /** Restriction in the constructWhere format (['field' => value] / [['field', value]]).
+         *  Preferred over the string query: the table alias is attached declaratively, without a regex
+         *  that breaks on JOINs/subqueries. When criteria is set, the string query is ignored. */
         public array $criteria = [],
     ) {
         if ($this->query && $this->params) {
@@ -42,7 +42,7 @@ final class RightsRestrict
         }
     }
 
-    /** WHERE-фрагмент и параметры с учётом префикса таблицы (напр. 't1.').
+    /** WHERE fragment and parameters with the table prefix applied (e.g. 't1.').
      * @return array{0: string, 1: array} */
     public function getWhere(string $prefix = ''): array
     {
@@ -53,7 +53,7 @@ final class RightsRestrict
         $query = $this->query;
 
         if ($prefix !== '' && $query !== '') {
-            /** @deprecated regex-навешивание алиаса — ломается на JOIN/подзапросах; используйте criteria */
+            /** @deprecated regex-based alias attachment — breaks on JOINs/subqueries; use criteria */
             $query = preg_replace('# (and|or) (\(?)#i', ' $1 $2' . $prefix, $query);
             $query = preg_replace('#^(\(?)#', '$1' . $prefix, $query);
         }
@@ -61,12 +61,12 @@ final class RightsRestrict
         return [$query ?? '', $this->params];
     }
 
-    /** Очищает и нормализует массив параметров
+    /** Cleans up and normalizes the parameters array
      *
-     * @param array $params Входящие параметры (ассоциативные или массивы массивов)
-     * @param array $allowedKeys Список разрешенных имен параметров (без ':')
+     * @param array $params Incoming parameters (associative or arrays of arrays)
+     * @param array $allowedKeys List of allowed parameter names (without ':')
      *
-     * @return array Массив строго в формате [['id', 'value', ?type]]
+     * @return array Array strictly in the format [['id', 'value', ?type]]
      */
     private function normalizeAndCleanParams(array $params, array $allowedKeys): array
     {
@@ -75,23 +75,23 @@ final class RightsRestrict
         $allowedMap = array_flip($allowedKeys);
 
         foreach ($params as $key => $value) {
-            // Проверяем, что элемент — это массив и имеет индекс 0 (формат [['id', 'value']])
+            // Check that the element is an array with index 0 (format [['id', 'value']])
             if (is_array($value) && array_key_exists(0, $value)) {
-                // Очищаем от двоеточия, если оно случайно затесалось (например, ':id')
+                // Strip the colon if it slipped in by accident (e.g. ':id')
                 $paramName = ltrim((string) $value[0], ':');
 
                 if (isset($allowedMap[$paramName])) {
-                    // Сохраняем элемент целиком (чтобы не потерять PDO::PARAM_*, если он там есть)
+                    // Keep the whole element (so as not to lose PDO::PARAM_* if it is there)
                     $cleaned[] = $value;
                 }
             }
-            // Иначе обрабатываем как ассоциативный массив ['id' => 'value']
+            // Otherwise process as an associative array ['id' => 'value']
             else {
                 $paramName = ltrim((string) $key, ':');
 
                 if (isset($allowedMap[$paramName])) {
-                    // Форматируем в нужный вид [['id', 'value']]
-                    // Ключ сохраняем с двоеточием или без — как он пришел изначально
+                    // Format into the required form [['id', 'value']]
+                    // Keep the key with or without the colon — as it originally came
                     $cleaned[] = [$key, $value];
                 }
             }

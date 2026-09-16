@@ -16,12 +16,12 @@ namespace Fraym\Service;
 use Fraym\Enum\OperandEnum;
 use Fraym\Helper\{DataHelper, DateHelper};
 
-/** Refresh-токены авторизации: у одного пользователя их может быть сколько угодно — по штуке
- *  на устройство. Единый механизм для браузера и внешнего API; когда токен был один на
- *  запись в user, вход с рабочего компьютера выбрасывал из PWA на телефоне.
+/** Auth refresh tokens: a user may have any number of them — one per
+ *  device. A single mechanism for the browser and the external API; when there was one token per
+ *  user record, logging in from a work computer kicked the user out of the PWA on their phone.
  *
- *  Здесь же ограничитель частоты попыток входа: он нужен обоим адресам с паролем — и форме
- *  логина, и /login/action=api_token, который отдаёт JWT прямо в теле ответа. */
+ *  This is also where the login attempt rate limiter lives: both password endpoints need it — the login
+ *  form and /login/action=api_token, which returns the JWT right in the response body. */
 final class AuthTokenService
 {
     public const ACCESS_TOKEN_TTL = 3600;
@@ -36,7 +36,7 @@ final class AuthTokenService
 
     private const TOKENS_TABLE = 'auth_token';
 
-    /** Новый refresh-токен для ещё одного устройства: чужие токены пользователя не трогаются */
+    /** A new refresh token for one more device: the user's other tokens are left untouched */
     public static function issueRefreshToken(int|string $userId): string
     {
         $now = DateHelper::getNow();
@@ -53,8 +53,8 @@ final class AuthTokenService
         return $refreshToken;
     }
 
-    /** Данные пользователя по действующему токену; просроченный токен удаляется.
-     *  Новый токен взамен просроченного не выдаётся: это делается только по паролю. */
+    /** User data by a valid token; an expired token is deleted.
+     *  No new token is issued in place of an expired one: that only happens with a password. */
     public static function findUserByRefreshToken(string $refreshToken): ?array
     {
         $record = DB->select(self::TOKENS_TABLE, ['refresh_token' => $refreshToken], true);
@@ -94,19 +94,19 @@ final class AuthTokenService
         );
     }
 
-    /** Выход на одном устройстве: остальные сессии пользователя продолжают работать */
+    /** Log out on one device: the user's other sessions keep working */
     public static function revokeRefreshToken(string $refreshToken): void
     {
         DB->delete(self::TOKENS_TABLE, ['refresh_token' => $refreshToken]);
     }
 
-    /** Выход на всех устройствах: для смены пароля и принудительного отзыва доступа */
+    /** Log out on all devices: for password changes and forced access revocation */
     public static function revokeAllRefreshTokens(int|string $userId): void
     {
         DB->delete(self::TOKENS_TABLE, ['user_id' => $userId]);
     }
 
-    /** Сколько секунд осталось до конца окна блокировки; null — попытка разрешена */
+    /** How many seconds are left until the end of the lockout window; null — the attempt is allowed */
     public static function getRetryAfter(string $login): ?int
     {
         $record = self::getAttemptRecord($login);
@@ -162,8 +162,8 @@ final class AuthTokenService
         DB->delete(self::ATTEMPTS_TABLE, ['attempt_key' => self::getAttemptKey($login)]);
     }
 
-    /** Ключ попыток: логин вместе с адресом клиента, чтобы блокировка одного адреса
-     *  не закрывала вход владельцу учётной записи с другого. */
+    /** Attempts key: the login together with the client address, so that locking out one address
+     *  doesn't block the account owner from logging in from another. */
     private static function getAttemptKey(string $login): string
     {
         return hash('sha256', mb_strtolower($login) . '|' . ($_SERVER['REMOTE_ADDR'] ?? ''));

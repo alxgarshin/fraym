@@ -19,7 +19,7 @@ use RuntimeException;
 
 final class EnvService
 {
-    /** Местоположение файла .env */
+    /** Location of the .env file */
     protected string $path;
 
     public function __construct(string $path)

@@ -15,7 +15,7 @@ namespace Fraym\BaseObject;
 
 use Attribute;
 
-/** Атрибут универсального указания устаревания метода или свойства класса */
+/** Attribute that universally marks a class method or property as deprecated */
 #[Attribute(Attribute::TARGET_METHOD | Attribute::TARGET_PROPERTY)]
 final class Deprecated
 {

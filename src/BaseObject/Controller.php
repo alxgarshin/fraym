@@ -16,7 +16,7 @@ namespace Fraym\BaseObject;
 use Attribute;
 use ReflectionClass;
 
-/** Атрибут универсального хранения ссылки на controller */
+/** Attribute that universally stores a reference to a controller */
 #[Attribute(Attribute::TARGET_CLASS)]
 final class Controller
 {

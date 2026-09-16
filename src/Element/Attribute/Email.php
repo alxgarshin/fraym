@@ -16,7 +16,7 @@ namespace Fraym\Element\Attribute;
 use Attribute;
 use Fraym\Element\Validator\{EmailValidator, ObligatoryValidator};
 
-/** Строка с email */
+/** Email string */
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class Email extends Text
 {

@@ -16,19 +16,19 @@ class UserService extends BaseService
 {
     private array $usersOnlineStatuses = [];
 
-    /** Часто используемый вариант вывода имени пользователя */
+    /** Commonly used user name output */
     public function showName(?UserModel $userModel, bool $link = false): string
     {
         return $this->showNameExtended($userModel, true, $link, '', false, false, true);
     }
 
-    /** Часто используемый вариант вывода имени пользователя вместе с его id */
+    /** Commonly used user name output together with the user id */
     public function showNameWithId(?UserModel $userModel, bool $link = false): string
     {
         return $this->showNameExtended($userModel, false, $link, '', false, true, true);
     }
 
-    /** Трансформация Ф.И.О. пользователя в ссылку и удобно читаемый вид */
+    /** Convert the user's full name into a link and a readable form */
     public function showNameExtended(
         ?UserModel $userModel,
         bool $showId = false,
@@ -137,7 +137,7 @@ class UserService extends BaseService
         return $result;
     }
 
-    /** Получение полного списка всех возможных объектов подписки через тире */
+    /** Get the full list of all possible subscription objects, dash-separated */
     public function getSubsObjectsList(): array
     {
         $LOCALE = LocaleHelper::getLocale(['user', 'fraym_model']);
@@ -152,7 +152,7 @@ class UserService extends BaseService
         return $subsObjectsArray;
     }
 
-    /** Превращение имени пользователя в читаемый формат */
+    /** Convert the user name into a readable form */
     public function getUserName(UserModel $userModel): string
     {
         $name = explode(' ', $userModel->full_name->get());
@@ -172,7 +172,7 @@ class UserService extends BaseService
         return $resultName;
     }
 
-    /** Регистрация токена для браузерных уведомлений */
+    /** Register a token for browser notifications */
     public function webpushSubscribe(
         ?string $deviceId,
         ?string $endpoint,
@@ -227,7 +227,7 @@ class UserService extends BaseService
         }
     }
 
-    /** Удаление токена для браузерных уведомлений */
+    /** Delete a token for browser notifications */
     public function webpushUnsubscribe(
         ?string $deviceId,
     ): array {
@@ -244,13 +244,13 @@ class UserService extends BaseService
         ];
     }
 
-    /** Проверка возможности регистрироваться */
+    /** Check whether registration is allowed */
     public function registrationIsOpen(): bool
     {
         return true;
     }
 
-    /** Расчет и выдача процента заполнения профиля */
+    /** Calculate and return the profile completion percentage */
     public function calculateProfileCompletion(int|string $userId): int
     {
         $profileCompletion = 0;
@@ -285,7 +285,7 @@ class UserService extends BaseService
         return $profileCompletion;
     }
 
-    /** Отсылка новому пользователю уведомления о необходимости подтвердить email и расчета заполненности профиля */
+    /** Send a new user a notification to confirm their email, and calculate profile completion */
     public function postRegister(int $id): void
     {
         $LOCALE = LocaleHelper::getLocale(['global']);
@@ -340,7 +340,7 @@ class UserService extends BaseService
         }
     }
 
-    /** Создание и сохранения identicon'а для пользователя */
+    /** Create and save an identicon for the user */
     public function createIdenticon(UserModel $userModel): string
     {
         $uploads = $_ENV['UPLOADS'];
@@ -407,13 +407,13 @@ class UserService extends BaseService
         return ABSOLUTE_PATH . $_ENV['UPLOADS_PATH'] . $uploads[2]['path'] . $name . '.png';
     }
 
-    /** Список пользователей в онлайне */
+    /** List of online users */
     public function getUsersOnlineStatuses(): array
     {
         return $this->usersOnlineStatuses;
     }
 
-    /** Проверка наличия пользователя(-ей) на сайте */
+    /** Check whether the user(s) are on the site */
     public function checkUserOnline(int|string|array|null $userId): int|bool
     {
         if (is_null($userId)) {
@@ -423,7 +423,7 @@ class UserService extends BaseService
         $usersOnlineStatuses = $this->getUsersOnlineStatuses();
 
         if (is_array($userId)) {
-            // если это массив, то нам нужно просто количество людей онлайн
+            // if this is an array, we just need the number of people online
             $usersOnlineCount = 0;
 
             if (count($userId) > 0) {
@@ -444,7 +444,7 @@ class UserService extends BaseService
 
             return $usersOnlineCount;
         } elseif ((int) $userId > 0) {
-            // если единичная запись, то нам нужен статус конкретного человека
+            // if this is a single entry, we need the status of that specific person
             if ($userId === CURRENT_USER->id()) {
                 return true;
             } elseif ($usersOnlineStatuses[$userId] ?? false) {
@@ -480,14 +480,14 @@ class UserService extends BaseService
         return false;
     }
 
-    /** Создание фото из профиля пользователя (если нет, то identicon) со ссылкой */
+    /** Create a user profile photo (identicon if none) with a link */
     public function photoLink(UserModel $userData, int $size = 50, bool $small = false): string
     {
         return '<img src="' . $this->photoUrl($userData) . '" width="' . $size . '" title="' .
             $this->showNameExtended($userData, true) . '"' . ($small ? ' class="small"' : '') . '>';
     }
 
-    /** Расширенная функция создания фото из профиля пользователя (если нет, то identicon) со ссылкой + имя пользователя */
+    /** Extended function creating a user profile photo (identicon if none) with a link + user name */
     public function photoNameLink(
         ?UserModel $userModel,
         string $size = '',
@@ -544,7 +544,7 @@ class UserService extends BaseService
         return $result;
     }
 
-    /** Расширенная функция создания фото из профиля пользователя (если нет, то identicon) со ссылкой + имя пользователя.
+    /** Extended function creating a user profile photo (identicon if none) with a link + user name.
      *
      * @param UserModel[] $userData
      */
@@ -573,14 +573,14 @@ class UserService extends BaseService
         return $result;
     }
 
-    /** Получение ссылки на фото пользователя */
+    /** Get the link to the user's photo */
     public function photoUrl(UserModel $userModel, bool $thumbnail = false): string
     {
         return FileHelper::getImagePath($userModel->avatar->get(), FileHelper::getUploadNumByType('user'), $thumbnail) ??
             $this->createIdenticon($userModel);
     }
 
-    /** Вычистка url'ов социальных сетей */
+    /** Clean up social network urls */
     public function socialEncode(string $path): string
     {
         return str_replace([
@@ -602,7 +602,7 @@ class UserService extends BaseService
         ], '', $path);
     }
 
-    /** Выдача url'ов социальных сетей с иконками */
+    /** Output social network urls with icons */
     public function socialShow(string $path, string $type = '', bool $pic = false): string
     {
         if ($type === '') {
@@ -714,7 +714,7 @@ class UserService extends BaseService
         return $rpath;
     }
 
-    /** Формирование ссылки на подписку */
+    /** Build a subscription link */
     public function showSubscribe(string $objTypeTo, int $objIdTo): string
     {
         $LOCALE = LocaleHelper::getLocale(['global', 'subscription']);
@@ -730,19 +730,19 @@ class UserService extends BaseService
         }
     }
 
-    /** Удаление подписки */
+    /** Delete a subscription */
     public function deleteSubscribe(string $objTypeTo, int $objIdTo): bool
     {
         return RightsHelper::deleteRights('{subscribe}', $objTypeTo, $objIdTo);
     }
 
-    /** Добавление подписки */
+    /** Add a subscription */
     public function addSubscribe(string $objTypeTo, int $objIdTo): bool
     {
         return RightsHelper::addRights('{subscribe}', $objTypeTo, $objIdTo);
     }
 
-    /** Переотсылка проверочного email'а подтверждения email'а */
+    /** Resend the email confirmation message */
     public function reverifyEm(): array
     {
         $LOCALE = LocaleHelper::getLocale(['global']);
@@ -792,7 +792,7 @@ class UserService extends BaseService
         return $returnArr;
     }
 
-    /** Вспомнить пароль */
+    /** Password reminder */
     public function remindPassword(string $userEmail): array
     {
         $LOCALE = LocaleHelper::getLocale(['login', 'global', 'messages']);
@@ -855,7 +855,7 @@ class UserService extends BaseService
         return $returnArr;
     }
 
-    /** Обновить капчу */
+    /** Refresh the captcha */
     public function getCaptcha(): array
     {
         return UniversalHelper::getCaptcha();

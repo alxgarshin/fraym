@@ -15,15 +15,15 @@ namespace Fraym\BaseObject;
 
 use Fraym\Enum\{ApiParamSourceEnum, ApiParamTypeEnum};
 
-/** Описание одного параметра action'а. Передаётся массивом внутрь ApiAction. */
+/** Description of a single action parameter. Passed as an array into ApiAction. */
 final class ApiParam
 {
     public function __construct(
-        /** Имя ровно в том виде, в каком параметр приезжает на проводе: обычно snake_case,
-         *  но у браузерных экшенов встречается и camelCase (deviceId, contentEncoding). */
+        /** The name exactly as the parameter arrives on the wire: usually snake_case,
+         *  but browser actions also use camelCase (deviceId, contentEncoding). */
         public readonly string $name,
         public readonly ApiParamTypeEnum $type = ApiParamTypeEnum::string,
-        /** Признак для манифеста: сам param() обязательность не проверяет — это дело экшена и валидаторов */
+        /** A flag for the manifest: param() itself doesn't check obligatoriness — that's the job of the action and validators */
         public readonly bool $obligatory = false,
         public readonly mixed $default = null,
         public readonly ApiParamSourceEnum $source = ApiParamSourceEnum::request,
@@ -53,7 +53,7 @@ final class ApiParam
         ];
     }
 
-    /** Константы Kernel::init() именуются в UPPER_SNAKE_CASE от имени параметра */
+    /** Kernel::init() constants are named in UPPER_SNAKE_CASE after the parameter name */
     private function getGlobalValue(): mixed
     {
         $constantName = mb_strtoupper($this->name);

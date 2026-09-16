@@ -7,7 +7,7 @@ namespace App\CMSVC\Trait;
 use App\CMSVC\User\UserService;
 use Fraym\Helper\CMSVCHelper;
 
-/** Ленивая подгрузка UserService*/
+/** Lazy loading of UserService */
 trait UserServiceTrait
 {
     private ?UserService $userService = null;

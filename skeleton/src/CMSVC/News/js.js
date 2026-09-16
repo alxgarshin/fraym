@@ -1,4 +1,4 @@
-/** Новости */
+/** News */
 
 if (withDocumentEvents) {
 

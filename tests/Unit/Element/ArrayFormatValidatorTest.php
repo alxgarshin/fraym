@@ -17,7 +17,7 @@ use Fraym\Element\{Attribute, Item};
 use Fraym\Element\Validator\ArrayFormatValidator;
 use PHPUnit\Framework\TestCase;
 
-/** Значения полей приходят как name[0]; скаляр раньше читался как первый байт строки и молча портил данные */
+/** Field values arrive as name[0]; a scalar used to be read as the first byte of the string and silently corrupted data */
 final class ArrayFormatValidatorTest extends TestCase
 {
     public function testIndexedValuePasses(): void

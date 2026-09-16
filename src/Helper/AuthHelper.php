@@ -19,15 +19,15 @@ use Fraym\Service\AuthTokenService;
 
 abstract class AuthHelper implements Helper
 {
-    /** httpOnly cookie с JWT для браузерного SPA (XSS не может прочитать токен) */
+    /** httpOnly cookie with the JWT for the browser SPA (XSS can't read the token) */
     public const AUTH_TOKEN_COOKIE = 'authToken';
 
-    /** Cookie double-submit токена для форм неавторизованных пользователей (login/register/reset) */
+    /** Double-submit token cookie for forms of unauthorized users (login/register/reset) */
     public const PRE_AUTH_CSRF_COOKIE = 'csrf_pre_auth';
 
-    /** Создание JWT-токена текущего пользователя.
-     * Payload несёт только идентификаторы: rights/bazecount/block_* грузятся из БД при auth() —
-     * иначе отзыв прав действовал бы до истечения токена (1ч). */
+    /** Create a JWT token for the current user.
+     * The payload carries only identifiers: rights/bazecount/block_* are loaded from the DB in auth() —
+     * otherwise revoking rights would only take effect when the token expires (1h). */
     public static function generateAuthToken(): string
     {
         $tokenData = [
@@ -39,7 +39,7 @@ abstract class AuthHelper implements Helper
         return self::generateJWTAuthToken(["alg" => "HS256", "typ" => "JWT"], $tokenData);
     }
 
-    /** JWT из httpOnly cookie (SPA-путь) */
+    /** JWT from the httpOnly cookie (SPA path) */
     public static function getAuthTokenFromCookie(): ?string
     {
         $token = CookieHelper::getCookie(self::AUTH_TOKEN_COOKIE);
@@ -47,7 +47,7 @@ abstract class AuthHelper implements Helper
         return is_string($token) && $token !== '' ? $token : null;
     }
 
-    /** JWT из заголовка Authorization: Bearer (внешние API-клиенты) */
+    /** JWT from the Authorization: Bearer header (external API clients) */
     public static function getAuthTokenFromBearer(): ?string
     {
         $authorization = function_exists('getallheaders') ? (getallheaders()['Authorization'] ?? '') : '';
@@ -62,7 +62,7 @@ abstract class AuthHelper implements Helper
         return $token !== '' ? $token : null;
     }
 
-    /** Проверка валидности токена авторизации (cookie приоритетнее Bearer) */
+    /** Check the validity of the auth token (cookie takes priority over Bearer) */
     public static function getAuthTokenPayload(): ?array
     {
         $authToken = self::getAuthTokenFromCookie() ?? self::getAuthTokenFromBearer();
@@ -70,7 +70,7 @@ abstract class AuthHelper implements Helper
         return is_null($authToken) ? null : self::validateAuthToken($authToken);
     }
 
-    /** Валидация строки JWT: структура, alg, подпись в постоянном времени, exp */
+    /** JWT string validation: structure, alg, constant-time signature, exp */
     public static function validateAuthToken(string $authToken): ?array
     {
         $tokenParts = explode('.', $authToken);
@@ -99,12 +99,12 @@ abstract class AuthHelper implements Helper
             return null;
         }
 
-        /** Явная проверка алгоритма — защита от alg-подмены */
+        /** Explicit algorithm check — protection against alg substitution */
         if (($tokenHeaders['alg'] ?? null) !== 'HS256') {
             return null;
         }
 
-        /** Проверка подписи в постоянном времени */
+        /** Constant-time signature check */
         $expectedSignature = DataHelper::base64UrlEncode(
             hash_hmac('SHA256', $headersEncoded . $payloadEncoded, $_ENV['PROJECT_HASH_WORD'], true),
         );
@@ -113,7 +113,7 @@ abstract class AuthHelper implements Helper
             return null;
         }
 
-        /** Протухший токен невалиден (проверка exp здесь, а не только у вызывающего) */
+        /** An expired token is invalid (exp is checked here, not only by the caller) */
         if (!isset($payload['exp']) || !is_int($payload['exp']) || $payload['exp'] < time()) {
             return null;
         }
@@ -121,20 +121,20 @@ abstract class AuthHelper implements Helper
         return $payload;
     }
 
-    /** Новый refresh-токен для текущего устройства. Токены остальных устройств пользователя
-     *  остаются рабочими: их у него может быть сколько угодно. */
+    /** A new refresh token for the current device. Tokens of the user's other devices
+     *  keep working: the user may have any number of them. */
     public static function generateAndSaveRefreshToken(): void
     {
         CookieHelper::batchSetCookie(['refreshToken' => AuthTokenService::issueRefreshToken(CURRENT_USER->id())]);
     }
 
-    /** Получение cookie refreshToken */
+    /** Get the refreshToken cookie */
     public static function getRefreshTokenCookie(): ?string
     {
         return CookieHelper::getCookie('refreshToken');
     }
 
-    /** Генерация stateless CSRF-токена (меняется раз в сутки) */
+    /** Generate a stateless CSRF token (changes once a day) */
     public static function generateCsrfToken(): string
     {
         $nonce = (int) floor(time() / 86400);
@@ -146,7 +146,7 @@ abstract class AuthHelper implements Helper
         );
     }
 
-    /** Валидация CSRF-токена (принимает сегодняшний и вчерашний — безшовный переход суток) */
+    /** CSRF token validation (accepts today's and yesterday's — seamless day rollover) */
     public static function validateCsrfToken(string $token): bool
     {
         if (!CURRENT_USER->isLogged()) {
@@ -163,25 +163,25 @@ abstract class AuthHelper implements Helper
         return hash_equals($valid[0], $token) || hash_equals($valid[1], $token);
     }
 
-    /** Сброс cookie refreshToken */
+    /** Reset the refreshToken cookie */
     public static function removeRefreshTokenCookie(): void
     {
         CookieHelper::batchDeleteCookie(['refreshToken']);
     }
 
-    /** Запись JWT в httpOnly cookie (срок жизни = сроку жизни токена) */
+    /** Write the JWT to the httpOnly cookie (lifetime = token lifetime) */
     public static function setAuthTokenCookie(string $token): void
     {
         CookieHelper::batchSetCookie([self::AUTH_TOKEN_COOKIE => $token], time() + 3600);
     }
 
-    /** Сброс cookie JWT */
+    /** Reset the JWT cookie */
     public static function removeAuthTokenCookie(): void
     {
         CookieHelper::batchDeleteCookie([self::AUTH_TOKEN_COOKIE]);
     }
 
-    /** Генерация double-submit токена: пишет cookie и возвращает значение для скрытого поля формы */
+    /** Generate a double-submit token: writes the cookie and returns the value for the hidden form field */
     public static function generatePreAuthCsrfToken(): string
     {
         $token = DataHelper::getRandomStringBin2hex(64);
@@ -190,7 +190,7 @@ abstract class AuthHelper implements Helper
         return $token;
     }
 
-    /** Валидация double-submit токена формы: значение поля должно совпасть с cookie */
+    /** Validate the form double-submit token: the field value must match the cookie */
     public static function validatePreAuthCsrfToken(): bool
     {
         $cookie = CookieHelper::getCookie(self::PRE_AUTH_CSRF_COOKIE);
@@ -199,13 +199,13 @@ abstract class AuthHelper implements Helper
         return is_string($cookie) && $cookie !== '' && is_string($field) && hash_equals($cookie, $field);
     }
 
-    /** Добавление проеектного хэша к строке */
+    /** Append the project hash to a string */
     public static function addProjectHashWord(string $string): string
     {
         return $string . $_ENV['PROJECT_HASH_WORD'];
     }
 
-    /** Хэширование паролей */
+    /** Password hashing */
     public static function hashPassword(string $password, bool $usePepper = true): string
     {
         if ($usePepper) {
@@ -219,7 +219,7 @@ abstract class AuthHelper implements Helper
         ]);
     }
 
-    /** Создание токена авторизации */
+    /** Create an auth token */
     private static function generateJWTAuthToken(array $headers, array $payload): string
     {
         $headersEncoded = DataHelper::base64UrlEncode(DataHelper::jsonFixedEncode($headers));

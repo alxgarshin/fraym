@@ -15,12 +15,12 @@ namespace Fraym\Interface;
 
 interface Validator
 {
-    /** Возвращает true, если валидация пройдена успешно */
+    /** Returns true if validation passed */
     public static function validate(ElementItem $element, mixed $value, array $options): bool;
 
-    /** Возвращает класс валидатора */
+    /** Returns the validator class */
     public static function getName(): string;
 
-    /** Формирует сообщение об ошибке */
+    /** Builds the error message */
     public static function getMessage(array $messageData): string;
 }

@@ -16,12 +16,12 @@ namespace Fraym\Tests\Unit\Element;
 use Fraym\Element\{Attribute, Item};
 use PHPUnit\Framework\TestCase;
 
-/** S8/FR-135: номер строки/группы живёт на экземпляре Item (а не на общем Attribute — клоны строк не перетирают
- *  номер друг друга). Доступ — свойствами PHP 8.4, без геттеров/сеттеров. Дефолт lineNumber = null:
- *  вручную созданный и отрисованный (asHTML) элемент идёт без суффикса [n]. */
+/** S8/FR-135: the line/group number lives on the Item instance (not on the shared Attribute — row clones don't overwrite
+ *  each other's number). Accessed via PHP 8.4 properties, without getters/setters. lineNumber defaults to null:
+ *  a manually created and rendered (asHTML) element has no [n] suffix. */
 final class ElementLineNumberTest extends TestCase
 {
-    /** Регрессия FR-135: свежесозданный вручную элемент не должен получать суффикс [0]. */
+    /** FR-135 regression: a freshly created manual element must not get the [0] suffix. */
     public function testFreshItemHasNoSuffixByDefault(): void
     {
         $item = $this->makeText();
@@ -34,7 +34,7 @@ final class ElementLineNumberTest extends TestCase
     {
         $item = $this->makeText();
 
-        /** Многострочный рендер явно проставляет номер — нулевая строка даёт [0]. */
+        /** Multi-line rendering sets the number explicitly — row zero gives [0]. */
         $item->lineNumber = 0;
         self::assertSame('[0]', $item->lineNumberWrapped);
 

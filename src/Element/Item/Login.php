@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Fraym\Element\Item;
 
-/** Поле логина */
+/** Login field */
 class Login extends Text
 {
 }

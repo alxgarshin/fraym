@@ -258,6 +258,12 @@
   },
   "file": {
     "size_not_counted": "No se puede obtener el tamaño",
+    "size_units": [
+      "B",
+      "KB",
+      "MB",
+      "GB"
+    ],
     "messages": {
       "file_add_success": "Archivo añadido correctamente a la biblioteca.",
       "file_add_fail": "No tienes permisos para añadir un archivo a la biblioteca.",

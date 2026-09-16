@@ -17,7 +17,7 @@ use Fraym\BaseObject\{ApiAction, ApiParam};
 use Fraym\Enum\{ApiParamSourceEnum, ApiParamTypeEnum};
 use PHPUnit\Framework\TestCase;
 
-/** Атрибут действия и приведение параметров с провода к объявленным типам */
+/** Action attribute and casting wire parameters to the declared types */
 final class ApiActionTest extends TestCase
 {
     public function testDefaultsAreRequestScopedString(): void
@@ -67,7 +67,7 @@ final class ApiActionTest extends TestCase
     {
         $_REQUEST['page'] = '7';
 
-        /** Значение global-параметра берётся из константы, а не из $_REQUEST */
+        /** The value of a global parameter is taken from the constant, not from $_REQUEST */
         self::assertSame(
             PAGE,
             (new ApiParam('page', ApiParamTypeEnum::int, source: ApiParamSourceEnum::global))->getValue(),

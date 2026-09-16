@@ -15,8 +15,8 @@ namespace Fraym\BaseObject;
 
 use Attribute;
 
-/** Объявление экшена контроллера во внешнем API. Метод без этого атрибута работает как раньше
- *  и в манифест не попадает. Описания живут в секции fraym_actions локали модуля. */
+/** Declares a controller action in the external API. A method without this attribute works as before
+ *  and is not included in the manifest. Descriptions live in the fraym_actions section of the module locale. */
 #[Attribute(Attribute::TARGET_METHOD)]
 final class ApiAction
 {
@@ -24,7 +24,7 @@ final class ApiAction
      * @param ApiParam[] $params
      */
     public function __construct(
-        /** Меняет ли экшен данные: агент по этому признаку отличает чтение от записи */
+        /** Whether the action modifies data: the agent uses this flag to tell reads from writes */
         public readonly bool $mutating = false,
         public readonly array $params = [],
     ) {

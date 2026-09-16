@@ -27,7 +27,7 @@ use PHPUnit\Util\Json;
 
 abstract class DataHelper implements Helper
 {
-    /** Определение ActEnum по умолчанию в случае, если он не предоставлен */
+    /** Determine the default ActEnum if none is provided */
     public static function getActDefault(?BaseEntity $entity = null): ActEnum
     {
         $act = ACT;
@@ -43,19 +43,19 @@ abstract class DataHelper implements Helper
         return $act;
     }
 
-    /** Проверка наличия всех переменных в массиве */
+    /** Check that all variables are present in the array */
     public static function inArrayAll(array $needles, array $haystack): bool
     {
         return empty(array_diff($needles, $haystack));
     }
 
-    /** Проверка наличия любой из переменных в массиве */
+    /** Check that any of the variables is present in the array */
     public static function inArrayAny(array $needles, array $haystack): bool
     {
         return !empty(array_intersect($needles, $haystack));
     }
 
-    /** Перенос элемента массива с одного индекса на другой */
+    /** Move an array element from one index to another */
     public static function changeValueIndexInArray(array $array, int|string $oldIndex, int|string $newIndex): array
     {
         $out = array_splice($array, $oldIndex, 1);
@@ -64,13 +64,13 @@ abstract class DataHelper implements Helper
         return $array;
     }
 
-    /** Получение id вне зависимости от того запрос это на сохранение или просто вывод страницы */
+    /** Get the id regardless of whether this is a save request or just a page output */
     public static function getId(): null|int|string
     {
         return ID[key(ID ?? []) ?? 0] ?? null;
     }
 
-    /** Поиск в $_REQUEST ключа массива данных, в которых присутствует указанный id */
+    /** Find in $_REQUEST the key of the data array that contains the given id */
     public static function findDataKeyInRequestById(int|string $id): int
     {
         if (ID === null) {
@@ -86,7 +86,7 @@ abstract class DataHelper implements Helper
         return 0;
     }
 
-    /** Вывод сообщений исключительно для админа */
+    /** Output messages to the admin only */
     public static function adminEcho(string $str): void
     {
         if (CURRENT_USER->isAdmin(true) && CookieHelper::getCookie('testMode') === '1') {
@@ -94,7 +94,7 @@ abstract class DataHelper implements Helper
         }
     }
 
-    /** Получение json-файла и декодирование его */
+    /** Get a json file and decode it */
     public static function getJsonFile(string $filePath): ?array
     {
         $data = null;
@@ -108,7 +108,7 @@ abstract class DataHelper implements Helper
         return $data;
     }
 
-    /** Защищенный парсинг JSON'а с выдачей ошибки в случае проблемы */
+    /** Safe JSON parsing that reports an error in case of a problem */
     public static function jsonFixedDecode(?string $string, bool $strict = false): mixed
     {
         try {
@@ -130,16 +130,16 @@ abstract class DataHelper implements Helper
         return $data;
     }
 
-    /** JSON-энкодирование без превращения кириллицы в символы класса \u */
+    /** JSON encoding without converting Cyrillic into \u characters */
     public static function jsonFixedEncode(array $array): string
     {
-        /* на случай, если в массиве данные почему-то не UTF-8 */
+        /* in case the array data is not UTF-8 for some reason */
         $array = self::fixUTFEncoding($array);
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
-    /** Исправление данных в массиве на UTF-8 данные */
+    /** Fix array data into UTF-8 data */
     public static function fixUTFEncoding(array $array): array
     {
         foreach ($array as $key => $value) {
@@ -153,7 +153,7 @@ abstract class DataHelper implements Helper
         return $array;
     }
 
-    /** Вывод данных последней ошибки обработки JSON */
+    /** Output the last JSON processing error data */
     public static function jsonLastErrorText(): string
     {
         $constants = get_defined_constants(true);
@@ -168,7 +168,7 @@ abstract class DataHelper implements Helper
         return $json_errors[json_last_error()];
     }
 
-    /** Добавление сигнатуры (подписи) в массив API-запроса */
+    /** Add a signature to the API request array */
     public static function apiSignature(array $request, ?string $hash = null): array
     {
         if (!is_null($hash)) {
@@ -181,9 +181,9 @@ abstract class DataHelper implements Helper
         return $request;
     }
 
-    /** Логирование действий пользователей.
-     * Мутация $_REQUEST выполняется синхронно (её читает контроллер того же запроса);
-     * записи в БД реально оффлоудятся: fastcgi_finish_request() отдаёт ответ клиенту, лог пишется после. */
+    /** User activity logging.
+     * $_REQUEST is mutated synchronously (the controller of the same request reads it);
+     * DB writes are actually offloaded: fastcgi_finish_request() sends the response to the client, the log is written afterwards. */
     public static function activityLog(bool $fullLog = false): void
     {
         if (CURRENT_USER->id() > 0 && 'profile' === KIND) {
@@ -216,7 +216,7 @@ abstract class DataHelper implements Helper
         });
     }
 
-    /** Исправление http-адреса на корректный */
+    /** Fix an http address to a correct one */
     public static function fixURL(string $url): string
     {
         if (!str_starts_with($url, 'http')) {
@@ -226,7 +226,7 @@ abstract class DataHelper implements Helper
         return $url;
     }
 
-    /** Определение адреса страницы */
+    /** Determine the page address */
     public static function selfURL(): string
     {
         $s = empty($_SERVER['HTTPS']) ? '' : ($_SERVER['HTTPS'] === 'on' ? 's' : '');
@@ -236,15 +236,15 @@ abstract class DataHelper implements Helper
         return $protocol . '://' . $_SERVER['SERVER_NAME'] . $port . $_SERVER['REQUEST_URI'];
     }
 
-    /** Получение "реального" IP пользователя.
-     * X-Forwarded-For принимается ТОЛЬКО если запрос пришёл через доверенный прокси
-     * (REMOTE_ADDR входит в TRUSTED_PROXIES); иначе — REMOTE_ADDR. Защита от IP-spoofing. */
+    /** Get the "real" user IP.
+     * X-Forwarded-For is accepted ONLY if the request came through a trusted proxy
+     * (REMOTE_ADDR is in TRUSTED_PROXIES); otherwise REMOTE_ADDR. Protection against IP spoofing. */
     public static function getRealIp(): string
     {
         $remoteAddr = $_SERVER['REMOTE_ADDR'] ?? '';
 
         if (self::isTrustedProxy($remoteAddr) && !empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-            /** X-Forwarded-For: client, proxy1, ... — самый левый адрес это исходный клиент */
+            /** X-Forwarded-For: client, proxy1, ... — the leftmost address is the originating client */
             $clientIp = trim(explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'])[0]);
 
             if (filter_var($clientIp, FILTER_VALIDATE_IP) !== false) {
@@ -255,13 +255,13 @@ abstract class DataHelper implements Helper
         return $remoteAddr;
     }
 
-    /** preg_quote заменяемого preg_replace контента */
+    /** preg_quote for preg_replace replacement content */
     public static function pregQuoteReplaced(?string $text): string
     {
         return preg_replace('#(?<!\\\\)(\\$|\\\\)#', '\\\\$1', $text);
     }
 
-    /** Получение названия объекта в фигурных кавычках */
+    /** Get the object name in curly braces */
     public static function addBraces(string $name): string
     {
         $clearedName = self::clearBraces($name);
@@ -269,13 +269,13 @@ abstract class DataHelper implements Helper
         return $clearedName !== '' ? '{' . $clearedName . '}' : '';
     }
 
-    /** Получение названия объекта без фигурных кавычек */
+    /** Get the object name without curly braces */
     public static function clearBraces(?string $name): string
     {
         return str_replace(['{', '}'], '', (string) $name);
     }
 
-    /** Очистка HTML-данных с помощью StripTags */
+    /** Clean HTML data with StripTags */
     public static function escapeHTMLData(?string $string): string
     {
         $_StripTags = CACHE->getFromCache('stripTags', 0);
@@ -288,7 +288,7 @@ abstract class DataHelper implements Helper
         return $_StripTags->filter((string) $string);
     }
 
-    /** Хеширование строки / массива */
+    /** Hash a string / array */
     public static function hashData(string|array $data): string
     {
         if (is_array($data)) {
@@ -298,7 +298,7 @@ abstract class DataHelper implements Helper
         return hash('xxh3', $data);
     }
 
-    /** Получение случайной байтовой строки */
+    /** Get a random byte string */
     public static function getRandomStringBin2hex(int $length = 200): string
     {
         $bytes = random_bytes($length / 2);
@@ -306,13 +306,13 @@ abstract class DataHelper implements Helper
         return bin2hex($bytes);
     }
 
-    /** Base64Url шифрование строки */
+    /** Base64Url string encoding */
     public static function base64UrlEncode(string $str): string
     {
         return rtrim(strtr(base64_encode($str), '+/', '-_'), '=');
     }
 
-    /** Base64Url расшифровка строки (обратная base64UrlEncode); null при некорректном вводе */
+    /** Base64Url string decoding (the inverse of base64UrlEncode); null on invalid input */
     public static function base64UrlDecode(string $str): ?string
     {
         $base64 = strtr($str, '-_', '+/');
@@ -322,7 +322,7 @@ abstract class DataHelper implements Helper
         return $decoded === false ? null : $decoded;
     }
 
-    /** Поиск по ключу в массиве вида [name, value] */
+    /** Search by key in an array of the form [name, value] */
     public static function getFlatArrayElement(int|string|array $needle, array $haystack): ?array
     {
         if (is_array($needle)) {
@@ -340,7 +340,7 @@ abstract class DataHelper implements Helper
         return null;
     }
 
-    /** Перевод значения multiselect в array */
+    /** Convert a multiselect value to an array */
     public static function multiselectToArray(?string $string): array
     {
         $returnArray = [];
@@ -369,7 +369,7 @@ abstract class DataHelper implements Helper
         return $returnArray;
     }
 
-    /** Перевод array в значения multiselect */
+    /** Convert an array to multiselect values */
     public static function arrayToMultiselect(array $array): string
     {
         $valueArray = [];
@@ -385,13 +385,13 @@ abstract class DataHelper implements Helper
         return self::jsonFixedEncode($valueArray);
     }
 
-    /** Проверка число или строка и возврата в соответствующем типе */
+    /** Check whether it's a number or a string and return it in the corresponding type */
     public static function checkNumeric(mixed $data): mixed
     {
         return is_numeric($data) ? (int) $data : $data;
     }
 
-    /** Разбор формата виртуальных данных */
+    /** Parse the virtual data format */
     public static function unmakeVirtual(string $data): array
     {
         $result = [];
@@ -409,7 +409,7 @@ abstract class DataHelper implements Helper
         return $result;
     }
 
-    /** Создание структуры объекта на основе виртуально-структурированных данных
+    /** Build the object structure from virtually structured data
      * @return Generator<int|string, ElementItem>
      */
     public static function virtualStructure(
@@ -537,7 +537,7 @@ abstract class DataHelper implements Helper
         unset($fieldsData);
     }
 
-    /** Эскапирование данных перед выводом во фронтенд */
+    /** Escape data before output to the frontend */
     public static function escapeOutput(mixed $value, EscapeModeEnum $escapeModeEnum = EscapeModeEnum::forHTML): mixed
     {
         if (is_null($value)) {
@@ -566,7 +566,7 @@ abstract class DataHelper implements Helper
         return $value;
     }
 
-    /** Фильтрация данных перед размещением в БД */
+    /** Filter data before storing it in the DB */
     public static function filterInput(bool|int|string|null|DateTime|DateTimeImmutable|array|float $value, array $fieldParams, bool $topLevel = true): mixed
     {
         if (is_null($value)) {
@@ -598,7 +598,7 @@ abstract class DataHelper implements Helper
         return $value;
     }
 
-    /** Входит ли IP в список доверенных прокси (TRUSTED_PROXIES — CSV из CIDR или одиночных IP) */
+    /** Whether the IP is in the trusted proxies list (TRUSTED_PROXIES — CSV of CIDRs or single IPs) */
     private static function isTrustedProxy(string $ip): bool
     {
         $trusted = $_ENV['TRUSTED_PROXIES'] ?? '';
@@ -618,7 +618,7 @@ abstract class DataHelper implements Helper
         return false;
     }
 
-    /** Проверка вхождения IP в CIDR-подсеть (IPv4 и IPv6 — через inet_pton, побитовое сравнение) */
+    /** Check whether the IP belongs to a CIDR subnet (IPv4 and IPv6 — via inet_pton, bitwise comparison) */
     private static function ipInCidr(string $ip, string $cidr): bool
     {
         if (!str_contains($cidr, '/')) {
@@ -635,7 +635,7 @@ abstract class DataHelper implements Helper
         $subnetBin = inet_pton($subnet);
 
         if ($ipBin === false || $subnetBin === false || strlen($ipBin) !== strlen($subnetBin)) {
-            /** разные семейства адресов (IPv4 против IPv6) */
+            /** different address families (IPv4 vs IPv6) */
             return false;
         }
 

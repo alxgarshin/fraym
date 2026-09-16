@@ -17,12 +17,12 @@ use Fraym\Interface\ElementItem;
 
 final class FiltersBlock
 {
-    /** Предсозданные элементы для фильтрации в рамках блоках
+    /** Pre-created elements for filtering within blocks
      * @var array<int, ElementItem> $filtersViewItems
      */
     private array $filtersViewItems = [];
 
-    /** Изначальные элементы, по которым и производится фильтрация
+    /** Original elements that the filtering is performed by
      * @var array<int, ElementItem> $filtratedModelItems
      */
     private array $modelItems = [];

@@ -18,18 +18,18 @@ use Fraym\BaseObject\BaseService;
 use Fraym\Enum\ActEnum;
 use Fraym\Helper\DataHelper;
 
-/** Права */
+/** Rights */
 #[Attribute(Attribute::TARGET_CLASS)]
 class Rights
 {
-    /** Родительская сущность */
+    /** Parent entity */
     public ?BaseEntity $entity = null;
 
     public ?BaseService $service {
         get => $this->entity->view->CMSVC->service;
     }
 
-    /** SQL-ограничение на просмотр данных */
+    /** SQL restriction on viewing data */
     public ?RightsRestrict $viewRestrict = null {
         get {
             $defaultValue = $this->viewRestrict;
@@ -67,7 +67,7 @@ class Rights
         }
     }
 
-    /** SQL-ограничение на изменение данных */
+    /** SQL restriction on changing data */
     public ?RightsRestrict $changeRestrict = null {
         get {
             $defaultValue = $this->changeRestrict;
@@ -105,7 +105,7 @@ class Rights
         }
     }
 
-    /** SQL-ограничение на удаление данных */
+    /** SQL restriction on deleting data */
     public ?RightsRestrict $deleteRestrict = null {
         get {
             $defaultValue = $this->deleteRestrict;
@@ -144,7 +144,7 @@ class Rights
     }
 
     public function __construct(
-        /** Право видеть данные: bool или название функции сервиса для проверки */
+        /** Right to view data: bool or the name of a service function to check it */
         public bool|string $viewRight {
             get {
                 $defaultValue = $this->viewRight;
@@ -167,7 +167,7 @@ class Rights
             set => $this->viewRight = $value;
         },
 
-        /** Право добавлять данные: bool или название функции сервиса для проверки */
+        /** Right to add data: bool or the name of a service function to check it */
         public bool|string $addRight {
             get {
                 $defaultValue = $this->addRight;
@@ -182,7 +182,7 @@ class Rights
             set => $this->addRight = $value;
         },
 
-        /** Право менять данные: bool или название функции сервиса для проверки */
+        /** Right to change data: bool or the name of a service function to check it */
         public bool|string $changeRight {
             get {
                 $defaultValue = $this->changeRight;
@@ -197,7 +197,7 @@ class Rights
             set => $this->changeRight = $value;
         },
 
-        /** Право удалять данные: bool или название функции сервиса для проверки */
+        /** Right to delete data: bool or the name of a service function to check it */
         public bool|string $deleteRight {
             get {
                 $defaultValue = $this->deleteRight;

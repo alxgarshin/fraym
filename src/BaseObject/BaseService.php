@@ -36,28 +36,28 @@ abstract class BaseService
 
     public ?CMSVC $CMSVC = null;
 
-    /** Callback-функция перед create */
+    /** Callback function before create */
     public ?string $preCreate = null;
 
-    /** Callback-функция после create */
+    /** Callback function after create */
     public ?string $postCreate = null;
 
-    /** Callback-функция перед change */
+    /** Callback function before change */
     public ?string $preChange = null;
 
-    /** Callback-функция после change */
+    /** Callback function after change */
     public ?string $postChange = null;
 
-    /** Callback-функция перед delete */
+    /** Callback function before delete */
     public ?string $preDelete = null;
 
-    /** Callback-функция после delete */
+    /** Callback function after delete */
     public ?string $postDelete = null;
 
-    /** Уточненный ACT (часто нужен в сервисах для проверки прав) */
+    /** Refined ACT (often needed in services to check rights) */
     public ActEnum $act;
 
-    /** Массив переменных, которые можно добавлять во время обработки сервиса. Помогает в postModelInit понять, нужно ли совершить какие-либо действия после того, как модель была собрана с участием сервиса (и избежать зацикливания таким образом). */
+    /** Variables that can be added while the service is processing. Helps postModelInit decide whether any actions are needed after the model has been built with the service's participation (and thus avoid infinite loops). */
     public array $postModelInitVars = [];
 
     public ?BaseModel $model {
@@ -166,7 +166,7 @@ abstract class BaseService
         return $this;
     }
 
-    /** Опциональная функция, позволяющая подменить модель в entity еще до исполнения действий в контроллере. */
+    /** Optional function that allows replacing the model in the entity before the controller actions run. */
     public function preLoadModel(): void
     {
     }
@@ -299,13 +299,13 @@ abstract class BaseService
         return $this->CMSVC?->getModelInstance($model, $id, $createIfNotExists, $data, $refresh);
     }
 
-    /** Осуществление дополнительных операций с моделью после ее полной инициализации (позволяет избежать зацикливания) */
+    /** Additional operations on the model after its full initialization (helps avoid infinite loops) */
     public function postModelInit(BaseModel $model): BaseModel
     {
         return $model;
     }
 
-    /** Дополнительная очистка параметров после сброса фильтров */
+    /** Additional cleanup of parameters after filters are reset */
     public function postClearFilters(): void
     {
     }

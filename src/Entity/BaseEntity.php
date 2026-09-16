@@ -25,19 +25,19 @@ abstract class BaseEntity
     use FraymActionTrait;
     use EntityViewTrait;
 
-    /** Окно (сек) подавления повторной вставки той же записи при двойном сабмите */
+    /** Window (sec) for suppressing a repeated insert of the same record on a double submit */
     private const DOUBLE_SAVE_GRACE_SECONDS = 30;
 
-    /** Языковая локаль сущности */
+    /** Entity language locale */
     public ?array $LOCALE {
         get => $this->LOCALE;
         set => $this->LOCALE = LocaleHelper::getLocale($value);
     }
 
-    /** Фильтры */
+    /** Filters */
     public ?Filters $filters = null {
         get {
-            /** У наследующих сущностей каталога нет своих фильтров: они подчинены фильтрам родительской сущности */
+            /** Descendant catalog entities have no filters of their own: they are subordinate to the parent entity's filters */
             if (!($this instanceof CatalogItemEntity) && $this->filters === null) {
                 $this->filters = new Filters($this);
             }
@@ -47,28 +47,28 @@ abstract class BaseEntity
         set => $this->filters = $value;
     }
 
-    /** Вьюшка, к которой привязан данный instance BaseEntity */
+    /** The view this BaseEntity instance is bound to */
     public BaseView $view;
 
-    /** Массив найденных при последнем запросе id сущностей */
+    /** Entity ids found by the last query */
     public array $listOfFoundIds = [];
 
-    /** Перевернутые для удобства массивы сортировки */
+    /** Sorting arrays, flipped for convenience */
     public array $rotatedArrayIndexes = [];
 
-    /** Все ошибки валидации в формате: [класс валидатора => [строка запроса => [номер группы (-1, если нет) => [непрошедший элемент]]]] */
+    /** All validation errors in the format: [validator class => [request line => [group number (-1 if none) => [failed element]]]] */
     public array $validationErrors = [];
 
-    /** Отформатированные данные после валидации */
+    /** Formatted data after validation */
     public array $dataAfterValidation = [];
 
-    /** Подготовленные сообщения в результате стандартных действий: create, change и delete */
+    /** Messages prepared as a result of the standard actions: create, change and delete */
     public array $fraymActionMessages = [];
 
-    /** Путь, по которому нужно перенаправить пользователя по завершению стандартного действия */
+    /** The path to redirect the user to after the standard action completes */
     public ?string $fraymActionRedirectPath = null;
 
-    /** Машинный код ошибки стандартного действия: клиент по нему решает, чинить запрос или повторять */
+    /** Machine-readable error code of the standard action: the client uses it to decide whether to fix the request or retry */
     public ?ResponseErrorCodeEnum $fraymActionErrorCode = null;
 
     public ?BaseModel $model {
@@ -83,31 +83,31 @@ abstract class BaseEntity
      * @param EntitySortingItem[] $sortingData
      */
     public function __construct(
-        /** Имя сущности, чаще всего совпадающее с URL раздела на сайте */
+        /** Entity name, usually the same as the section URL on the site */
         public string $name,
 
-        /** Таблица данных сущности */
+        /** Entity data table */
         public string $table,
 
-        /** Информация по сортировке данных сущности */
+        /** Entity data sorting information */
         public array $sortingData,
 
-        /** Опциональный параметр, указывающий на колонку, в которой нужно хранить данные JSON-виртуальных полей, сделанных конструктором */
+        /** Optional parameter pointing to the column that stores the data of JSON virtual fields created by the constructor */
         public ?string $virtualField = null,
 
-        /** Количество выводимых на страницу строк в объекте */
+        /** Number of rows per page in the object */
         public ?int $elementsPerPage = 50,
 
-        /** Использовать для просмотра сушности view из CMSVC. В ином случае просмотр приравнен к редактированию объекта. */
+        /** Use the view from CMSVC for viewing the entity. Otherwise viewing is treated as editing the object. */
         public bool $useCustomView = false,
 
-        /** Использовать для списка сущностей view из CMSVC. В ином случае будет применен автоматический view. */
+        /** Use the view from CMSVC for the entity list. Otherwise an automatic view is applied. */
         public bool $useCustomList = false,
 
-        /** В какой ACT (тип карточки сущности) осуществляется по умолчанию переход из общего списка сущностей? */
+        /** Which ACT (entity card type) is opened by default from the general entity list? */
         public ActEnum $defaultItemActType = ActEnum::edit,
 
-        /** В какой ACT попадает по умолчанию пользователь при переходе на список сущностей? */
+        /** Which ACT does the user get by default when going to the entity list? */
         public ActEnum $defaultListActType = ActEnum::list,
     ) {
         foreach ($this->sortingData as $sortingData) {

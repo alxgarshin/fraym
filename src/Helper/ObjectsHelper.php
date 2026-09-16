@@ -19,7 +19,7 @@ use ReflectionClass;
 
 abstract class ObjectsHelper implements Helper
 {
-    /** Получение короткого имени класса из одного из объектов CMSVC */
+    /** Get the short class name from one of the CMSVC objects */
     public static function getClassShortNameFromCMSVCObject(BaseHelper|BaseController|BaseModel|BaseService|BaseView $object): string
     {
         $cachedName = CACHE->getFromCache('_CLASSNAMES', 0, $object::class);
@@ -43,7 +43,7 @@ abstract class ObjectsHelper implements Helper
         return self::getClassShortName($object::class, $removeText);
     }
 
-    /** Получение короткого имени класса */
+    /** Get the short class name */
     public static function getClassShortName(string $className, string $removeTextFromClassName = ''): string
     {
         $reflection = self::getReflection($className);
@@ -57,7 +57,7 @@ abstract class ObjectsHelper implements Helper
         return $name;
     }
 
-    /** Получение Reflection класса */
+    /** Get the class Reflection */
     public static function getReflection(string|object $class): ReflectionClass
     {
         return new ReflectionClass($class);

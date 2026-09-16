@@ -23,15 +23,15 @@ use Fraym\Kernel;
 use ReflectionClass;
 use Throwable;
 
-/** Машиночитаемое описание API проекта, собранное из уже существующих метаданных:
- *  рефлексия даёт структуру, типы и права, локаль — смысл, #[ApiAction] — действия.
+/** Machine-readable description of the project API, built from already existing metadata:
+ *  reflection provides structure, types and rights, the locale provides meaning, #[ApiAction] provides actions.
  *
- *  Выдача двухуровневая: индекс перечисляет модули, детализация раскрывает один.
- *  Одним куском манифест реального проекта в контекст агента не помещается.
+ *  Output has two levels: the index lists the modules, the details expand one of them.
+ *  A real project's manifest in one piece doesn't fit into the agent's context.
  *
- *  Слой прав вычисляется в момент запроса: колбэки #[Rights] и Select::$values
- *  раскрываются под текущего пользователя, поэтому один и тот же адрес с Bearer
- *  и без него отдаёт разный объём. */
+ *  The rights layer is computed at request time: #[Rights] callbacks and Select::$values
+ *  are resolved for the current user, so the same address with and without Bearer
+ *  returns a different amount of data. */
 final class AgentManifestService
 {
     public const MANIFEST_VERSION = '1.0';
@@ -56,7 +56,7 @@ final class AgentManifestService
         ];
     }
 
-    /** Детализация одного модуля; null — модуля нет или он недоступен текущему пользователю */
+    /** Details of a single module; null — the module doesn't exist or isn't accessible to the current user */
     public static function getModule(string $cmsvcName): ?array
     {
         $controller = self::makeController($cmsvcName);
@@ -77,8 +77,8 @@ final class AgentManifestService
         if ($controller instanceof BaseHelper) {
             $customActions = self::describeCustomActions($controller, $manifest['path'], $moduleLocale);
 
-            /** Неразмеченный хелпер отдаёт прежний синтетический lookup: проекты, не дошедшие
-             *  до #[ApiAction], не должны терять модуль из манифеста. */
+            /** An unannotated helper returns the old synthetic lookup: projects that haven't adopted
+             *  #[ApiAction] yet must not lose the module from the manifest. */
             $manifest['type'] = 'helper';
             $manifest['actions'] = $customActions !== [] ? $customActions : [self::describeHelperLookup($manifest['path'])];
 
@@ -95,7 +95,7 @@ final class AgentManifestService
             $initFailed = true;
         }
 
-        /** Сбой инициализации не выдаётся за модуль без полей: агент иначе уверенно собрал бы неполный запрос */
+        /** An initialization failure isn't presented as a module without fields: otherwise the agent would confidently build an incomplete request */
         if ($initFailed) {
             $LOCALE = LocaleHelper::getLocale(['agentManifest']);
             $manifest['type'] = 'unavailable';
@@ -121,8 +121,8 @@ final class AgentManifestService
         return $manifest;
     }
 
-    /** Строки по модулю для индекса: локаль читается напрямую, CMSVC не поднимается —
-     *  иначе индекс стоил бы инициализации всех моделей проекта. */
+    /** Module strings for the index: the locale is read directly, CMSVC isn't initialized —
+     *  otherwise the index would cost the initialization of all project models. */
     private static function getModules(): array
     {
         $modules = [];
@@ -174,7 +174,7 @@ final class AgentManifestService
         return 'App\\CMSVC\\' . $name . '\\' . $name . 'Controller';
     }
 
-    /** Контроллер модуля без инициализации CMSVC: доступ проверяется до загрузки моделей */
+    /** Module controller without CMSVC initialization: access is checked before models are loaded */
     private static function makeController(string $cmsvcName): BaseController|BaseHelper|null
     {
         $name = TextHelper::snakeCaseToCamelCase($cmsvcName);
@@ -201,9 +201,9 @@ final class AgentManifestService
         }
     }
 
-    /** Доступность модуля текущему пользователю. Штатные checkIfIsAccessible/checkIfHasToBeAndIsAdmin
-     *  здесь неприменимы: при отсутствии прав они перенаправляют и завершают запрос, обрывая выдачу
-     *  манифеста. Атрибуты те же, но читаются без побочных эффектов. */
+    /** Module accessibility for the current user. The standard checkIfIsAccessible/checkIfHasToBeAndIsAdmin
+     *  don't fit here: without rights they redirect and terminate the request, cutting off the manifest
+     *  output. The attributes are the same, but they are read without side effects. */
     private static function isAccessible(string $controllerClass): bool
     {
         try {
@@ -255,8 +255,8 @@ final class AgentManifestService
         $fields = [];
 
         foreach ($entity->model->elementsList as $element) {
-            /** Разбор одного поля не должен ронять весь манифест: атрибут может конструировать хелпер,
-             *  которому нужно окружение (Attribute\Select(helper: new SomeHelperController())). */
+            /** Parsing one field must not bring down the whole manifest: an attribute may construct a helper
+             *  that needs an environment (Attribute\Select(helper: new SomeHelperController())). */
             try {
                 $fields[] = self::describeField($element);
             } catch (Throwable) {
@@ -319,7 +319,7 @@ final class AgentManifestService
         return $field;
     }
 
-    /** Встроенные действия записи. Имена параметров даны в формате провода: с индексом объекта. */
+    /** Built-in write actions. Parameter names are given in wire format: with the object index. */
     private static function describeCrudActions(BaseEntity $entity, string $path): array
     {
         $LOCALE = LocaleHelper::getLocale(['agentManifest']);
@@ -395,8 +395,8 @@ final class AgentManifestService
         return $actions;
     }
 
-    /** Параметры действия записи. Поля, которые сервер заполняет сам через OnCreate/OnChange,
-     *  в список не попадают: клиенту их слать не нужно и нельзя. */
+    /** Write action parameters. Fields that the server fills in itself via OnCreate/OnChange
+     *  are not listed: the client doesn't need to and must not send them. */
     private static function describeCrudParams(BaseEntity $entity, ActEnum $act): array
     {
         $contextSuffix = $act === ActEnum::add ? 'create' : 'update';
@@ -423,7 +423,7 @@ final class AgentManifestService
         return $params;
     }
 
-    /** Действия, объявленные через #[ApiAction]. Метод без атрибута в манифест не попадает. */
+    /** Actions declared via #[ApiAction]. A method without the attribute doesn't get into the manifest. */
     private static function describeCustomActions(BaseController|BaseHelper $controller, string $path, array $moduleLocale): array
     {
         $actionsLocale = $moduleLocale['fraym_actions'] ?? [];
@@ -448,7 +448,7 @@ final class AgentManifestService
                 );
             }
 
-            /** Response() хелпера — его единственный вход, обращение к нему идёт по пути без action= */
+            /** A helper's Response() is its only entry point, it is called via a path without action= */
             $isHelperEntryPoint = $controller instanceof BaseHelper && $methodName === 'Response';
 
             $actions[] = [

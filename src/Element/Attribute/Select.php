@@ -20,7 +20,7 @@ use Fraym\Interface\HasDefaultValue;
 use Generator;
 use InvalidArgumentException;
 
-/** Выпадающий список */
+/** Dropdown list */
 /** @implements HasDefaultValue<null|string|int> */
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class Select extends BaseElement implements HasDefaultValue
@@ -29,7 +29,7 @@ class Select extends BaseElement implements HasDefaultValue
         ObligatoryValidator::class,
     ];
 
-    /** Значение по умолчанию */
+    /** Default value */
     public mixed $defaultValue {
         get => $this->_val;
         set {
@@ -46,7 +46,7 @@ class Select extends BaseElement implements HasDefaultValue
     public function __construct(
         mixed $defaultValue = null,
 
-        /** Массив возможных значений: массив или строка с callback функции */
+        /** Possible values: an array or a callback function name string */
         public null|string|array $values = null {
             set(null|string|array|Generator $values) {
                 if ($values instanceof Generator) {
@@ -57,15 +57,15 @@ class Select extends BaseElement implements HasDefaultValue
             }
         },
 
-        /** Заблокированные к изменению значения: массив или строка с callback функции */
+        /** Values locked from changes: an array or a callback function name string */
         public null|string|array $locked = null,
 
-        /** Механизм динамического поиска списка значений на основе ввода пользователя */
+        /** Mechanism for dynamically searching the list of values based on user input */
         public ?BaseHelper $helper = null,
 
-        /** Legacy-поиск по устаревшему dash-формату (`-v1-v2-`) в дополнение к JSON — для virtualField,
-         *  где dash встречался. По умолчанию false: фильтры генерируют только JSON-условия.
-         *  Ставить true только при наличии старых dash-данных (`database:scan-multiselect-formats`). */
+        /** Legacy search by the outdated dash format (`-v1-v2-`) in addition to JSON — for virtualField,
+         *  where dash was used. False by default: filters generate only JSON conditions.
+         *  Set to true only if old dash data exists (`database:scan-multiselect-formats`). */
         public bool $legacySearch = false,
         ?bool $obligatory = null,
         ?string $helpClass = null,

@@ -16,7 +16,7 @@ namespace Fraym\Interface;
 use DateTimeImmutable;
 use Fraym\Element\Item;
 
-/** Интерфейс моделей для мягкого удаления данных. Требует подключения к модели трейта DeletedAtTrait или аналога, а также выставления соответствующих прав видимости для модели, исключающих (или, например, нет в зависимости от флага) записи с deleted_at IS NOT NULL */
+/** Interface for models with soft deletion. Requires the model to use the DeletedAtTrait trait or an equivalent, and to set the corresponding visibility rights for the model that exclude (or, e.g., don't, depending on a flag) records with deleted_at IS NOT NULL */
 /**
  * @property Item\Hidden $deleted_at
  */

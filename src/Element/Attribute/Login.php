@@ -16,7 +16,7 @@ namespace Fraym\Element\Attribute;
 use Attribute;
 use Fraym\Element\Validator\{LoginValidator, MinMaxCharValidator, ObligatoryValidator};
 
-/** Поле логина */
+/** Login field */
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class Login extends Text
 {

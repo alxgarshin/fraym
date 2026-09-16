@@ -27,7 +27,7 @@ final class SQLDatabaseService implements Database
 {
     public DbTypeEnum $dbType;
 
-    /** Диалект текущей СУБД — инкапсулирует все SQL-конструкции, специфичные для движка */
+    /** Dialect of the current DBMS — encapsulates all engine-specific SQL constructs */
     public readonly DatabaseDialect $dialect;
 
     private PDO $DB;
@@ -42,7 +42,7 @@ final class SQLDatabaseService implements Database
 
     private array $preparedQueriesCache = [];
 
-    /** Конструктор соединения */
+    /** Connection constructor */
     private function __construct()
     {
         $this->dbType = DbTypeEnum::init();
@@ -74,7 +74,7 @@ final class SQLDatabaseService implements Database
         $this->DB->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }
 
-    /** Создание или получение соединения в константу. По умолчанию: DB */
+    /** Create or get the connection into a constant. Default: DB */
     public static function getInstance(string $constName = 'DB'): self
     {
         if (defined($constName)) {
@@ -84,13 +84,13 @@ final class SQLDatabaseService implements Database
         }
     }
 
-    /** Принудительное создание соединения. Рекомендуется использовать только в случае необходимости манипуляции двумя соединениями за раз. */
+    /** Forced connection creation. Recommended only when you need to handle two connections at once. */
     public static function forceCreate(): self
     {
         return new self();
     }
 
-    /** Исполнение запроса
+    /** Execute a query
      *
      * @param array<int, array{0: string, 1: mixed, 2?: ?array}> $data
      */
@@ -149,16 +149,16 @@ final class SQLDatabaseService implements Database
         return [];
     }
 
-    /** Получение id последней добавленной записи */
+    /** Get the id of the last inserted record */
     public function lastInsertId(?string $name = null): string|false
     {
         $id = $this->dialect->extractLastInsertId($this->lastQuery['result'] ?? false);
 
-        /** null означает: диалект не поддерживает RETURNING, использовать PDO::lastInsertId() */
+        /** null means: the dialect doesn't support RETURNING, use PDO::lastInsertId() */
         return $id !== null ? $id : $this->DB->lastInsertId($name);
     }
 
-    /** Получение количества строк, задетых последней операцией в базе данных */
+    /** Get the number of rows affected by the last database operation */
     public function rowCount(): int
     {
         $stmt = $this->lastQuery['stmt'] ?? null;
@@ -166,7 +166,7 @@ final class SQLDatabaseService implements Database
         return $stmt instanceof PDOStatement ? $stmt->rowCount() : 0;
     }
 
-    /** Получение данных из таблицы */
+    /** Get data from a table */
     public function select(
         string $tableName,
         ?array $criteria = null,
@@ -216,7 +216,7 @@ final class SQLDatabaseService implements Database
         return $result;
     }
 
-    /** Получение количества объектов таблицы из последнего PDOStatement'а */
+    /** Get the number of table objects from the last PDOStatement */
     public function selectCount(): int
     {
         if ($this->lastQuery['fromAndWhere'] ?? false) {
@@ -256,7 +256,7 @@ final class SQLDatabaseService implements Database
         return 0;
     }
 
-    /** Получение количества объектов таблицы простым count в select'e */
+    /** Get the number of table objects with a simple count in select */
     public function count(
         string $tableName,
         ?array $criteria = null,
@@ -272,7 +272,7 @@ final class SQLDatabaseService implements Database
         )[0];
     }
 
-    /** Вставка данных в таблицу */
+    /** Insert data into a table */
     public function insert(
         string $tableName,
         array $data,
@@ -308,7 +308,7 @@ final class SQLDatabaseService implements Database
         return [];
     }
 
-    /** Изменение данных в таблице */
+    /** Update data in a table */
     public function update(
         string $tableName,
         array $data,
@@ -346,7 +346,7 @@ final class SQLDatabaseService implements Database
         return [];
     }
 
-    /** Удаление из таблицы */
+    /** Delete from a table */
     public function delete(
         string $tableName,
         array $criteria,
@@ -368,7 +368,7 @@ final class SQLDatabaseService implements Database
         return [];
     }
 
-    /** Исполнение скрипта данных без дополнительной фильтрации: использовать крайне осторожно */
+    /** Execute a data script without additional filtering: use with extreme caution */
     public function exec(string $SQL): true
     {
         $this->DB->exec($SQL);
@@ -376,25 +376,25 @@ final class SQLDatabaseService implements Database
         return true;
     }
 
-    /** Начало транзакции */
+    /** Begin a transaction */
     public function beginTransaction(): bool
     {
         return $this->DB->beginTransaction();
     }
 
-    /** Коммит транзакции */
+    /** Commit the transaction */
     public function commit(): bool
     {
         return $this->DB->commit();
     }
 
-    /** Откат транзакции */
+    /** Roll back the transaction */
     public function rollBack(): bool
     {
         return $this->DB->rollBack();
     }
 
-    /** Получение объекта на основе его id */
+    /** Get an object by its id */
     public function findObjectById(
         string|int $objId,
         string $objType,
@@ -440,7 +440,7 @@ final class SQLDatabaseService implements Database
         return null;
     }
 
-    /** Получение объектов на основе их id */
+    /** Get objects by their ids */
     public function findObjectsByIds(
         array $objIds,
         string $objType,
@@ -478,7 +478,7 @@ final class SQLDatabaseService implements Database
         return null;
     }
 
-    /** Превращение в массив генератора соотношений данных из БД (id к name, например) */
+    /** Turn a generator of data mappings from the DB (e.g. id to name) into an array */
     public function getArrayOfItemsAsArray(
         string $query,
         string $id,
@@ -488,7 +488,7 @@ final class SQLDatabaseService implements Database
         return iterator_to_array($this->getArrayOfItems($query, $id, $fields, $nodata));
     }
 
-    /** Создание массива соотношений данных из БД (id к name, например) */
+    /** Create an array of data mappings from the DB (e.g. id to name) */
     public function getArrayOfItems(
         string $query,
         string $id,
@@ -533,7 +533,7 @@ final class SQLDatabaseService implements Database
         }
     }
 
-    /** Создание дерева объектов из БД на основе родительского идентификатора */
+    /** Build an object tree from the DB based on the parent identifier */
     public function getTreeOfItems(
         bool $empty,
         string $table,
@@ -556,9 +556,9 @@ final class SQLDatabaseService implements Database
             $objectsTree[] = [null, $LOCALE['top_level'], 0];
         }
 
-        /** Защита от пустого IN без идентификаторов, прилетевшего в and */
+        /** Protection against an empty IN without identifiers that came in and */
         if (mb_stripos($and, 'IN ()') === false) {
-            //если есть лимит, забираем его, чтобы потом отсеять результаты вручную
+            //if there is a limit, take it away so the results can be filtered manually later
             $limitFrom = false;
             $limitCount = false;
 
@@ -600,7 +600,7 @@ final class SQLDatabaseService implements Database
                 $fullDataArray[] = $item;
             }
 
-            /** Собираем данные верхнего уровня */
+            /** Collect the top-level data */
             $mainDataFound = 0;
 
             foreach ($fullDataArray as $key => $fullData) {
@@ -625,15 +625,15 @@ final class SQLDatabaseService implements Database
 
             $level++;
 
-            /** Индекс детей по (тип+значение) родителя: сохраняет строгое === матчинга,
-             *  но убирает полный проход fullDataArray на каждого родителя каждого уровня. */
+            /** Children index by the parent's (type+value): keeps the strict === matching,
+             *  but avoids a full pass over fullDataArray for every parent on every level. */
             $childrenByParent = [];
 
             foreach ($fullDataArray as $fullData) {
                 $childrenByParent[gettype($fullData[$where]) . ':' . $fullData[$where]][] = $fullData;
             }
 
-            /** Выстраиваем нужное дерево */
+            /** Build the required tree */
             while ($level <= $maxlevel) {
                 $noObjectsFoundOnLevel = true;
 
@@ -677,7 +677,7 @@ final class SQLDatabaseService implements Database
         return $objectsTree;
     }
 
-    /** Удаление объектов из созданного дерева, чтобы остались только отобранные id и их parent'ы до верхнего уровня. При этом у каталоговых сущностей оставляем их наследников также. */
+    /** Remove objects from the built tree so that only the selected ids and their parents up to the top level remain. For catalog entities their descendants are kept as well. */
     public function chopOffTreeOfItemsBranches(
         array $objectsTree,
         array $listOfIds,
@@ -685,8 +685,8 @@ final class SQLDatabaseService implements Database
     ): array {
         $keepItemsIds = [];
 
-        /** Индекс первого вхождения id (тип+значение — сохраняет строгое ===) вместо вложенного
-         *  прохода по всему дереву на каждый искомый id. */
+        /** Index of the first occurrence of an id (type+value — keeps the strict ===) instead of a nested
+         *  pass over the whole tree for every searched id. */
         $treeKeyById = [];
 
         foreach ($objectsTree as $key => $objectsTreeItem) {
@@ -703,7 +703,7 @@ final class SQLDatabaseService implements Database
             $objectsTreeItem = $objectsTree[$key];
             $keepItemsIds[] = $idToFind;
 
-            /** Находим всех наследующих */
+            /** Find all descendants */
             $childKey = $key;
             $lookingForChilds = true;
 
@@ -717,7 +717,7 @@ final class SQLDatabaseService implements Database
                 }
             }
 
-            /** Находим всех родителей */
+            /** Find all parents */
             $parentId = $objectsTreeItem[3][$fieldWithParentId];
             $keepItemsIds[] = $parentId;
             $parentKey = $key;
@@ -739,7 +739,7 @@ final class SQLDatabaseService implements Database
         }
         $keepItemsIds = array_unique($keepItemsIds);
 
-        /** Удаляем все объекты, для которых мы не нашли связь */
+        /** Delete all objects for which no relation was found */
         foreach ($objectsTree as $key => $objectsTreeItem) {
             if (!in_array($objectsTreeItem[0], $keepItemsIds)) {
                 unset($objectsTree[$key]);
@@ -749,7 +749,7 @@ final class SQLDatabaseService implements Database
         return $objectsTree;
     }
 
-    /** Подготовка запроса */
+    /** Prepare the query */
     private function prepare(string $query): PDOStatement|bool
     {
         $queryHash = DataHelper::hashData($query);
@@ -771,7 +771,7 @@ final class SQLDatabaseService implements Database
         }
     }
 
-    /** Построение where-части запроса
+    /** Build the where part of the query
      * @return array{0: string, 1: array}
      */
     private function constructWhere(?array $criteria): array
@@ -871,7 +871,7 @@ final class SQLDatabaseService implements Database
         return [$whereQuery, $whereParams];
     }
 
-    /** Исполнение PDO-запроса */
+    /** Execute the PDO query */
     private function execute(PDOStatement $statement, array $preparedData): void
     {
         try {

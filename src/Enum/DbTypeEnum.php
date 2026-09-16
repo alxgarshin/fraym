@@ -23,7 +23,7 @@ enum DbTypeEnum: string
         return self::tryFrom($_ENV['DATABASE_TYPE']) ?? self::POSTGRESQL;
     }
 
-    /** Безопасное оборачивание идентификатора (таблицы или поля) */
+    /** Safe quoting of an identifier (table or field) */
     public function quoteIdentifier(string $identifier): string
     {
         $char = match ($this) {
@@ -41,7 +41,7 @@ enum DbTypeEnum: string
         return implode('.', $escapedParts);
     }
 
-    /** Получение regex-слов */
+    /** Get regex words */
     public function getRegexpWords(): array
     {
         return match ($this) {
@@ -50,7 +50,7 @@ enum DbTypeEnum: string
         };
     }
 
-    /** Получение названия базы данных для root-пользователя */
+    /** Get the database name for the root user */
     public function getRootTableName(): ?string
     {
         return match ($this) {
@@ -59,7 +59,7 @@ enum DbTypeEnum: string
         };
     }
 
-    /** Получение названия root-пользователя */
+    /** Get the root user name */
     public function getRootUser(): string
     {
         return match ($this) {

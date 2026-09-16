@@ -1,4 +1,4 @@
-/** Просмотр статей */
+/** Article view */
 
 if (withDocumentEvents) {
 

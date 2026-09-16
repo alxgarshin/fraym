@@ -358,7 +358,7 @@ div.fullpage_cover.shown {
     transform: none;
 }
 
-/** CSS-лоадер */
+/** CSS loader */
 #circleGroup {
     left: 0;
     right: 0;
@@ -514,7 +514,7 @@ div.fullpage_cover .circleG {
     height: 2em;
 }
 
-/** Элементы форм **/
+/** Form elements **/
 input,
 select,
 textarea,
@@ -1293,7 +1293,7 @@ body .ql-html-buttonGroup button.ql-html-buttonCancel {
     font-size: 2.5em;
 }
 
-/** Всплывающая подсказка */
+/** Tooltip */
 div.help {
     display: none;
     position: absolute;
@@ -1340,7 +1340,7 @@ div.fixed_help {
     z-index: 1;
 }
 
-/** Таблицы вывода данных */
+/** Data output tables */
 :root {
     --mot_columns_count: 1;
 }
@@ -1619,7 +1619,7 @@ a.trash:hover {
     border: 0;
 }
 
-/** SBI: svg background import, автоматически вставляет svg из background-image в страницу, как html */
+/** SBI: svg background import, automatically inserts svg from background-image into the page as html */
 .sbi {
     background-size: contain;
     width: 1em;
@@ -1759,7 +1759,7 @@ span.red .sbi path {
     background-image: url(../design/sbi/users.svg);
 }
 
-/** Основные блоки верстки */
+/** Main layout blocks */
 div.maincontent_wrapper {
     display: flex;
     flex-wrap: wrap;
@@ -1825,7 +1825,7 @@ div.maincontent_data div.multi_objects_table.excel div.td.alert {
     background-position: center center;
 }
 
-/** Фильтры */
+/** Filters */
 div.indexer {
     font-size: .9em;
     height: 100%;
@@ -1991,7 +1991,7 @@ div.copy_filters_link {
     margin: 3em 0 -1em 0;
 }
 
-/** Пагинатор */
+/** Paginator */
 div.pagecounter {
     display: flex;
     margin: 4em auto 2em auto;
@@ -2098,7 +2098,7 @@ div.pagecounter div.pagecounter_text span {
     margin: 0 .3em;
 }
 
-/** Модальное окно: FraymModal */
+/** Modal window: FraymModal */
 #fraymmodal-overlay {
     position: fixed;
     top: 0;
@@ -2195,7 +2195,7 @@ div.pagecounter div.pagecounter_text span {
     margin-top: 0.5%;
 }
 
-/** Вкладки */
+/** Tabs */
 .fraymtabs {
     padding: 0;
     width: 100%;
@@ -2268,7 +2268,7 @@ div.maincontent_data.autocreated form .fraymtabs>div.shown {
     cursor: text;
 }
 
-/** Панель, вложенная в другую панель */
+/** Panel nested in another panel */
 .fraymtabs>div .fraymtabs {
     overflow: visible;
 }
@@ -2291,7 +2291,7 @@ div.maincontent_data.autocreated form .fraymtabs>div.shown {
     padding: 1em 1.5em;
 }
 
-/** Эффекты и анимации **/
+/** Effects and animations **/
 @keyframes fadeFromTransparent {
     from {
         opacity: 0;
@@ -2320,7 +2320,7 @@ div.maincontent_data.autocreated form .fraymtabs>div.shown {
     animation: fadeToTransparent .5s ease-in-out forwards;
 }
 
-/** Адаптативная верстка */
+/** Responsive layout */
 @media only screen {
     html {
         font-size: 45%;
@@ -2391,7 +2391,7 @@ div.maincontent_data.autocreated form .fraymtabs>div.shown {
     }
 }
 
-/** Мобильная верстка */
+/** Mobile layout */
 @media only screen and (max-device-width: 767px) {
     div.maincontent_data form {
         font-size: .8em;
@@ -2511,7 +2511,7 @@ div.maincontent_data.autocreated form .fraymtabs>div.shown {
         font-size: 1.2rem;
     }
 
-    /** Модальное окно */
+    /** Modal window */
     #fraymmodal-close {
         width: 2.5em;
         height: 2.5em;
@@ -2543,7 +2543,7 @@ div.maincontent_data.autocreated form .fraymtabs>div.shown {
         height: 95%;
     }
 
-    /** Вкладки */
+    /** Tabs */
     .fraymtabs>ul {
         overflow-x: auto;
         width: 100%;
@@ -2559,16 +2559,16 @@ div.maincontent_data.autocreated form .fraymtabs>div.shown {
         margin-right: 3em;
     }
 
-    /** Панель, вложенная в другую панель */
+    /** Panel nested in another panel */
     .fraymtabs-panel .fraymtabs>ul a {
         padding: 1em 1.3em;
     }
 }
 
-/** Альбомный разворот */
+/** Landscape orientation */
 @media only screen and (max-device-width: 767px) and (orientation: landscape) {}
 
-/** Стили для печати */
+/** Print styles */
 @media print {
     @page {
         size: auto;

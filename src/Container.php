@@ -33,7 +33,7 @@ final class Container
         return self::$bindings[$id];
     }
 
-    /** Сброс состояния (persistent workers: Swoole, RoadRunner) */
+    /** State reset (persistent workers: Swoole, RoadRunner) */
     public static function reset(): void
     {
         self::$bindings = [];

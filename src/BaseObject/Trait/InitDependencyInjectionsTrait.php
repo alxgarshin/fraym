@@ -19,7 +19,7 @@ use ReflectionAttribute;
 use ReflectionNamedType;
 use ReflectionObject;
 
-/** Функция инициализации зависимостей */
+/** Dependency initialization function */
 trait InitDependencyInjectionsTrait
 {
     public function initDependencyInjections(): static

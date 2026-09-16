@@ -25,7 +25,7 @@ class Wysiwyg extends BaseElement
     use CloneTrait;
     use MinMaxChar;
 
-    /** Значение */
+    /** Value */
     private ?string $fieldValue;
 
     private Attribute\Wysiwyg $attribute;

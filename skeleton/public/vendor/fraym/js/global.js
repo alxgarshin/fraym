@@ -7,27 +7,27 @@
  * file that was distributed with this source code.
  */
 
-/** Настройки для дебага путем вывода в консоль времени исполнения операций */
+/** Debug settings: log operation execution times to the console */
 const showTimeMode = false;
 let startTime = new Date().getTime();
 
-/** JWT хранится в httpOnly cookie authToken (JS его не видит). Single-flight guard обновления токена. */
+/** JWT is stored in the httpOnly cookie authToken (invisible to JS). Single-flight guard for token refresh. */
 let jwtTokenRefreshing = null;
 const jwtTokenRefreshUrl = `${absolutePath()}/login/action=refresh_token`;
 
 const FRAYM_JS_VERSION = '3.0.0';
 let fraymVersionWarned = false;
 
-/** Переменная локали */
+/** Locale variable */
 let LOCALE = {};
 
-/** Проверка нахождения в режиме standalone (PWA-приложение) */
+/** Check whether running in standalone mode (PWA) */
 const isInStandalone = (window.navigator.standalone === true) || (window.matchMedia('(display-mode: standalone)').matches);
 
-/** Проверка видимости документа на экране */
+/** Check whether the document is visible on screen */
 const visibilityChangeHidden = document.hidden !== undefined ? 'hidden' : (document.msHidden !== undefined ? 'msHidden' : (document.webkitHidden !== undefined ? 'webkitHidden' : ''));
 
-/** Набор базовых переменных, связанных с отправкой данных */
+/** Basic variables related to sending data */
 let doDropfieldRefresh = true;
 let doSubmit = false;
 let blockDefaultSubmit = false;
@@ -38,7 +38,7 @@ let hrefAfterModalClose = null;
 const filesDirProtectRegexp = document.location.protocol + '//' + document.location.hostname + '/uploads/';
 const filesDirProtect = new RegExp(filesDirProtectRegexp, 'i');
 
-/** Хранит состояние подгрузки различных блоков стилей (css) и логики (js) в разных разделах сайта, а также различных библиотек вендоров (libraries) и завязанных на них функций (functions)*/
+/** Tracks the loading state of style (css) and logic (js) blocks in site sections, as well as vendor libraries (libraries) and the functions bound to them (functions) */
 const dataLoaded = {
     css: {},
     js: {},
@@ -46,13 +46,13 @@ const dataLoaded = {
     functions: {}
 };
 
-/** Хранит все FraymElement'ы
+/** Stores all FraymElements
  * 
  * @type {Map<string, FraymElement>}
 */
 const fraymElementsMap = new Map();
 
-/** Хранит основной обсервер для listener'ов */
+/** Stores the main observer for listeners */
 const globalFraymListenersObserver = new MutationObserver((mutations) => {
     if (activeListeners.size === 0) return;
 
@@ -73,45 +73,45 @@ const globalFraymListenersObserver = new MutationObserver((mutations) => {
     processInBatches(nodesToProcess);
 });
 
-/** Хранит все listener'ы данной конкретной страницы
+/** Stores all listeners of the current page
  * 
  * @type {Map<FraymElement, Object>}
 */
 const activeListeners = new Map();
 
-/** Хранит все коллбэки (успеха и провала) для соответствующих действий */
+/** Stores all callbacks (success and error) for the corresponding actions */
 const actionRequestCallbacks = {
     'success': {},
     'error': {}
 };
 
-/** Массив действий, для которых необходимо при провале подавить вывод в формате noty полученного сообщения в actionRequest */
+/** Actions for which actionRequest must not show the received error message as a noty */
 const actionRequestSupressErrorForActions = [];
 
-/** Массив wysiwyg-элементов для дальнейшего доступа к ним при необходимости обрабатывать ввод, например */
+/** Wysiwyg elements, kept for later access, e.g. to process input */
 const wysiwygObjs = new Map();
 
-/** Массив FilePond-элементов для корректировки передаваемых на сервер значений */
+/** FilePond elements, used to adjust the values sent to the server */
 const filepondObjs = new Map();
 
-/** Массив предварительно загруженных изображений */
+/** Preloaded images */
 const preloadedImages = [];
 
-/** Переменная, хранящая открытый Noty-диалог / промпт */
+/** The currently open Noty dialog / prompt */
 let notyDialog = null;
 
-/** Реестр активных таймеров */
+/** Registry of active timers */
 const _debounceTimers = {};
 
-/** Массив сообщений */
+/** Messages */
 window['messages'] = defaultFor(window['messages'], []);
 
-/** Механизм сокрытия / показа полей в зависимости от других полей */
+/** Showing / hiding fields depending on other fields */
 let dynamicFieldsList = [];
 let currentDynamicFieldsList = [];
 let dependencyItemsMap = new Map();
 
-/** Проверка сделанных свайпов для переключения между вкладками на странице */
+/** Swipe detection for switching between tabs on the page */
 let touchingDevice = false;
 let touchstartX = 0;
 let touchendX = 0;
@@ -121,7 +121,7 @@ let swipeTimeDiff = 0;
 let swipeTimeThreshold = 200;
 let swipeDiffThreshold = 50;
 
-/** Переменные для автоподгрузки svg из бэкграундов в DOM (для управления через css) */
+/** Variables for inlining background svgs into the DOM (to control them via css) */
 const sbiSelector = '.sbi:not(.loading):not(.loaded)';
 const sbiObserver = new MutationObserver((mutations) => {
     const nodesToProcess = [];
@@ -147,16 +147,16 @@ const sbiObserver = new MutationObserver((mutations) => {
 });
 
 ready(() => {
-    /** Проверяем, поддерживает ли браузер изменение адреса */
+    /** Check whether the browser supports changing the address */
     if ('pushState' in history) {
-        /** Заменяем базовый вариант истории первой открытой страницы на расширенный, с указанием url'а, чтобы соблюсти консистентность данных при
-         *  дальнейшей навигации */
+        /** Replace the basic history entry of the first opened page with an extended one that includes the url, to keep the data consistent during
+         *  further navigation */
         history.replaceState({
             'href': document.location.href,
             'replacedDiv': 'div.maincontent_data'
         }, document.title, document.location.href);
 
-        /** Автоматическое добавление заголовка динамической загрузки Fraym-Request=true к любому запросу страниц внутри сайта */
+        /** Automatically add the dynamic loading header Fraym-Request=true to every request for pages within the site */
         _(document).on('click', `[href^="/"], [href*="${document.location.protocol}//${document.location.hostname}"]`, function (e) {
             if (!popStateChanging) {
                 let self = _(this);
@@ -179,7 +179,7 @@ ready(() => {
             }
         });
 
-        /** Поддержка кнопок ведущих вовне */
+        /** Support for buttons leading outside */
         _(document).on('click', `button[href]:not(.careful):not(.fraymmodal-window):not([href^="/"]):not([href*="${document.location.protocol}//${document.location.hostname}"])`, function (e) {
             e.preventDefault();
 
@@ -192,7 +192,7 @@ ready(() => {
             }
         });
 
-        /** Настраиваем перехват событий нажатия кнопок "назад" и "вперед" в браузере */
+        /** Intercept the browser's "back" and "forward" buttons */
         window.onpopstate = function (e) {
             if (e.state) {
                 popStateChanging = true;
@@ -201,7 +201,7 @@ ready(() => {
             }
         };
     } else {
-        /** Альтернативные обработчики ссылок на кнопках для несовременных браузеров */
+        /** Alternative link handlers on buttons for outdated browsers */
         _(document).on('click', `button[href]:not(.careful):not(.fraymmodal-window)`, function (e) {
             e.preventDefault();
 
@@ -215,7 +215,7 @@ ready(() => {
         });
     }
 
-    /** Подключение локалей с последующей инициализацией всех основных элементов */
+    /** Load locales, then initialize all core elements */
     const localeUrls = elAll('.localeUrl');
     let localeLoadedCounter = 0;
 
@@ -235,22 +235,22 @@ ready(() => {
     }
 
     function postLocalesLoad() {
-        /** Полная инициализация всех основных элементов */
+        /** Full initialization of all core elements */
         fraymInit(true);
     }
 });
 
-/** Инициализация всех основных элементов Fraym с последующим выполнением projectInit */
+/** Initialize all core Fraym elements, then run projectInit */
 async function fraymInit(withDocumentEvents, updateHash) {
-    /** Фиксируем время начала отработки */
+    /** Record the start time */
     startTime = new Date().getTime();
 
     if (withDocumentEvents) {
-        /** Запуск глобального observer'а для всех событий */
+        /** Start the global observer for all events */
         globalFraymListenersObserver.observe(document.body, { childList: true, subtree: true });
     }
 
-    /** Очищаем из fraymElementsMap всё кроме ключа document, т.е. установленных перманентных элементов / листенеров */
+    /** Clear everything from fraymElementsMap except the document key, i.e. the permanent elements / listeners */
     for (const [key, value] of fraymElementsMap.entries()) {
         if (key !== document && key !== window) {
             let hasActiveElement = false;
@@ -268,7 +268,7 @@ async function fraymInit(withDocumentEvents, updateHash) {
         }
     }
 
-    /** Очищаем переменные, хранившие объекты страницы */
+    /** Clear the variables that held page objects */
     for (const [key, value] of filepondObjs.entries()) {
         if (!el(`input[type="hidden"][name="${key}"]`)) {
             filepondObjs.delete(key);
@@ -281,7 +281,7 @@ async function fraymInit(withDocumentEvents, updateHash) {
         }
     }
 
-    /** Дальнейшая обработка */
+    /** Further processing */
 
     updateHash = defaultFor(updateHash, false);
 
@@ -319,10 +319,10 @@ async function fraymInit(withDocumentEvents, updateHash) {
     showExecutionTime('Tabs');
 
     if (withDocumentEvents) {
-        /** Всплывающие уведомления */
+        /** Pop-up notifications */
         fraymNotyInit();
 
-        /** Всплывающие подсказки / тултипы */
+        /** Pop-up hints / tooltips */
         _(document).on('mouseenter', '[title]:not([data-tooltip-text])', function () {
             const self = _(this, { noCache: true });
             const title = self.attr('title');
@@ -334,7 +334,7 @@ async function fraymInit(withDocumentEvents, updateHash) {
             self.attr('title', null).destroy();
         })
 
-        /** Открытие календаря на полях datetime-local */
+        /** Open the calendar on datetime-local fields */
         _(document).on('click', '[type="datetime-local"]', function () {
             if (typeof this.showPicker === 'function') {
                 this.showPicker();
@@ -347,12 +347,12 @@ async function fraymInit(withDocumentEvents, updateHash) {
             }
         })
 
-        /** Блокировка дефолтного поведения при нажатии на кнопку */
+        /** Prevent the default behavior on button click */
         _(document).on('click', 'button', function (e) {
             e.preventDefault();
         })
 
-        /** Кнопка добавления группы объектов */
+        /** Button for adding a group of objects */
         _(document).on('click', 'button.add_group', function (e) {
             e.stopImmediatePropagation();
 
@@ -458,7 +458,7 @@ async function fraymInit(withDocumentEvents, updateHash) {
             }
         });
 
-        /** ВЫПАДАЮЩИЙ МНОЖЕСТВЕННЫЙ СПИСОК */
+        /** DROPDOWN MULTISELECT */
 
         _(document).on('click', '.dropfield div.options a', function (e) {
             e.stopImmediatePropagation();
@@ -500,7 +500,7 @@ async function fraymInit(withDocumentEvents, updateHash) {
                     hasSome = true;
 
                     if (type === 'checkbox' && el(`a[rel="${self.attr('id')}"]`, df.asDomElement())) {
-                        //не надо дублировать
+                        //no need to duplicate
                     } else {
                         df.insert(`<div class="options">${text}<a rel="${self.attr('id')}"></a></div>`, 'end');
                     }
@@ -521,7 +521,7 @@ async function fraymInit(withDocumentEvents, updateHash) {
         _(document).on('keyup change', '.dropfield2_search input', function () {
             const self = _(this);
 
-            /** Ждем немного возможного дальнейшего ввода */
+            /** Wait a bit for possible further input */
             debounce('filterDropfield', filterDropfield, 200, self, self.val());
         });
 
@@ -621,7 +621,7 @@ async function fraymInit(withDocumentEvents, updateHash) {
             }
         });
 
-        /** ВАЛИДАТОРЫ */
+        /** VALIDATORS */
 
         _(document)
             .on('change keyup', 'input[type="text"][maxlength], input[type="password"][maxlength]', function () {
@@ -659,7 +659,7 @@ async function fraymInit(withDocumentEvents, updateHash) {
                 checkNumeric(self);
             });
 
-        /** ПЕРЕКЛЮЧЕНИЕ МЕЖДУ ПОЛЯМИ ФОРМЫ */
+        /** SWITCHING BETWEEN FORM FIELDS */
 
         _(document).on('click', '.field', function (e) {
             const target = e.target;
@@ -707,7 +707,7 @@ async function fraymInit(withDocumentEvents, updateHash) {
             }
         });
 
-        /** ПАНЕЛЬ ФИЛЬТРОВ */
+        /** FILTERS PANEL */
 
         _(document).on('click', 'div.indexer_toggle', function () {
             const self = _(this);
@@ -730,7 +730,7 @@ async function fraymInit(withDocumentEvents, updateHash) {
             }
         });
 
-        /** КНОПКИ И ЗАПРОСЫ НА СЕРВЕР */
+        /** BUTTONS AND SERVER REQUESTS */
 
         _(document).on('click', '[action_request]:not(.careful)', function (e) {
             e.preventDefault();
@@ -749,7 +749,7 @@ async function fraymInit(withDocumentEvents, updateHash) {
             const self = _(this);
 
             if (self.hasClass('fraymmodal-window')) {
-                /** Не надо ничего делать: есть другой обработчик всех модальных окон */
+                /** Nothing to do here: all modal windows have their own handler */
             } else {
                 self.addClass('triggered');
                 self.closest('form')?.trigger('submit');
@@ -954,7 +954,7 @@ async function fraymInit(withDocumentEvents, updateHash) {
 
                         if (jsonData['redirect'] !== undefined) {
                             if (jsonData['redirect'] == 'stayhere') {
-                                /** При обновлении проверяем нет ли модального окна. Если есть, обновляем контент в нем. */
+                                /** On refresh, check for a modal window. If there is one, refresh its content. */
                                 if (el('.fraymmodal-overlay.shown')) {
                                     const hash = window.location.hash.substring(1);
                                     const hashElement = el('[hash="' + hash + '"]');
@@ -972,7 +972,7 @@ async function fraymInit(withDocumentEvents, updateHash) {
                                 if (self.is('[no_dynamic_content]')) {
                                     window.location = jsonData['redirect'];
                                 } else {
-                                    /** При прямом перенаправлении проверяем нет ли модального окна, закрываем его и только потом переходим */
+                                    /** On a direct redirect, check for a modal window, close it and only then navigate */
                                     if (el('.fraymmodal-overlay.shown')) {
                                         hrefAfterModalClose = jsonData['redirect'];
                                         _('.fraymmodal-overlay.shown').click();
@@ -1104,7 +1104,7 @@ async function fraymInit(withDocumentEvents, updateHash) {
             return true;
         });
 
-        /** ЭЛЕМЕНТЫ ДИЗАЙНА */
+        /** DESIGN ELEMENTS */
 
         _(document).on('keydown', function (e) {
             const keyCode = e.keyCode || e.which;
@@ -1153,7 +1153,7 @@ async function fraymInit(withDocumentEvents, updateHash) {
             }
         });
 
-        /** Стрелочки направления сортировок Excel-подобной таблицы объектов */
+        /** Sorting direction arrows of the Excel-like objects table */
         _(document).on('mouseenter', '.menu a', function () {
             const self = _(this);
 
@@ -1180,14 +1180,14 @@ async function fraymInit(withDocumentEvents, updateHash) {
             }
         });
 
-        /** В типе cardtable у созданных cardtable_card автоматически исправляем названия, если они есть */
+        /** In the cardtable type, automatically fix the names of created cardtable_card elements, if any */
         _(document).on('keyup', 'div.multi_objects_table.cards div.td input[name^="name"]', function () {
             const self = _(this);
 
             self.closest('div.tr')?.find('span.cardtable_card_num_name')?.text(self.val());
         });
 
-        /** Глобальные события документа: click, scroll, resize, touch, wheel. Обязаны идти в самом конце, иначе они будут исполняться раньше времени и их нельзя будет отменить с помощью e.stopImmediatePropagation() */
+        /** Global document events: click, scroll, resize, touch, wheel. They must come at the very end, otherwise they would run too early and could not be cancelled with e.stopImmediatePropagation() */
         _(document)
             .on('touchstart', function () {
                 touchingDevice = true;
@@ -1228,19 +1228,19 @@ async function fraymInit(withDocumentEvents, updateHash) {
                 });
             });
 
-        /** Автоподгрузка фоновых svg */
+        /** Auto-inlining of background svgs */
         loadSbiBackground(elAll(sbiSelector));
         sbiObserver.observe(document.body, { childList: true, subtree: true });
 
         showExecutionTime('Document events end');
     }
 
-    /** Защита от svg файлов без viewbox'а */
+    /** Protection against svg files without a viewBox */
     fixSvgWithoutViewBox();
 
     _('select[name="searchAllTextFieldsValues"]').trigger('change');
 
-    /** Проверка наличия hash'а и открытие модального окна, если есть */
+    /** Check for a hash and open the modal window if there is one */
     if (window.location.hash !== '' && (withDocumentEvents || popStateChanging || updateHash)) {
         const hash = window.location.hash.substring(1);
         const element = el(`.fraymmodal-window[hash="${hash}"]`);
@@ -1273,7 +1273,7 @@ async function fraymInit(withDocumentEvents, updateHash) {
         }
     }
 
-    /** Перемотка панели вкладок на выбранную */
+    /** Scroll the tabs panel to the selected tab */
     if (mobilecheck()) {
         ifDataLoaded(
             'fraymTabsApply',
@@ -1298,7 +1298,7 @@ async function fraymInit(withDocumentEvents, updateHash) {
 
     showExecutionTime('fraymInit end');
 
-    /** Инициализация всех дополнительных элементов */
+    /** Initialize all additional elements */
     if (typeof projectInit === 'function') {
         await projectInit(withDocumentEvents, updateHash);
     } else {
@@ -1306,9 +1306,9 @@ async function fraymInit(withDocumentEvents, updateHash) {
     }
 }
 
-/** БАЗОВЫЕ ФУНКЦИИ */
+/** BASE FUNCTIONS */
 
-/** Готовность документа к работе */
+/** Document ready */
 function ready(fn) {
     try {
         if (
@@ -1325,7 +1325,7 @@ function ready(fn) {
     }
 }
 
-/** Вывод в консоль времени исполнения элемента */
+/** Log the element execution time to the console */
 function showExecutionTime(message) {
     if (showTimeMode) {
         message = defaultFor(message, 'Execution time');
@@ -1336,12 +1336,12 @@ function showExecutionTime(message) {
     }
 }
 
-/** Проверка значения на установленность и возврата или значения, или значения по умолчанию */
+/** Return the value if it is set, otherwise the default value */
 function defaultFor(arg, val) {
     return arg !== undefined && arg !== '' && arg !== null ? arg : val;
 }
 
-/** Конвертирование имени, содержащего квадратные скобки */
+/** Convert a name containing square brackets */
 function convertName(str, char) {
     if (str !== undefined) {
         str = str.substring(char);
@@ -1352,7 +1352,7 @@ function convertName(str, char) {
     return str;
 }
 
-/** Очистка фигурных кавычек в строке */
+/** Strip curly braces from a string */
 function clearBraces(str) {
     str = str.replace('{', '');
     str = str.replace('}', '');
@@ -1360,29 +1360,29 @@ function clearBraces(str) {
     return str;
 }
 
-/** Превращение <br> в перенос строки */
+/** Convert <br> to a line break */
 String.prototype.br2nl = function () {
     return this.replace(/<br\s*\/?>/gi, "\n");
 };
 
-/** Превращение переноса строки в <br> */
+/** Convert a line break to <br> */
 String.prototype.nl2br = function () {
     return this.replace(/\n/g, "<br />");
 };
 
-/** Превращение переноса строки в пробел */
+/** Convert a line break to a space */
 String.prototype.nl2space = function () {
     return this.replace(/\n/g, " ");
 };
 
-/** Нормализуем json-данные в массивы вместо объектов */
+/** Normalize json data into arrays instead of objects */
 function objectToArray(data) {
     data = Array.from(data, value => value);
 
     return data;
 }
 
-/** Нормализация входящего(-их) объекта(-ов) в массив */
+/** Normalize the incoming object(s) into an array */
 function normalizeToArray(elements) {
     if (elements === undefined) {
         return [];
@@ -1414,18 +1414,18 @@ function normalizeToArray(elements) {
     return results;
 }
 
-/** Выбор элемента */
+/** Select an element */
 const el = (sel, parent) => (parent || document).querySelector(sel);
 
-/** Выбор элементов */
+/** Select elements */
 const elAll = (sel, parent) => (parent || document).querySelectorAll(sel);
 
-/** Упрощенное создание элемента
+/** Simplified element creation
  * @return Element
 */
 const elNew = (tag, props) => Object.assign(document.createElement(tag), props);
 
-/** Создание элемента из HTML
+/** Create an element from HTML
  * @return Element
 */
 const elFromHTML = (html) => {
@@ -1439,7 +1439,7 @@ const elFromHTML = (html) => {
     return template.content.firstChild;
 };
 
-/** Извлечение строго одного DOM-элемента из строки / FraymElement */
+/** Extract exactly one DOM element from a string / FraymElement */
 const domElementFromAnything = (element) =>
     element?.nodeType ?
         element :
@@ -1453,7 +1453,7 @@ const domElementFromAnything = (element) =>
                 )
         );
 
-/** Функция применения коллбэка к каждому элементу массива / объекта (замена $.each) */
+/** Apply a callback to each element of an array / object (replacement for $.each) */
 const _each = (collection, callback) => {
     if (Array.isArray(collection) || collection instanceof Map) {
         collection.forEach(callback);
@@ -1474,7 +1474,7 @@ const _each = (collection, callback) => {
  * @param {FraymElement|null|undefined} target
  */
 
-/** Выставляет коллбэк для успешного actionRequest
+/** Sets the callback for a successful actionRequest
  * 
  * @param {string} callbackName 
  * @param {actionRequestCallbackSuccess} callback 
@@ -1492,7 +1492,7 @@ const _arSuccess = (callbackName, callback) => {
  * @param {Response|undefined} error
  */
 
-/** Выставляет коллбэк для неуспешного actionRequest
+/** Sets the callback for a failed actionRequest
  * 
  * @param {string} callbackName 
  * @param {actionRequestCallbackError} callback 
@@ -1501,7 +1501,7 @@ const _arError = (callbackName, callback) => {
     actionRequestCallbacks.error[callbackName] = callback;
 }
 
-/** Краткая функция, создающая FraymElement и инициализирующая его в карте
+/** Shorthand that creates a FraymElement and registers it in the map
  * 
  * @return {FraymElement}
  */
@@ -1554,7 +1554,7 @@ class FraymElement {
         }
     }
 
-    /** Снимаем все активные листенеры
+    /** Remove all active listeners
      * 
      * @return {FraymElement}
      */
@@ -2276,7 +2276,7 @@ class FraymElement {
     }
 }
 
-/** Подключение листенеров пачками с паузами для прорисовки */
+/** Attach listeners in batches with pauses for rendering */
 function processInBatches(items, startIndex = 0) {
     const BATCH_SIZE = 50;
     const endIndex = Math.min(startIndex + BATCH_SIZE, items.length);
@@ -2317,12 +2317,12 @@ function processInBatches(items, startIndex = 0) {
     }
 }
 
-/** Прокрутка окна на нужную высоту */
+/** Scroll the window to the given height */
 function scrollWindow(height) {
     _(window, { noCache: true }).scrollTop(height).destroy();
 }
 
-/** Проверка браузера */
+/** Browser check */
 function mobilecheck() {
     let check = false;
 
@@ -2333,7 +2333,7 @@ function mobilecheck() {
     return check;
 }
 
-/** Создаём/читаем deviceId из localStorage (уникален для этого браузера/устройства) **/
+/** Create/read deviceId from localStorage (unique for this browser/device) **/
 function getOrCreateDeviceId() {
     const deviceKey = 'deviceId';
     let id = localStorage.getItem(deviceKey);
@@ -2346,7 +2346,7 @@ function getOrCreateDeviceId() {
     return id;
 }
 
-/** Создание уникального hash'а из строки */
+/** Create a unique hash from a string */
 function hashCode(s) {
     let hash = 0,
         i, l, char;
@@ -2364,7 +2364,7 @@ function hashCode(s) {
     return hash;
 }
 
-/** Таймаут в структуре delay(200).then(() => {}); */
+/** Timeout in the form delay(200).then(() => {}); */
 function delay(ms) {
     ms = defaultFor(ms, 200);
 
@@ -2372,11 +2372,11 @@ function delay(ms) {
 }
 
 /**
- * Выполняет функцию с задержкой, автоматически очищая предыдущий таймер по ID.
+ * Runs a function with a delay, automatically clearing the previous timer with the same ID.
  * @param {string} id
  * @param {Function} func
  * @param {number} delay
- * @param {...*} [args] - Аргументы, которые будут переданы в функцию func
+ * @param {...*} [args] - Arguments to pass to func
  */
 function debounce(id, func, delay, ...args) {
     if (_debounceTimers[id]) {
@@ -2389,7 +2389,7 @@ function debounce(id, func, delay, ...args) {
     }, delay);
 }
 
-/** Получение корректных цифр выделения в textarea */
+/** Get correct selection positions in a textarea */
 function getCursorPosition(element) {
     const input = domElementFromAnything(element);
 
@@ -2410,7 +2410,7 @@ function getCursorPosition(element) {
     return 0;
 }
 
-/** Смена раскладки с английской на русскую */
+/** Switch the keyboard layout from English to Russian */
 function autoLayoutKeyboard(str) {
     const replacer = {
         "q": "й", "w": "ц", "e": "у", "r": "к", "t": "е", "y": "н", "u": "г",
@@ -2425,17 +2425,17 @@ function autoLayoutKeyboard(str) {
     });
 }
 
-/** Получение расширения файла */
+/** Get the file extension */
 function getExtension(file_name) {
     return file_name.substr((file_name.lastIndexOf('.') + 1));
 }
 
-/** Получение базового пути сайта */
+/** Get the site base path */
 function absolutePath() {
     return 'https://' + window.location.hostname;
 }
 
-/** Парсинг URL'ов */
+/** URL parsing */
 function parseUri(str) {
     const o = {
         strictMode: false,
@@ -2464,7 +2464,7 @@ function parseUri(str) {
     return uri;
 }
 
-/** Проверка значения на то, что оно число */
+/** Check whether the value is a number */
 function isNumeric(num) {
     if (typeof num === 'number') return num - num === 0;
     if (typeof num === 'string' && num.trim() !== '')
@@ -2473,12 +2473,12 @@ function isNumeric(num) {
     return false;
 }
 
-/** Проверка значения на то, что оно int */
+/** Check whether the value is an int */
 function isInt(num) {
     return !isNaN(num) && (function (x) { return (x | 0) === x; })(parseFloat(num));
 }
 
-/** Отсечение смайликов */
+/** Strip emoji */
 function removeInvalidChars(field) {
     const ranges = [
         '\ud83c[\udf00-\udfff]', // U+1F300 to U+1F3FF
@@ -2489,7 +2489,7 @@ function removeInvalidChars(field) {
     field.value = field.value.replace(new RegExp(ranges.join('|'), 'g'), '');
 }
 
-/** Импортируем svg в код страницы, чтобы управлять ими через css */
+/** Import svg into the page code to control it via css */
 function loadSbiBackground(sbiElements) {
     const itemsToLoad = new Map();
 
@@ -2554,7 +2554,7 @@ function loadSbiBackground(sbiElements) {
     })
 }
 
-/** Исправление svg без viewBox */
+/** Fix svg without a viewBox */
 function fixSvgWithoutViewBox() {
     if (el('svg:not([viewBox])')) {
         _('svg:not([viewBox])').each(function () {
@@ -2569,12 +2569,12 @@ function fixSvgWithoutViewBox() {
     }
 }
 
-/** Определение текущей локали */
+/** Detect the current locale */
 function getLocale() {
     return LOCALE.localeCode;
 }
 
-/** Открытие и закрытие любых меню */
+/** Open and close any menu */
 function submenuToggle(button, submenu) {
     _(button).on('click close', function (e) {
         e.stopImmediatePropagation();
@@ -2594,7 +2594,7 @@ function submenuToggle(button, submenu) {
     })
 }
 
-/** В зависимости от значения показать div со вставленным значением или же скрыть его и обнулить значение */
+/** Depending on the value, show the div with the inserted value, or hide it and reset the value */
 const showHideByValue = function (selector, value) {
     const element = _(selector, { noCache: true });
 
@@ -2607,13 +2607,13 @@ const showHideByValue = function (selector, value) {
     element.destroy();
 }
 
-/** Отслеживание свайпов */
+/** Swipe tracking */
 function handleSwipe(elem) {
     if (elem) {
         let check = _(elem);
 
         while (check.parent()?.asDomElement()) {
-            /** Если у любого родительского элемента overflow-x: auto, значит пользователь просто прокручивал элемент */
+            /** If any parent element has overflow-x: auto, the user was just scrolling that element */
             if (check.css('overflow-x') == 'auto') {
                 return false;
             }
@@ -2685,9 +2685,9 @@ function handleSwipe(elem) {
 }
 
 
-/** ФУНКЦИИ ПОДГРУЗКИ ДАННЫХ */
+/** DATA LOADING FUNCTIONS */
 
-/** Изменение текущего адреса страницы методами javascript и динамической подгрузки содержания */
+/** Change the current page address via javascript and load the content dynamically */
 function updateState(newHref, replacedDiv, form) {
     replacedDiv = defaultFor(replacedDiv, 'div.maincontent_data');
 
@@ -2696,13 +2696,13 @@ function updateState(newHref, replacedDiv, form) {
 
     if (newHrefParsed.file !== 'index.php') {
         if (popStateChanging && currentHrefParsed.path === newHrefParsed.path) {
-            /** Если изменилась только вкладка / модальная страница и это было изменение из истории браузера */
+            /** If only the tab / modal page changed and the change came from the browser history */
             if (currentHrefParsed.anchor !== newHrefParsed.anchor) {
                 if (newHrefParsed.anchor === '' && el(`li.fraymtabs-active a#${currentHrefParsed.anchor}`)) {
-                    /** Если хэша больше нет, а до этого была открыта tab-вкладка по хэшу, то переходим на вкладку по умолчанию */
+                    /** If the hash is gone and a tab was previously opened by hash, switch to the default tab */
                     _(`li.fraymtabs-active a#${currentHrefParsed.anchor}`).closest('ul')?.find('a')?.first().click();
                 } else if (newHrefParsed.anchor === '' && el('.fraymmodal-overlay.shown')) {
-                    /** Если хэша больше нет, а до этого было открыто модальное окно, то отдаем закрытие ему на обработку */
+                    /** If the hash is gone and a modal window was previously open, let the modal window handle closing */
                     _('.fraymmodal-overlay.shown').click();
                 } else if (newHrefParsed.anchor != '') {
                     if (el(`#${newHrefParsed.anchor}`)) {
@@ -2710,13 +2710,13 @@ function updateState(newHref, replacedDiv, form) {
                     } else if (el(`[hash="${newHrefParsed.anchor}"]`)) {
                         _(`[hash="${newHrefParsed.anchor}"]`).click();
                     } else {
-                        /** Это нестандартный хэш, передаем его кастомной функции обработки */
+                        /** This is a non-standard hash, pass it to the custom handler */
                         if (typeof customHashHandler === 'function') {
                             customHashHandler(newHrefParsed);
                         }
                     }
                 } else {
-                    /** Хэша нет, но и обработчики фреймворка не знают, что делать. Передаем url кастомной функции обработки. */
+                    /** No hash, and the framework handlers don't know what to do. Pass the url to the custom handler. */
                     if (typeof customHashHandler === 'function') {
                         customHashHandler(newHrefParsed);
                     }
@@ -2724,8 +2724,8 @@ function updateState(newHref, replacedDiv, form) {
 
                 currentHref = newHref;
             } else {
-                //хэш точно такой же, значит, где-то баг с управлением историей
-                console.error('popStateChanging, но хэш не изменился');
+                //the hash is exactly the same, so there is a bug in history management somewhere
+                console.error('popStateChanging, but the hash has not changed');
             }
         } else {
             if ("pushState" in history) {
@@ -2790,7 +2790,7 @@ function updateState(newHref, replacedDiv, form) {
 
                     currentHref = newHref;
 
-                    /** Меняем url в истории на корректный, если это не переход по истории */
+                    /** Replace the url in history with the correct one, unless this is a history navigation */
                     if (!popStateChanging && (currentHrefParsed.path !== newHrefParsed.path || currentHrefParsed.anchor !== newHrefParsed.anchor)) {
                         history.pushState({
                             'href': newHref,
@@ -2800,10 +2800,10 @@ function updateState(newHref, replacedDiv, form) {
 
                     showExecutionTime('updateState history.pushState');
 
-                    /** Меняем шапку сайта */
+                    /** Update the site header */
                     document.title = result.pageTitle;
 
-                    /** Меняем og реквизиты, если есть */
+                    /** Update the og properties, if any */
                     if (el('meta[property="og:title"]')) {
                         _('meta[property="og:title"]').attr('content', result.pageTitle);
                     }
@@ -2811,7 +2811,7 @@ function updateState(newHref, replacedDiv, form) {
                         _('meta[property="og:url"]').attr('content', newHref);
                     }
 
-                    /** Выставляем динамический контент в тело сайта */
+                    /** Put the dynamic content into the site body */
                     _('div.indexer').remove();
 
                     showExecutionTime('updateState indexer and doubles removed');
@@ -2835,21 +2835,21 @@ function updateState(newHref, replacedDiv, form) {
                         const scripts = _(replacedDiv).asDomElement()?.getElementsByTagName('script');
 
                         if (scripts) {
-                            /** Снапшот: appendChild может мутировать живую HTMLCollection. */
+                            /** Snapshot: appendChild may mutate the live HTMLCollection. */
                             for (const oldScript of Array.from(scripts)) {
                                 const newScript = document.createElement('script');
 
                                 if (oldScript.src) {
-                                    /** Внешний скрипт: переносим src/type, чтобы он реально загрузился (раньше игнорировался). */
+                                    /** External script: copy src/type so it actually loads (it used to be ignored). */
                                     newScript.src = oldScript.src;
 
                                     if (oldScript.type) {
                                         newScript.type = oldScript.type;
                                     }
                                 } else {
-                                    /** Инлайн-скрипт: оборачиваем в IIFE — top-level const/let становятся локальными,
-                                     *  иначе повторное объявление при повторном визите → SyntaxError.
-                                     *  \n перед })(); защищает от хвостового // line-комментария. */
+                                    /** Inline script: wrap it in an IIFE so top-level const/let become local,
+                                     *  otherwise re-declaring them on a repeat visit → SyntaxError.
+                                     *  The \n before })(); guards against a trailing // line comment. */
                                     newScript.text = '(function(){\n' + oldScript.text + '\n})();';
                                 }
 
@@ -2863,12 +2863,12 @@ function updateState(newHref, replacedDiv, form) {
                         window.location = newHref;
                     }
 
-                    /** Переинициализируем все элементы */
+                    /** Reinitialize all elements */
                     fraymInit(false, true).then(() => {
                         showExecutionTime('updateState pre additional actions');
 
                         if (newHrefParsed.anchor === '' && el('.fraymmodal-overlay.shown')) {
-                            /** Если хэша больше нет, а до этого было открыто модальное окно, то отдаем закрытие ему на обработку */
+                            /** If the hash is gone and a modal window was previously open, let the modal window handle closing */
                             _('.fraymmodal-overlay.shown').click();
                         }
 
@@ -2924,11 +2924,11 @@ function updateState(newHref, replacedDiv, form) {
     return true;
 }
 
-/** Изменение состояния хэша в истории различными отдельными компонентами: модальными окнами и вкладками */
+/** Update the hash state in history from separate components: modal windows and tabs */
 function componentsUpdateState(new_anchor) {
     if ("pushState" in history) {
         if (!popStateChanging) {
-            /** Проверяем, внесен ли этот url уже в историю с таким же хэшем, и если это не так, то заносим */
+            /** Check whether this url with the same hash is already in history, and add it if not */
             const currentHrefParsed = parseUri(currentHref);
 
             if (currentHrefParsed.anchor !== new_anchor) {
@@ -2939,12 +2939,12 @@ function componentsUpdateState(new_anchor) {
                 currentHref = link;
             }
 
-            /** Если нам нужно было куда-то перейти после закрытия модального окна */
+            /** If we had to navigate somewhere after closing the modal window */
             if (hrefAfterModalClose) {
                 updateState(hrefAfterModalClose);
                 hrefAfterModalClose = null;
             } else {
-                /** Переинициализируем все элементы */
+                /** Reinitialize all elements */
                 fraymInit(false);
             }
         } else {
@@ -2955,7 +2955,7 @@ function componentsUpdateState(new_anchor) {
     }
 }
 
-/** Получение данных
+/** Fetch data
  * @param {string} url
  * @param {object} options
  * @param {object|null} data
@@ -2994,8 +2994,8 @@ async function fetchData(url, options = {}, data = null) {
         const response = await fetch(url, requestOptions);
 
         if (!response.ok) {
-            /** Ошибочный статус несёт конверт с response_text, response_error_code и fields —
-             *  отдаём тело вызывающему, иначе на месте внятного сообщения окажется общая ошибка */
+            /** An error status carries an envelope with response_text, response_error_code and fields —
+             *  return the body to the caller, otherwise a generic error would replace the meaningful message */
             if (options.json) {
                 try {
                     return await response.json();
@@ -3011,7 +3011,7 @@ async function fetchData(url, options = {}, data = null) {
     }
 }
 
-/** Корректировка работы fetch на автоматическую обработку api-токенов */
+/** Make fetch handle api tokens automatically */
 window.fetch = new Proxy(window.fetch, {
     async apply(fetch, thisArg, args) {
         let [url, options = {}] = args;
@@ -3026,8 +3026,8 @@ window.fetch = new Proxy(window.fetch, {
             }
         }
 
-        /** JWT в httpOnly cookie authToken (JS его не читает) — refresh-эндпоинт выставляет свежую cookie.
-         *  Single-flight против параллельных refresh на одновременных 401. */
+        /** JWT lives in the httpOnly cookie authToken (unreadable by JS) — the refresh endpoint sets a fresh cookie.
+         *  Single-flight against parallel refreshes on simultaneous 401s. */
         const refreshAuthToken = async function () {
             if (jwtTokenRefreshing) {
                 await jwtTokenRefreshing.catch(() => { });
@@ -3042,9 +3042,9 @@ window.fetch = new Proxy(window.fetch, {
 
         const localUrl = isLocalUrl(url);
 
-        /** Запросы к модулю авторизации не проксируем: на самом refresh это дало бы бесконечный цикл,
-         *  а на входе по логину и паролю 401 означает неверный пароль, а не протухший токен —
-         *  обновлять нечего, а повтор запроса был бы вторым вводом пароля */
+        /** Requests to the auth module are not proxied: on refresh itself this would cause an infinite loop,
+         *  and on login by username and password a 401 means a wrong password, not an expired token —
+         *  there is nothing to refresh, and retrying the request would amount to a second password attempt */
         const refreshUrlString = (typeof url === 'string' ? url : url.url);
         const isAuthRequest = refreshUrlString && refreshUrlString.indexOf(`${absolutePath()}/login/`) === 0;
 
@@ -3055,7 +3055,7 @@ window.fetch = new Proxy(window.fetch, {
             return new Response(null, { status: 0, statusText: "NetworkError" });
         }
 
-        /** Токен протух (401) — обновляем cookie и повторяем запрос один раз */
+        /** The token has expired (401) — refresh the cookie and retry the request once */
         if (localUrl && !isAuthRequest && response.status === 401) {
             await refreshAuthToken();
 
@@ -3065,7 +3065,7 @@ window.fetch = new Proxy(window.fetch, {
                 return new Response(null, { status: 0, statusText: "NetworkError" });
             }
 
-            /** Refresh не восстановил сессию — уходим на login (не молча). */
+            /** Refresh did not restore the session — go to login (not silently). */
             if (response.status === 401) {
                 const loginUrl = `${absolutePath()}/login/`;
 
@@ -3080,7 +3080,7 @@ window.fetch = new Proxy(window.fetch, {
     },
 });
 
-/** Функция проверки подгруженности элемента данных */
+/** Check whether a data element has loaded */
 function dataElementLoad(dataName, element, loadingFunction, loadedFunction, options, dataElementCategory, attempt) {
     if (
         dataName === undefined ||
@@ -3115,7 +3115,7 @@ function dataElementLoad(dataName, element, loadingFunction, loadedFunction, opt
     }
 }
 
-/** Функция проверки подгруженности конкретной библиотеки для действия по зависимой функции */
+/** Check whether a specific library has loaded before running a dependent function */
 function verifyDataLoaded(dataCategory, dataName, functionName) {
     const intervalId = setInterval(function () {
         if (dataLoaded[dataCategory][dataName]) {
@@ -3130,7 +3130,7 @@ function verifyDataLoaded(dataCategory, dataName, functionName) {
         });
 }
 
-/** Функция исполнения коллбэка по факту проверки подгруженности родительского скрипта */
+/** Run the callback once the parent script is confirmed loaded */
 function ifDataLoaded(dataName, functionName, element, callback, dataCategory) {
     dataCategory = defaultFor(dataCategory, 'libraries');
 
@@ -3146,7 +3146,7 @@ function ifDataLoaded(dataName, functionName, element, callback, dataCategory) {
     );
 }
 
-/** Подгрузка javascript на лету */
+/** Load javascript on the fly */
 const getScript = url => new Promise((resolve, reject) => {
     const script = document.createElement('script');
     script.src = url;
@@ -3167,7 +3167,7 @@ const getScript = url => new Promise((resolve, reject) => {
     document.head.appendChild(script);
 })
 
-/** Подключение css на лету */
+/** Load css on the fly */
 const cssLoad = (name, url) => new Promise((resolve, reject) => {
     if (!dataLoaded['css'][name] && !el(`link[href="${url}"]`)) {
         const link = document.createElement('link');
@@ -3189,7 +3189,7 @@ const cssLoad = (name, url) => new Promise((resolve, reject) => {
     }
 })
 
-/** Подключение javascript и css соответствующего раздела в процессе init */
+/** Load the javascript and css of the current section during init */
 const loadJsCssForCMSVC = cmsvc => new Promise((resolve, reject) => {
     if (!cmsvc) {
         const currentHrefParsed = parseUri(currentHref);
@@ -3225,7 +3225,7 @@ const loadJsCssForCMSVC = cmsvc => new Promise((resolve, reject) => {
     })
 })
 
-/** Подключение javascript компоненты из-под другого javascript в процессе init */
+/** Load a javascript component from another javascript during init */
 const loadJsComponent = component => new Promise((resolve, reject) => {
     if (!component) {
         resolve();
@@ -3252,7 +3252,7 @@ const loadJsComponent = component => new Promise((resolve, reject) => {
     }
 })
 
-/** Предзагрузка изображений, картинку которых нужно менять на лету без мигания */
+/** Preload images that have to be swapped on the fly without flickering */
 function preload(arrayOfImages) {
     _each(arrayOfImages, image => {
         if (preloadedImages.indexOf(image) == -1) {
@@ -3264,9 +3264,9 @@ function preload(arrayOfImages) {
     })
 }
 
-/** Обработка всех динамических запросов, не требующих перезагрузки страницы */
+/** Handle all dynamic requests that don't require a page reload */
 function actionRequest(params, target) {
-    //URL получаем из params.action
+    //the URL comes from params.action
     const paramsAction = params.action;
     const n = paramsAction.lastIndexOf('/');
 
@@ -3338,8 +3338,8 @@ function actionRequest(params, target) {
             actionRequestCallbacks.error[params.action](null, params, target, error);
         }
     }).finally(function () {
-        /** Re-enable кнопок и снятие loader'а — ПОСЛЕ завершения запроса (в .finally),
-         *  а не синхронно: иначе возможен double-submit и мигание loader'а. */
+        /** Re-enable buttons and remove the loader AFTER the request completes (in .finally),
+         *  not synchronously: otherwise a double submit and loader flicker are possible. */
         if (params.dynamicForm && target) {
             target.find('button.main')?.each(function () {
                 _(this, { noCache: true }).enable().destroy();
@@ -3349,9 +3349,9 @@ function actionRequest(params, target) {
     });
 }
 
-/** ВАЛИДАЦИИ */
+/** VALIDATIONS */
 
-/** Выделение проблемного поля */
+/** Highlight the problematic field */
 function simpleValidate(self, condition, title) {
     if (self.val() === '') {
         self
@@ -3371,7 +3371,7 @@ function simpleValidate(self, condition, title) {
     }
 }
 
-/** Проверка заполненности поля исключительно цифрами */
+/** Check that the field contains digits only */
 function checkNumeric(self) {
     if (self.val()) {
         const t = parseFloat(self.val());
@@ -3388,7 +3388,7 @@ function checkNumeric(self) {
     }
 }
 
-/** Подсчет длины текста в текстовом поле */
+/** Count the text length in a text field */
 function validateTextMaxLength(field, maxlimit) {
     const val = field.val();
 
@@ -3403,7 +3403,7 @@ function validateTextMaxLength(field, maxlimit) {
     }
 }
 
-/** Проверка url'ов */
+/** Url check */
 function checkHttpUrl(string) {
     if (!string) {
         return false;
@@ -3424,7 +3424,7 @@ function checkHttpUrl(string) {
     return givenURL.protocol === "http:" || givenURL.protocol === "https:";
 }
 
-/** Валидация email'ов */
+/** Email validation */
 function validateEmail(email = '') {
     const validEmailPattern = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
@@ -3432,9 +3432,9 @@ function validateEmail(email = '') {
 }
 
 
-/** СТАНДАРТНЫЕ КОМПОНЕНТЫ FRAYM */
+/** STANDARD FRAYM COMPONENTS */
 
-/** Обработка вывода подсказки и выделения текущего поля в форме */
+/** Show the hint and highlight the current form field */
 function showHelpAndName(nameOrElement, parentElement) {
     _('.help:not(.fixed_help)').hide();
 
@@ -3458,7 +3458,7 @@ function showHelpAndName(nameOrElement, parentElement) {
     }
 }
 
-/** Закрепление кнопок фильтрации и сброса фильтра */
+/** Pin the filter and reset filter buttons */
 function fixateIndexerButtons() {
     if (el('div.indexer')) {
         const element = _('div.indexer div.filtersBlock').last();
@@ -3472,7 +3472,7 @@ function fixateIndexerButtons() {
     }
 }
 
-/** Добавление loader'а */
+/** Add a loader */
 function appendLoader(element) {
     element = domElementFromAnything(element);
 
@@ -3489,7 +3489,7 @@ function appendLoader(element) {
     }
 }
 
-/** Уничтожение loader'а */
+/** Remove a loader */
 function removeLoader(element) {
     element = domElementFromAnything(element);
 
@@ -3501,7 +3501,7 @@ function removeLoader(element) {
     element.classList.remove('loader_appended');
 }
 
-/** Создание placeholder в поле формы */
+/** Create a placeholder in a form field */
 function fraymPlaceholder(field) {
     if (field !== undefined) {
         field = _(domElementFromAnything(field));
@@ -3538,7 +3538,7 @@ function fraymPlaceholder(field) {
     }
 }
 
-/** Сортировка выпадающего множественного списка */
+/** Sort the dropdown multiselect */
 function filterDropfield(el, string) {
     if (el instanceof FraymElement) {
         const container = el.closest('.dropfield2');
@@ -3583,7 +3583,7 @@ function filterDropfield(el, string) {
     }
 }
 
-/** Показ и сокрытие динамических полей
+/** Show and hide dynamic fields
  * 
  * @param {HTMLElement} [element]
 */
@@ -3648,9 +3648,9 @@ function toggleDynamicFields(element = null) {
 
                     elem.hide();
                     doDropfieldRefresh = false;
-                    /** Значения скрытого поля не стираем, а отключаем: так на сервер они не уйдут, но при обратном показе поля
-                     * пользователь увидит и введённое им ранее, и значение по умолчанию. Отключаем только то, что не было
-                     * отключено до нас — чужие блокировки помечены не будут и при показе поля останутся на месте */
+                    /** Values of a hidden field are not erased but disabled: this way they are not sent to the server, but when the field is shown again
+                     * the user sees both their earlier input and the default value. Only what was not disabled before us gets disabled —
+                     * someone else's locks are not marked and stay in place when the field is shown */
                     elem.find('input, select, textarea')?.each(function () {
                         if (!this.disabled) {
                             this.setAttribute('data-dynamic-disabled', '1');
@@ -3673,7 +3673,7 @@ function toggleDynamicFields(element = null) {
                     doDropfieldRefresh = true;
                     _(`[id="selected_${item.name}"]`).trigger('refresh');
                     elem.show().trigger('change');
-                    /** Значения вернулись в игру только сейчас, поэтому и поля, зависящие уже от этого поля, пересчитываем после показа */
+                    /** The values are back in play only now, so fields that depend on this field are recalculated after it is shown */
                     _each(enabledElements, enabledElement => _(enabledElement, { noCache: true }).change().destroy());
                 }
             }
@@ -3681,14 +3681,14 @@ function toggleDynamicFields(element = null) {
     })
 }
 
-/** Формирование карты значений динамических полей */
+/** Build the value map of dynamic fields */
 function getDependencyItemsMapElementValues(elemName) {
     let value = [];
 
     const checkSelect = el(`select[name="${elemName}"]`);
 
     if (checkSelect) {
-        /** Поле, скрытое по зависимости, отключено нами: его значение сохраняется в форме, но для показа других полей уже не действует */
+        /** A field hidden by a dependency is disabled by us: its value stays in the form but no longer affects showing other fields */
         if (!checkSelect.hasAttribute('data-dynamic-disabled')) {
             value.push(checkSelect.value);
         }
@@ -3727,7 +3727,7 @@ function getDependencyItemsMapElementValues(elemName) {
     return value;
 }
 
-/** Инициализация динамических полей */
+/** Initialize dynamic fields */
 function initDynamicFields() {
     dependencyItemsMap = new Map();
 
@@ -3736,8 +3736,8 @@ function initDynamicFields() {
     if (dynamicFieldsList.length > 0) {
         currentDynamicFieldsList = dynamicFieldsList;
 
-        //структура массива currentDynamicFieldsList: {name = name скрываемого элемента, dependencies = массив объектов родителей, по которым происходит скрытие}. В объекте родителе структура {type = тип (select, multiselect), name = name элемента, value = value, при которой скрываемый элемент показывается}
-        //ВАЖНО: все поля, от которых зависит один элемент, должны быть в одной записи массива dynamicFieldsList (нельзя на один элемент несколько dynamicFieldsList[] делать)
+        //structure of currentDynamicFieldsList: {name = name of the hidden element, dependencies = array of parent objects that control hiding}. Parent object structure: {type = type (select, multiselect), name = element name, value = value at which the hidden element is shown}
+        //IMPORTANT: all fields a single element depends on must be in one entry of dynamicFieldsList (don't create several dynamicFieldsList[] entries for one element)
 
         _each(currentDynamicFieldsList.reverse(), function (item) {
             _each(item.dependencies, function (dependencyItems) {
@@ -3803,9 +3803,9 @@ function initDynamicFields() {
 }
 
 
-/** ФУНКЦИИ ДАТ, ВРЕМЕНИ И СООТВЕТСТВУЮЩИХ ПОЛЕЙ */
+/** DATE, TIME AND RELATED FIELD FUNCTIONS */
 
-/** Четыре функции логики обработки различных полей date и datetime-local */
+/** Four functions handling the logic of date and datetime-local fields */
 function dateFromLogicTimepicker(dateFromField) {
     const dateFromFieldValue = new Date(dateFromField.value);
     const dateToField = el('input.dpkr_time[name="date_to[0]"]');
@@ -3862,7 +3862,7 @@ function dateToLogic(dateToField) {
     }
 }
 
-/** Вывод объекта даты или строки в стандартном UTC представлении вида: 2023-10-28T19:00 */
+/** Output a date object or string in the standard UTC format: 2023-10-28T19:00 */
 function dateFormat(date, withTime) {
     withTime = defaultFor(withTime, false);
     let local = new Date(date);
@@ -3870,13 +3870,13 @@ function dateFormat(date, withTime) {
     return local.toJSON().slice(0, (withTime ? 16 : 10));
 }
 
-/** Вывод объекта даты в стандартном для локали представлении: 28.10.2023 19:00 */
+/** Output a date object in the locale's standard format: 28.10.2023 19:00 */
 function dateFormatText(date, withTime, locale) {
     locale = defaultFor(locale, 'ru-RU');
     return withTime ? date.toLocaleDateString(locale, { dateStyle: "short" }) + " " + date.toLocaleTimeString(locale, { timeStyle: "short" }) : date.toLocaleDateString(locale);
 }
 
-/** Превращение строковой даты в js-дату */
+/** Convert a string date into a js date */
 function dateFromString(str) {
     const date = str.substring(0, 10);
     const time = str.substring(11, 16);
@@ -3885,7 +3885,7 @@ function dateFromString(str) {
     return new Date(parseInt(dateFrom[2]), parseInt(dateFrom[1]) - 1, parseInt(dateFrom[0]), parseInt(timeFrom[0]), parseInt(timeFrom[1]));
 }
 
-/** Хелпер для денег */
+/** Money helper */
 function formatMoney(amount, currency = 'USD', locale = navigator.language) {
     return new Intl.NumberFormat(locale, {
         style: 'currency',
@@ -3893,7 +3893,7 @@ function formatMoney(amount, currency = 'USD', locale = navigator.language) {
     }).format(amount);
 }
 
-/** Хелпер для дат */
+/** Dates helper */
 function formatDate(dateString, locale = navigator.language) {
     const date = new Date(dateString);
 
@@ -3904,7 +3904,7 @@ function formatDate(dateString, locale = navigator.language) {
     }).format(date);
 }
 
-/** Инициализация функций полей date и datetime-local */
+/** Initialize date and datetime-local field functions */
 function fraymDateTimePickerApply() {
     _(document)
         .on('change', 'input.dpkr_time[name="date_from[0]"]', function () {
@@ -3930,9 +3930,9 @@ function fraymDateTimePickerApply() {
 }
 
 
-/** ДОПОЛНИТЕЛЬНО ПОДГРУЖАЕМЫЕ КОМПОНЕНТЫ FRAYM */
+/** ADDITIONALLY LOADED FRAYM COMPONENTS */
 
-/** Инициализация инпутов загрузки файлов (стайлера) */
+/** Initialize file upload inputs (styler) */
 function fraymFileBrowseStylerApply(element) {
     const scriptName = 'fraymFileBrowseStylerApply';
 
@@ -3963,7 +3963,7 @@ function fraymFileBrowseStylerApply(element) {
     );
 }
 
-/** Инициализация загрузчика файлов */
+/** Initialize the file uploader */
 function fraymFileUploadApply(element) {
     const scriptName = 'fraymFileUploadApply';
 
@@ -4136,7 +4136,7 @@ function fraymFileUploadInputsFix() {
     })
 }
 
-/** Инициализация wysiwyg*/
+/** Initialize wysiwyg */
 function fraymWysiwygApply(element) {
     const scriptName = 'fraymWysiwygApply';
 
@@ -4218,7 +4218,7 @@ function fraymWysiwygApply(element) {
     );
 }
 
-/** Инициализация simplemodal */
+/** Initialize simplemodal */
 function fraymModalApply(element) {
     const scriptName = 'fraymModalApply';
 
@@ -4251,7 +4251,7 @@ function fraymModalApply(element) {
     );
 }
 
-/** Инициализация вкладок */
+/** Initialize tabs */
 function fraymTabsApply(element) {
     const scriptName = 'fraymTabsApply';
 
@@ -4271,7 +4271,7 @@ function fraymTabsApply(element) {
     );
 }
 
-/** Инициализация noty */
+/** Initialize noty */
 function fraymNotyInit() {
     const scriptName = 'fraymNotyInit';
 
@@ -4293,7 +4293,7 @@ function fraymNotyInit() {
     );
 }
 
-/** Создание диалогового запроса на подтверждение noty */
+/** Create a noty confirmation dialog */
 function fraymNotyPrompt(button, text, callback, callbackCancel) {
     ifDataLoaded(
         'fraymNotyInit',
@@ -4345,7 +4345,7 @@ function fraymNotyPrompt(button, text, callback, callbackCancel) {
     );
 }
 
-/** Настройка кнопки удаления объекта через диалоговый запрос noty */
+/** Set up an object delete button with a noty confirmation dialog */
 function notyDeleteButton(button, params) {
     ifDataLoaded(
         'fraymNotyInit',
@@ -4372,7 +4372,7 @@ function notyDeleteButton(button, params) {
                         if (jsonData['redirect'] === 'stayhere') {
                             updateState(currentHref);
                         } else {
-                            /** При прямом перенаправлении проверяем нет ли модального окна, закрываем его и только потом переходим */
+                            /** On a direct redirect, check for a modal window, close it and only then navigate */
                             if (el('.fraymmodal-overlay.shown')) {
                                 hrefAfterModalClose = jsonData['redirect'];
                                 _('.fraymmodal-overlay.shown').click();
@@ -4393,7 +4393,7 @@ function notyDeleteButton(button, params) {
                                         type: data[0],
                                     });
                                 } else {
-                                    /** Это данные для удаления определенной строки из табличного представления или карточки */
+                                    /** Data for removing a specific row from the table view or card */
                                     _(`div.tr[obj_id="${data[1]}"]`).trigger('remove').remove();
                                 }
                             })
@@ -4410,7 +4410,7 @@ function notyDeleteButton(button, params) {
     );
 }
 
-/** Конструктор окошек запроса данных */
+/** Builder of data request dialogs */
 function createPseudoPrompt(html, title, additionalButtons, onClose, onShow) {
     ifDataLoaded(
         'fraymNotyInit',
@@ -4464,7 +4464,7 @@ function createPseudoPrompt(html, title, additionalButtons, onClose, onShow) {
     );
 }
 
-/** Получение DOM-элемента noty диалога */
+/** Get the DOM element of the noty dialog */
 function getNotyDialogDOM() {
     const dom = notyDialog?.layoutDom;
 
@@ -4475,7 +4475,7 @@ function getNotyDialogDOM() {
     return null;
 }
 
-/** Вывод сообщения-нотификации */
+/** Show a notification message */
 function showMessage(options) {
     let timeout = options.timeout || (options.text.length * 25);
     if (timeout < 5000) {
@@ -4498,7 +4498,7 @@ function showMessage(options) {
     );
 }
 
-/** Вывод сообщений-нотификаций из массива */
+/** Show notification messages from an array */
 function showMessages() {
     for (let message of messages) {
         showMessage({
@@ -4509,14 +4509,14 @@ function showMessages() {
     messages = [];
 }
 
-/** Данные из конверта ответа: служебные ключи лежат в корне, полезная нагрузка — в response_data **/
+/** Data from the response envelope: service keys are in the root, the payload is in response_data **/
 function responseData(jsonData) {
     return jsonData !== null && typeof jsonData === 'object' && jsonData['response_data'] !== undefined
         ? jsonData['response_data']
         : jsonData;
 }
 
-/** Вывод сообщений-нотификаций из JSON-ответа **/
+/** Show notification messages from a JSON response **/
 function showMessagesFromJson(jsonData) {
     if (jsonData['messages'] !== undefined) {
         _each(jsonData['messages'], (data) => {
@@ -4527,7 +4527,7 @@ function showMessagesFromJson(jsonData) {
     }
 }
 
-/** Вывод одиночного сообщения-нотификаций из JSON-ответа динамического действия **/
+/** Show a single notification message from a dynamic action JSON response **/
 function showMessageFromJsonData(jsonData) {
     showMessage({
         text: jsonData['response_text'],
@@ -4536,7 +4536,7 @@ function showMessageFromJsonData(jsonData) {
     });
 }
 
-/** Инициализация autocomplete */
+/** Initialize autocomplete */
 function fraymAutocompleteApply(element, options) {
     const scriptName = 'fraymAutocompleteApply';
 
@@ -4559,7 +4559,7 @@ function fraymAutocompleteApply(element, options) {
     );
 }
 
-/** Инициализация drag&drop */
+/** Initialize drag&drop */
 function fraymDragDropApply(element, options) {
     const scriptName = 'fraymDragDropApply';
 

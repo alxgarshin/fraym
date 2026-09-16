@@ -25,7 +25,7 @@ trait SqlTrait
             $baseName = INNER_PATH . 'src/Migrations/Sql/Sql' .
                 ObjectsHelper::getClassShortName($this::class, ($this instanceof BaseMigration ? 'Migration' : 'Fixture'));
 
-            /** Для MySQL сначала ищем файл с суффиксом .mysql.sql, затем fallback на .sql */
+            /** For MySQL, first look for a file with the .mysql.sql suffix, then fall back to .sql */
             $mysqlPath = $baseName . '.mysql.sql';
 
             $sqlPath = ($_ENV['DATABASE_TYPE'] === 'mysql' && file_exists($mysqlPath))

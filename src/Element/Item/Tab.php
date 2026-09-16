@@ -18,7 +18,7 @@ use Fraym\Element\Item\Trait\CloneTrait;
 use Fraym\Entity\TableEntity;
 use Fraym\Interface\ElementAttribute;
 
-/** Вкладка */
+/** Tab */
 class Tab extends BaseElement
 {
     use CloneTrait;

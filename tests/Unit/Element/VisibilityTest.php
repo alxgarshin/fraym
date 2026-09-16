@@ -16,7 +16,7 @@ namespace Fraym\Tests\Unit\Element;
 use Fraym\Element\{Attribute, Item};
 use PHPUnit\Framework\TestCase;
 
-/** S2: DOM-видимость и «скрыт когда пусто» — полиморфные методы вместо instanceof-цепочки */
+/** S2: DOM visibility and "hidden when empty" — polymorphic methods instead of an instanceof chain */
 final class VisibilityTest extends TestCase
 {
     public function testStructuralTypesAreNotDomVisible(): void

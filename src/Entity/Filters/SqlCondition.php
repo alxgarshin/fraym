@@ -13,10 +13,10 @@ declare(strict_types=1);
 
 namespace Fraym\Entity\Filters;
 
-/** Построитель параметризованных WHERE-условий фильтров.
- * Каждый экземпляр держит собственный автоинкрементный счётчик плейсхолдеров (`:f_0`, `:f_1`, …),
- * поэтому имена не конфликтуют в пределах одного набора условий. Значения пользователя проходят
- * ТОЛЬКО через bind() → в SQL попадает плейсхолдер, само значение — в params (формат DB->query). */
+/** Builder of parameterized WHERE conditions for filters.
+ * Each instance keeps its own auto-incrementing placeholder counter (`:f_0`, `:f_1`, …),
+ * so names don't conflict within one set of conditions. User values go
+ * ONLY through bind() → the SQL gets a placeholder, the value itself goes to params (DB->query format). */
 final class SqlCondition
 {
     private int $counter = 0;
@@ -24,8 +24,8 @@ final class SqlCondition
     /** @var array<int, array{0: string, 1: mixed}> */
     private array $params = [];
 
-    /** $placeholderPrefix различает наборы плейсхолдеров, попадающие в ОДИН запрос
-     *  (фильтры и restrict-права мержатся вместе — иначе :f_0 столкнулись бы). */
+    /** $placeholderPrefix distinguishes placeholder sets that end up in ONE query
+     *  (filters and restrict rights are merged together — otherwise :f_0 would collide). */
     public function __construct(private string $placeholderPrefix = 'f')
     {
     }

@@ -17,7 +17,7 @@ use Fraym\Interface\Helper;
 
 abstract class CookieHelper implements Helper
 {
-    /** Массовое создание cookie
+    /** Batch cookie creation
      * @param array<string|int, string|int|array> $cookies
      */
     public static function batchSetCookie(array $cookies, ?int $time = null, ?string $samesite = null): void
@@ -33,7 +33,7 @@ abstract class CookieHelper implements Helper
         }
     }
 
-    /** Получение cookie (в том числе выставленного только что) */
+    /** Get a cookie (including one set just now) */
     public static function getCookie(string $cookieName, bool $isArray = false): string|array|null
     {
         $cookies = self::getCookiesFromHeaders();
@@ -49,7 +49,7 @@ abstract class CookieHelper implements Helper
         return $isArray ? [] : null;
     }
 
-    /** Массовое удаление cookie
+    /** Batch cookie deletion
      * @param string[] $cookiesNames
      */
     public static function batchDeleteCookie(array $cookiesNames, ?string $samesite = null): void
@@ -61,7 +61,7 @@ abstract class CookieHelper implements Helper
         }
     }
 
-    /** Удаление всех cookie сайта */
+    /** Delete all site cookies */
     public static function deleteAllCookies(?string $samesite = null): void
     {
         if (isset($_SERVER['HTTP_COOKIE'])) {
@@ -75,7 +75,7 @@ abstract class CookieHelper implements Helper
         }
     }
 
-    /** Получение стандартного набора свойств для всех cookie проекта */
+    /** Get the standard set of properties for all project cookies */
     public static function getOptions(?int $time = null, ?string $samesite = null): array
     {
         return [
@@ -88,9 +88,9 @@ abstract class CookieHelper implements Helper
         ];
     }
 
-    /** Получение текущих cookie из header'а.
-     * Разбирает сырую строку Set-Cookie вручную: имена с точками/пробелами не искажаются
-     * (в отличие от parse_str), при повторной установке в рамках запроса берётся последнее значение. */
+    /** Get the current cookies from the headers.
+     * Parses the raw Set-Cookie string manually: names with dots/spaces aren't mangled
+     * (unlike parse_str), and if a cookie is set repeatedly within the request, the last value wins. */
     private static function getCookiesFromHeaders(): array
     {
         $cookies = [];
@@ -120,9 +120,9 @@ abstract class CookieHelper implements Helper
         return $cookies;
     }
 
-    /** Удаление определённой cookie из headers с сохранением исходных опций остальных.
-     * Работает с сырыми строками Set-Cookie: удаляет только целевую, остальные re-emit'ит
-     * как есть (не теряя их expires/samesite/domain, в отличие от перевыставления через setcookie). */
+    /** Delete a specific cookie from the headers while keeping the original options of the others.
+     * Works with raw Set-Cookie strings: removes only the target one and re-emits the rest
+     * as is (without losing their expires/samesite/domain, unlike re-setting them via setcookie). */
     private static function deleteCookieFromHeaders(string $cookieKey): void
     {
         $preserved = [];

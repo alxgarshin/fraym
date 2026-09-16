@@ -134,7 +134,7 @@ class FraymAutocomplete {
 		autocomplete.options.change.call(autocomplete, value);
 
 		if (value.length >= this.options.minLength || (!value && autocomplete.options.makeEmptySearches)) {
-			/** Ждем немного возможного дальнейшего ввода */
+			/** Wait a bit for possible further input */
 			window.clearTimeout(window['autocomplete_search']);
 
 			window['autocomplete_search'] = setTimeout(function () {

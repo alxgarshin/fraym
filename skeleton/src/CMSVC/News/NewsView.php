@@ -77,7 +77,7 @@ class NewsView extends BaseView
                 $RESPONSE_DATA .= $text;
                 $RESPONSE_DATA .= '</div>';
 
-                // заглушка для добавления видео-файлов
+                // stub for adding video files
                 if (preg_match('#video#', $RESPONSE_DATA)) {
                     $video = '';
 

@@ -17,7 +17,7 @@ use Fraym\Element\Attribute as Attribute;
 use Fraym\Element\Item\Trait\CloneTrait;
 use Fraym\Interface\ElementAttribute;
 
-/** Заголовок */
+/** Heading */
 class H1 extends BaseElement
 {
     use CloneTrait;

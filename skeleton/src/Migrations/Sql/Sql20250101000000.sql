@@ -1,4 +1,4 @@
--- Включаем расширение для генерации UUID
+-- Enable the extension for UUID generation
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- ----------------------------

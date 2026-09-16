@@ -31,7 +31,7 @@ class Wysiwyg extends BaseElement implements InterfaceMinMaxChar, HasDefaultValu
         MinMaxCharValidator::class,
     ];
 
-    /** Значение по умолчанию */
+    /** Default value */
     public mixed $defaultValue {
         get => $this->_val;
         set {

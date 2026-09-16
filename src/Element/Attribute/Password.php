@@ -18,7 +18,7 @@ use Fraym\Element\Attribute\Trait\{MinMaxChar};
 use Fraym\Element\Validator\{MinMaxCharValidator, ObligatoryValidator, RepeatPasswordValidator};
 use Fraym\Interface\MinMaxChar as InterfaceMinMaxChar;
 
-/** Пароль */
+/** Password */
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class Password extends BaseElement implements InterfaceMinMaxChar
 {
@@ -31,7 +31,7 @@ class Password extends BaseElement implements InterfaceMinMaxChar
     ];
 
     public function __construct(
-        /** Имя еще одного элемента класса Password для функции: "Введите пароль повторно" */
+        /** Name of another Password element for the "Repeat password" function */
         public ?string $repeatPasswordFieldName = null,
         ?int $minChar = null,
         ?int $maxChar = null,

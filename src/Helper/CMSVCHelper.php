@@ -20,31 +20,31 @@ use RuntimeException;
 
 abstract class CMSVCHelper implements Helper
 {
-    /** Подгрузка контроллера из кэша или создание */
+    /** Load the controller from the cache or create it */
     public static function getController(string $cmsvcName): ?BaseController
     {
         return self::get($cmsvcName, 'Controller');
     }
 
-    /** Подгрузка модели из кэша или создание */
+    /** Load the model from the cache or create it */
     public static function getModel(string $cmsvcName): ?BaseModel
     {
         return self::get($cmsvcName, 'Model');
     }
 
-    /** Подгрузка сервиса из кэша или создание */
+    /** Load the service from the cache or create it */
     public static function getService(string $cmsvcName): ?BaseService
     {
         return self::get($cmsvcName, 'Service');
     }
 
-    /** Подгрузка вьюшки из кэша или создание */
+    /** Load the view from the cache or create it */
     public static function getView(string $cmsvcName): ?BaseView
     {
         return self::get($cmsvcName, 'View');
     }
 
-    /** Подгрузка любого из объектов CMSVC / класса, добавленного через атрибут DependencyInjection, из кэша или же попытка его инициализации */
+    /** Load any CMSVC object / class added via the DependencyInjection attribute from the cache, or try to initialize it */
     public static function get(string $cmsvcNameOrObjectClass, ?string $objectType = null): BaseController|BaseModel|BaseService|BaseView|null
     {
         if ($objectType === null) {
@@ -134,7 +134,7 @@ abstract class CMSVCHelper implements Helper
         return $object;
     }
 
-    /** Подгрузка CMSVC-объекта из кэша */
+    /** Load a CMSVC object from the cache */
     public static function getCMSVC(string $cmsvcName): ?CMSVC
     {
         return CACHE->getFromCache('_CMSVC', 0, TextHelper::mb_lcfirst($cmsvcName));

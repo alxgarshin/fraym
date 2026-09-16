@@ -31,7 +31,7 @@ class LoginController extends BaseController
         return $this->Default();
     }
 
-    /** Восстановление пароля */
+    /** Password recovery */
     public function remind(): void
     {
         if (!AuthHelper::validatePreAuthCsrfToken()) {
@@ -43,7 +43,7 @@ class LoginController extends BaseController
         $loginService->remindPassword();
     }
 
-    /** Обновление JWT: пишет токен в httpOnly cookie authToken (тело ответа пустое — токен недоступен JS) */
+    /** JWT refresh: writes the token to the httpOnly cookie authToken (the response body is empty — the token is inaccessible to JS) */
     public function refreshToken(): void
     {
         $refreshToken = AuthHelper::getRefreshTokenCookie();

@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Fraym\Element\Item;
 
-/** Обертка для создания ссылок вокруг значения элемента */
+/** Wrapper for creating links around the element value */
 class LinkAt
 {
     public function __construct(

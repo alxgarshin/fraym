@@ -18,7 +18,7 @@ use Fraym\Element\Validator\ObligatoryValidator;
 use Fraym\Interface\HasDefaultValue;
 use InvalidArgumentException;
 
-/** Галочка */
+/** Checkbox */
 /** @implements HasDefaultValue<null|string|bool> */
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class Checkbox extends BaseElement implements HasDefaultValue
@@ -27,7 +27,7 @@ class Checkbox extends BaseElement implements HasDefaultValue
         ObligatoryValidator::class,
     ];
 
-    /** Значение по умолчанию */
+    /** Default value */
     public mixed $defaultValue {
         get => $this->_val;
         set {

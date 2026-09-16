@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Fraym\Element\Item;
 
-/** Строка с email */
+/** Email string */
 class Email extends Text
 {
     public static function validateEmail($email): bool|string

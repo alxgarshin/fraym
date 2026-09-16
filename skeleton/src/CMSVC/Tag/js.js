@@ -1,4 +1,4 @@
-/** Редактирование тегов */
+/** Tag editing */
 
 if (withDocumentEvents) {
 

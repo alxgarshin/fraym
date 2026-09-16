@@ -15,15 +15,15 @@ namespace Fraym\Element\Attribute;
 
 use Attribute;
 
-/** Данные используемые во время OnCreate в качестве замены данных элемента */
+/** Data used during OnCreate as a replacement for the element data */
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class OnCreate
 {
     public function __construct(
-        /** Четкие данные элемента */
+        /** Exact element data */
         public mixed $data = null,
 
-        /** Имя функции, предоставляющей данные элемента */
+        /** Name of the function providing the element data */
         public ?string $callback = null,
     ) {
     }

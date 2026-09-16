@@ -15,9 +15,9 @@ namespace Fraym\Enum;
 
 enum SubstituteDataTypeEnum: string
 {
-    /** Поиск по таблице и сортировка по ней же, а не по основной */
+    /** Search in the table and sort by it, rather than by the main one */
     case TABLE = 'table';
 
-    /** Выбор из забитого массива */
+    /** Choice from a hardcoded array */
     case ARRAY = 'array';
 }

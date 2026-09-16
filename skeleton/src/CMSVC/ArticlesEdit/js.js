@@ -1,4 +1,4 @@
-/** Редактирование статей */
+/** Article editing */
 
 if (withDocumentEvents) {
 

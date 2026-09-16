@@ -17,12 +17,12 @@ use Fraym\Element\Attribute as Attribute;
 use Fraym\Element\Item\Trait\CloneTrait;
 use Fraym\Interface\ElementAttribute;
 
-/** Галочка */
+/** Checkbox */
 class Checkbox extends BaseElement
 {
     use CloneTrait;
 
-    /** Значение */
+    /** Value */
     private ?bool $fieldValue;
 
     private Attribute\Checkbox $attribute;

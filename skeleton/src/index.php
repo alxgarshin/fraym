@@ -12,14 +12,14 @@ use Fraym\Helper\{AuthHelper, CookieHelper, DataHelper, LocaleHelper, ResponseHe
 use Fraym\Interface\Response;
 use Fraym\Response\{ArrayResponse, HtmlResponse};
 
-/** Логинимся / выходим */
+/** Log in / log out */
 if ('logout' === ACTION) {
     CURRENT_USER->authLogout();
 } elseif (CURRENT_USER->isLogged() && CURRENT_USER->isBanned()) {
     CURRENT_USER->authLogout(LocaleHelper::getLocale(['user'])['you_re_banned']);
 }
 
-/** Если это первая открытая страница сайта и пользователь залогинен, проверяем, нет ли cookie последней успешно сгенеренной страницы */
+/** If this is the first opened page of the site and the user is logged in, check for a cookie with the last successfully generated page */
 if (
     CURRENT_USER->isLogged() && CookieHelper::getCookie('last_page_visited')
     && !preg_match('#' . ABSOLUTE_PATH . '#', $_SERVER['HTTP_REFERER'] ?? '')
@@ -35,10 +35,10 @@ if (
     }
 }
 
-/** Записываем данные в лог */
+/** Write data to the log */
 DataHelper::activityLog();
 
-/** Подгружаем соответствующий запросу контроллер раздела: он в свою очередь подключает необходимые модели и вьюшку */
+/** Load the section controller for the request: it in turn loads the required models and view */
 $RESPONSE_DATA = null;
 $CMSCVName = TextHelper::snakeCaseToCamelCase(KIND);
 $controllerName = 'App\\CMSVC\\' . $CMSCVName . '\\' . $CMSCVName . 'Controller';
@@ -74,7 +74,7 @@ if (class_exists($controllerName)) {
     }
 }
 
-/** Если в результате обработки контента нет, ошибка 404 */
+/** If processing produced no content, return 404 */
 if (!($RESPONSE_DATA instanceof Response)) {
     if (REQUEST_TYPE->isApiRequest()) {
         ResponseHelper::response404();
@@ -83,7 +83,7 @@ if (!($RESPONSE_DATA instanceof Response)) {
     $RESPONSE_DATA = (new Error404Controller())->construct(CMSVCinit: false)->init()->Default();
 }
 
-/** Подгружаем базовую локаль проекта */
+/** Load the base project locale */
 $LOCALE = LocaleHelper::getLocale(['global']);
 
 $cookieMessages = CookieHelper::getCookie('messages', true);
@@ -106,7 +106,7 @@ if ($RESPONSE_DATA instanceof ArrayResponse) {
     ResponseHelper::setCorsHeaders();
     echo DataHelper::jsonFixedEncode(ResponseHelper::buildEnvelope($RESPONSE_RESULT));
 } elseif ($RESPONSE_DATA instanceof HtmlResponse) {
-    /** Если предоставлено альтернативное название страницы, убеждаемся, что оно идет с большой буквы */
+    /** If an alternative page title is provided, make sure it starts with a capital letter */
     $PAGETITLE = $RESPONSE_DATA->getPagetitle();
 
     if (!is_null($PAGETITLE) && !in_array($PAGETITLE, ['', $LOCALE['sitename']])) {
@@ -117,7 +117,7 @@ if ($RESPONSE_DATA instanceof ArrayResponse) {
         $PAGETITLE = $LOCALE['sitename'];
     }
 
-    /** Сохраняем информацию об адресе текущей страницы */
+    /** Save the address of the current page */
     CookieHelper::batchSetCookie(
         [
             'last_page_visited' => ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']),
@@ -137,12 +137,12 @@ if ($RESPONSE_DATA instanceof ArrayResponse) {
         ResponseHelper::setCorsHeaders();
         echo $RESPONSE_RESULT;
     } else {
-        /** Вносим блоки информации в заданный шаблон визуализации */
+        /** Put the information blocks into the given rendering template */
         $RESPONSE_TEMPLATE = MainTemplate::asHTML();
         $RESPONSE_TEMPLATE = preg_replace('#<!--pagetitle-->#', $PAGETITLE, $RESPONSE_TEMPLATE);
         $RESPONSE_RESULT = preg_replace('#<!--maincontent-->#', DataHelper::pregQuoteReplaced($RESPONSE_DATA->getHtml()), $RESPONSE_TEMPLATE);
 
-        /** Добавляем сообщения-нотификации и CSRF-токен */
+        /** Add notification messages and the CSRF token */
         $messagesPairs = [];
 
         if ($cookieMessages) {
@@ -151,7 +151,7 @@ if ($RESPONSE_DATA instanceof ArrayResponse) {
             }
         }
 
-        /** JSON_HEX_* экранируют < > & ' " → безопасно внутри <script> (не разорвать тег/строку) */
+        /** JSON_HEX_* escape < > & ' " → safe inside <script> (cannot break out of the tag/string) */
         $jsonFlags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE;
 
         $messageArray = '<script>
@@ -164,7 +164,7 @@ if ($RESPONSE_DATA instanceof ArrayResponse) {
         $messageArray .= '</script>';
         $RESPONSE_RESULT = preg_replace('#<!--messages-->#', $messageArray, $RESPONSE_RESULT);
 
-        /** Выводим html */
+        /** Output html */
         echo $RESPONSE_RESULT;
         echo GLOBALTIMER->getTimerDiffStr();
     }

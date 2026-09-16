@@ -22,7 +22,7 @@ use RuntimeException;
 
 trait EntityViewTrait
 {
-    /** HTML или array вывод данных на выдачу */
+    /** HTML or array data output */
     public function view(?ActEnum $act = null, int|string|null $id = null, ?string $contextName = null): ?Response
     {
         $OBJECT_LOCALE = LocaleHelper::getLocale([$this->getNameUsedInLocale()]);
@@ -96,14 +96,14 @@ trait EntityViewTrait
                 $QUERY .= $this->filters->getPreparedSearchQuerySql() .
                     ($ORDER !== "" ? " ORDER BY " . $ORDER : "");
 
-                /** В случае сущности-каталога необходимо провести полную пересборку списка полученных результатов: нужно получить полное дерево до
-                 * соответствующих объектов, если были фильтры, или же просто полный список подобъектов, найденных по запросу.
+                /** For a catalog entity, the list of results must be fully rebuilt: we need the full tree down to
+                 * the matching objects if there were filters, or just the full list of sub-objects found by the query.
                  */
                 if ($this instanceof CatalogEntity) {
                     $DATA = DB->query($QUERY, $QUERY_PARAMS);
 
-                    /** Записываем все id, которые были найдены нативным запросом: в дальнейшем это понадобится для понимания, какой из элементов каталога
-                     * был найден в результате поиска, а какой был найден при создании структуры до найденных элементов.
+                    /** Record all ids found by the native query: later this is needed to tell which catalog elements
+                     * were found by the search and which were found while building the structure leading to them.
                      */
                     $catalogEntityFoundIds = [];
 
@@ -112,7 +112,7 @@ trait EntityViewTrait
                     }
                     $this->catalogEntityFoundIds = $catalogEntityFoundIds;
 
-                    /** Формируем полное дерево объектов */
+                    /** Build the full object tree */
 
                     /** @var CatalogItemEntity $catalogItemEntity */
                     $catalogItemEntity = $this->catalogItemEntity;
@@ -135,14 +135,14 @@ trait EntityViewTrait
                         $viewRestrict->params ?? [],
                     );
 
-                    /** Убираем все элементы, которые отсутствуют в выборке по фильтрам */
+                    /** Remove all elements missing from the filtered selection */
                     $catalogEntityFullTree = DB->chopOffTreeOfItemsBranches(
                         $catalogEntityFullTree,
                         $catalogEntityFoundIds,
                         $catalogItemEntity->tableFieldWithParentId,
                     );
 
-                    /** К оставшемуся дереву объектов применяем LIMIT и OFFSET к верхнему уровню каталога. И фиксируем финальный $ITEMS_TOTAL. */
+                    /** Apply LIMIT and OFFSET to the top catalog level of the remaining object tree. And fix the final $ITEMS_TOTAL. */
                     $topLevelItemsNum = 0;
                     $topLevelItemsCount = 0;
                     $dataGrabStarted = false;
@@ -174,7 +174,7 @@ trait EntityViewTrait
                     unset($catalogEntityFullTree);
                     $ITEMS_TOTAL = $topLevelItemsCount;
 
-                    /** Пересобираем дерево в виде стандартного набора данных из БД для дальнейшей обработки */
+                    /** Rebuild the tree as a standard DB data set for further processing */
                     $DATA = [];
 
                     foreach ($catalogEntitySelectedTree as $catalogEntitySelectedTreeItem) {
@@ -208,7 +208,7 @@ trait EntityViewTrait
                 $RESPONSE_ARRAY = $DATA_FILTERED_BY_CONTEXT;
 
                 if (!REQUEST_TYPE->isApiRequest()) {
-                    /** Открываем div.maincontent_data */
+                    /** Open div.maincontent_data */
                     $RESPONSE_DATA .= '<div class="maincontent_data autocreated' .
                         ($this->filters->getFiltersState() ? ' with_indexer' : '') .
                         ' kind_' . KIND . ' ' . TextHelper::camelCaseToSnakeCase(ObjectsHelper::getClassShortName($this::class)) . ' ' . $act->value . '">';
@@ -217,7 +217,7 @@ trait EntityViewTrait
                         $RESPONSE_DATA .= '<h1 class="form_header"><a href="' . ABSOLUTE_PATH . '/' . KIND . '/">' . $PAGETITLE . '</a></h1>';
                     }
 
-                    /** Добавляем переключатель фильтров */
+                    /** Add the filters toggle */
                     if ($filtersHtml !== '') {
                         $RESPONSE_DATA .= '<div class="indexer_toggle' .
                             ($this->filters->getFiltersState() ? ' indexer_shown' : '') .
@@ -237,13 +237,13 @@ trait EntityViewTrait
                             $RESPONSE_DATA .= $_GLOBALTIMERDRAWREPORT->getTimerDiffStr('<!-- data draw execution time: %ss-->');
                         }
 
-                        /** Ссылка на текущий набор фильтров */
+                        /** Link to the current set of filters */
                         if ($this->filters->getPreparedCurrentFiltersLink() !== '' && $this->filters->getFiltersState()) {
                             $RESPONSE_DATA .= '<div class="copy_filters_link"><a href="' . $this->filters->getPreparedCurrentFiltersLink() .
                                 '" target="_blank">' . $FILTERS_LOCALE['copy_filters_link'] . '</a></div>';
                         }
 
-                        /** Навигатор страниц с объектами */
+                        /** Object pages navigator */
                         if ($this->elementsPerPage) {
                             $RESPONSE_DATA .= $this->drawPageCounter($this->name, PAGE, $ITEMS_TOTAL, $maxItemsOnPage);
 
@@ -252,7 +252,7 @@ trait EntityViewTrait
                             }
                         }
 
-                        /** Закрываем div.maincontent_data */
+                        /** Close div.maincontent_data */
                         $RESPONSE_DATA .= '</div>';
 
                         $RESPONSE_DATA .= $filtersHtml;
@@ -318,7 +318,7 @@ trait EntityViewTrait
                         }
                     }
 
-                    /** Фильтрация данных по контексту обрабатывает массив записей, поэтому одну запись оборачиваем в массив */
+                    /** Filtering data by context processes an array of records, so a single record is wrapped in an array */
                     $DATA = [$DATA];
                 }
 
@@ -335,7 +335,7 @@ trait EntityViewTrait
                 $RESPONSE_ARRAY = $DATA_FILTERED_BY_CONTEXT;
 
                 if (!REQUEST_TYPE->isApiRequest() && $modelRights->viewRight) {
-                    /** Открываем div.maincontent_data */
+                    /** Open div.maincontent_data */
                     $RESPONSE_DATA .= '<div class="maincontent_data autocreated kind_' . KIND .
                         ' ' . TextHelper::camelCaseToSnakeCase(ObjectsHelper::getClassShortName($this::class)) . ' ' . $act->value . '">';
 
@@ -357,7 +357,7 @@ trait EntityViewTrait
                             $RESPONSE_DATA .= $_GLOBALTIMERDRAWREPORT->getTimerDiffStr('<!-- object draw execution time: %ss-->');
                         }
 
-                        /** Закрываем div.maincontent_data */
+                        /** Close div.maincontent_data */
                         $RESPONSE_DATA .= '</div>';
                     } else {
                         $RESPONSE_DATA = '';
@@ -385,7 +385,7 @@ trait EntityViewTrait
         return $this->asHtml($RESPONSE_DATA, $PAGETITLE);
     }
 
-    /** HTML-отрисовка значения элемента в строковом списке объектов */
+    /** HTML rendering of an element value in a row list of objects */
     public function drawElementValue(ElementItem $modelElement, array $DATA_ITEM, ?EntitySortingItem $sortingItem = null): string
     {
         $RESPONSE_DATA = '';
@@ -469,7 +469,7 @@ trait EntityViewTrait
         return $RESPONSE_DATA;
     }
 
-    /** Отфильтровка данных в зависимости от контекста элементов модели
+    /** Filter data depending on the context of the model elements
      * @return array{0: array[], 1: int[]}
      */
     private function filterDataByContext(array $data, array $contexts): array
@@ -477,7 +477,7 @@ trait EntityViewTrait
         $filteredData = [];
         $LIST_OF_FOUND_IDS = [];
 
-        /** Добавляем значения из виртуального поля сущности */
+        /** Add values from the entity's virtual field */
         if ($this->virtualField) {
             foreach ($data as $dataKey => $dataValue) {
                 if ($dataValue[$this->virtualField] ?? false) {
@@ -560,7 +560,7 @@ trait EntityViewTrait
         return [$filteredData, $LIST_OF_FOUND_IDS];
     }
 
-    /** Формирование строки для ORDER BY в запросе
+    /** Build the ORDER BY string for the query
      * @param EntitySortingItem[] $sortingData
      */
     private function getOrderString(array $sortingData, string $mainTablePrefix): array
@@ -581,13 +581,13 @@ trait EntityViewTrait
         foreach ($sortingData as $sortingItemNum => $sortingItem) {
             $sortingItemNum = (int) $sortingItemNum;
 
-            /** Если у $sortingItem выставлен параметр $doNotUseInSorting, мы вообще не включаем его в запрос сортировки данных, никогда */
+            /** If $sortingItem has $doNotUseInSorting set, it is never included in the data sorting query */
             if (!$sortingItem->doNotUseInSorting) {
                 if ($sortingItem->substituteDataType === SubstituteDataTypeEnum::TABLE) {
                     $element = $this->model->getElement($sortingItem->tableFieldName);
 
                     if ($element instanceof Multiselect && !$element->getOne()) {
-                        /** Если вдруг указан мультиселект в качестве поля, нам нужно выдернуть первое значение из поля */
+                        /** If a multiselect is specified as the field, we need to extract the first value from it */
                         $firstElementSql = DB->dialect->jsonLeftJoinFirstElement('t1.' . $sortingItem->tableFieldName);
 
                         $leftJoinedTablesSql .= " LEFT JOIN " .
@@ -612,8 +612,8 @@ trait EntityViewTrait
                     }
                     ++$tablesUsedCount;
                 } elseif ($sortingItem->substituteDataType === SubstituteDataTypeEnum::ARRAY) {
-                    /** Если выставлен параметр doNotUseIfNotSortedByThisField в настройке сортировки, то мы сортируем по данному полю ТОЛЬКО
-                     * в случае, если прямо по нему задана сортировка. Это серьезно облегчает запросы */
+                    /** If doNotUseIfNotSortedByThisField is set in the sorting settings, we sort by this field ONLY
+                     * when sorting by it is explicitly requested. This makes queries much lighter */
                     if (!$sortingItem->doNotUseIfNotSortedByThisField || ($sortingItemNum === $sortingFieldNum && SORTING > 0)) {
                         $substituteDataArray = $sortingItem->substituteDataArray;
 

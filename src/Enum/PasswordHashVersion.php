@@ -15,9 +15,9 @@ namespace Fraym\Enum;
 
 enum PasswordHashVersion: string
 {
-    /** Legacy: Argon2 поверх md5(pepper+password) — перешифровывается при следующем входе */
+    /** Legacy: Argon2 over md5(pepper+password) — rehashed on the next login */
     case WRAPPED_V1 = 'wrapped_v1';
 
-    /** Текущий: Argon2ID поверх pepper+password */
+    /** Current: Argon2ID over pepper+password */
     case FINAL_V2 = 'final_v2';
 }

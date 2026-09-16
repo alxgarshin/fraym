@@ -15,12 +15,12 @@ namespace Fraym\Entity;
 
 use Attribute;
 
-/** Функция перед FraymDelete. Добавляется в Service */
+/** Function before FraymDelete. Added to the Service */
 #[Attribute(Attribute::TARGET_CLASS)]
 class PreDelete
 {
     public function __construct(
-        /** Имя функции  */
+        /** Function name */
         public string $callback = 'preDelete',
     ) {
     }

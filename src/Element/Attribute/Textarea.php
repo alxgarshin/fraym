@@ -19,7 +19,7 @@ use Fraym\Element\Validator\{MinMaxCharValidator, ObligatoryValidator};
 use Fraym\Interface\{HasDefaultValue, MinMaxChar as InterfaceMinMaxChar};
 use InvalidArgumentException;
 
-/** Большое текстовое поле */
+/** Large text field */
 /** @implements HasDefaultValue<null|string> */
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class Textarea extends BaseElement implements InterfaceMinMaxChar, HasDefaultValue
@@ -31,7 +31,7 @@ class Textarea extends BaseElement implements InterfaceMinMaxChar, HasDefaultVal
         MinMaxCharValidator::class,
     ];
 
-    /** Значение по умолчанию */
+    /** Default value */
     public mixed $defaultValue {
         get => $this->_val;
         set {
@@ -48,7 +48,7 @@ class Textarea extends BaseElement implements InterfaceMinMaxChar, HasDefaultVal
     public function __construct(
         mixed $defaultValue = null,
 
-        /** Количество рядов textarea */
+        /** Number of textarea rows */
         public ?int $rows = null,
         ?int $minChar = null,
         ?int $maxChar = null,

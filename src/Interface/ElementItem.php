@@ -20,25 +20,25 @@ use Fraym\Enum\ActEnum;
 
 interface ElementItem
 {
-    /** Название поля: совпадает с названием в БД */
+    /** Field name: matches the name in the DB */
     public ?string $name { get; set; }
 
-    /** Видимое для пользователей название поля */
+    /** Field name visible to users */
     public ?string $shownName { get; set; }
 
-    /** Текст подсказки к полю */
+    /** Field hint text */
     public ?string $helpText { get; set; }
 
-    /** Родительская сущность */
+    /** Parent entity */
     public ?BaseEntity $entity { get; set; }
 
-    /** Родительская модель */
+    /** Parent model */
     public ?BaseModel $model { get; set; }
 
-    /** Данные для замены значения элемента при create */
+    /** Data to replace the element value on create */
     public ?Attribute\OnCreate $create { get; set; }
 
-    /** Данные для замены значения элемента при change */
+    /** Data to replace the element value on change */
     public ?Attribute\OnChange $change { get; set; }
 
     public ?int $lineNumber { get; set; }

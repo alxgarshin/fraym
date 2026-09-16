@@ -19,7 +19,7 @@ abstract class TextHelper implements Helper
 {
     private static $cache = [];
 
-    /** Проверка текстового поля на спам */
+    /** Check a text field for spam */
     public static function checkForSpam(string $text): bool
     {
         $is_spam = false;
@@ -31,7 +31,7 @@ abstract class TextHelper implements Helper
         return $is_spam;
     }
 
-    /** Проверка текстового поля на заполненность */
+    /** Check that a text field is filled in */
     public static function checkForFullfill(string $text): bool
     {
         $text = trim($text);
@@ -39,19 +39,19 @@ abstract class TextHelper implements Helper
         return preg_match('#[a-zа-я]+#i', trim($text)) && mb_strlen(trim($text)) >= 10;
     }
 
-    /** Преобразование первой буквы текста в заглавную */
+    /** Convert the first letter of the text to uppercase */
     public static function mb_ucfirst(string $str): string
     {
         return mb_strtoupper(mb_substr($str, 0, 1)) . mb_substr($str, 1, mb_strlen($str));
     }
 
-    /** Преобразование первой буквы текста в строчную */
+    /** Convert the first letter of the text to lowercase */
     public static function mb_lcfirst(string $str): string
     {
         return mb_strtolower(mb_substr($str, 0, 1)) . mb_substr($str, 1, mb_strlen($str));
     }
 
-    /** Обрезка строки до указанного лимита */
+    /** Truncate a string to the given limit */
     public static function cutStringToLimit(string $string, int $limit = 255, bool $striptags = false): string
     {
         if ($striptags) {
@@ -67,13 +67,13 @@ abstract class TextHelper implements Helper
         return $string;
     }
 
-    /** Превращение всех ссылок в тексте в активные */
+    /** Make all links in the text active */
     public static function basePrepareText(?string $content): ?string
     {
         return self::makeQuotesActive(self::makeATsActive(self::makeURLsActive(self::bbCodesInDescription($content))));
     }
 
-    /** Превращение всех ссылок в тексте в активные */
+    /** Make all links in the text active */
     public static function makeURLsActive(?string $content): ?string
     {
         $content = $content ?? '';
@@ -82,7 +82,7 @@ abstract class TextHelper implements Helper
 
         $content = preg_replace($url_pattern, '<a href="$1" target="_blank">$1</a>', $content);
 
-        /** Замена зря переведенных url'ов в тегах типа img */
+        /** Revert urls wrongly converted inside tags like img */
         $content = preg_replace('#="(https://|http://)<a href=[^>]*>([^<]*)</a>#', '="$1$2', $content);
 
         $content = preg_replace('#href="(?!http://)#', 'href="http://', $content);
@@ -90,7 +90,7 @@ abstract class TextHelper implements Helper
         return preg_replace('#http://https://#', 'https://', $content);
     }
 
-    /** Превращение кодов в форматирование */
+    /** Convert codes into formatting */
     public static function bbCodesInDescription(?string $content): ?string
     {
         $content = $content ?? '';
@@ -102,7 +102,7 @@ abstract class TextHelper implements Helper
         return preg_replace('#\[(http|https|www)(.*?)]#', '<img src="$1$2">', $content);
     }
 
-    /** Превращение > в начале строки в цитату */
+    /** Convert > at the start of a line into a quote */
     public static function makeQuotesActive(?string $content): ?string
     {
         $content = preg_replace('#(<br />|<br/>)#', '<br>', $content);
@@ -124,13 +124,13 @@ abstract class TextHelper implements Helper
         );
     }
 
-    /** Превращение @ обращений в ссылку */
+    /** Convert @ mentions into a link */
     public static function makeATsActive(?string $content): ?string
     {
         return preg_replace('#@([^\[]+)\[(\d+)]#', '<a href="' . ABSOLUTE_PATH . '/people/$2/">$1</a>', $content);
     }
 
-    /** Превращение ссылок на пользователя в @ обращение */
+    /** Convert user links into @ mentions */
     public static function makeATsInactive(?string $content): ?string
     {
         return preg_replace(
@@ -143,7 +143,7 @@ abstract class TextHelper implements Helper
         );
     }
 
-    /** CamelCase в snake_case */
+    /** CamelCase to snake_case */
     public static function camelCaseToSnakeCase(string $name): string
     {
         if (self::$cache[$name] ?? false) {
@@ -155,7 +155,7 @@ abstract class TextHelper implements Helper
         return $result;
     }
 
-    /** snake_case в CamelCase */
+    /** snake_case to CamelCase */
     public static function snakeCaseToCamelCase(string $name, bool $firstWordLowcase = false): string
     {
         $text = str_replace(' ', '', ucwords(str_replace('_', ' ', str_replace('/', '/ ', $name))));

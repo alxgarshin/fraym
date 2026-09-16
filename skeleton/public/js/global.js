@@ -1,6 +1,6 @@
-/** Инициализация различных кастомных элементов, которые могут быть, а могут и отсутствовать на конкретной странице */
+/** Initialization of various custom elements that may or may not be present on a given page */
 async function projectInit(withDocumentEvents, updateHash) {
-    /** Фиксируем время начала отработки */
+    /** Record the start time */
     startTime = new Date().getTime();
 
     updateHash = defaultFor(updateHash, false);
@@ -9,19 +9,19 @@ async function projectInit(withDocumentEvents, updateHash) {
 
     await loadJsCssForCMSVC();
 
-    /** Динамические поля */
+    /** Dynamic fields */
     initDynamicFields();
 
     if (withDocumentEvents) {
-        /** РАЗЛИЧНЫЕ ОТДЕЛЬНЫЕ ФУНКЦИИ */
+        /** MISCELLANEOUS STANDALONE FUNCTIONS */
 
-        /** Антибот */
+        /** Anti-bot */
         _(document).on('click', 'a#approvement_link', function () {
             _('input[name="approvement[0]"]').val(typeof justAnotherVar !== 'undefined' ? justAnotherVar : '');
             _('form[id^="form_"]').find('button.main').click();
         });
 
-        /** ДИНАМИЧЕСКИЕ ДЕЙСТВИЯ */
+        /** DYNAMIC ACTIONS */
 
         _arSuccess('get_captcha', function (jsonData, params, target) {
             const hash = responseData(jsonData)['hash'];
@@ -31,7 +31,7 @@ async function projectInit(withDocumentEvents, updateHash) {
         })
     }
 
-    /** Проверка наличия hash'а и открытие соответствующего элемента, если он есть */
+    /** Check for a hash and open the corresponding element if there is one */
     if (window.location.hash && (withDocumentEvents || popStateChanging || updateHash)) {
         customHashHandler(parseUri(currentHref));
     }
@@ -39,7 +39,7 @@ async function projectInit(withDocumentEvents, updateHash) {
     showExecutionTime('projectInit end');
 }
 
-/** Кастомная функция обработки хэша */
+/** Custom hash handler */
 function customHashHandler(newHrefParsed) {
     newHrefParsed = defaultFor(newHrefParsed, parseUri(newHrefParsed));
 

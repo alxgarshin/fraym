@@ -1,4 +1,4 @@
-/** Регистрация */
+/** Registration */
 
 if (withDocumentEvents) {
 

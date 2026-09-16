@@ -15,12 +15,12 @@ namespace Fraym\Entity;
 
 use Attribute;
 
-/** Функция после FraymDelete. Добавляется в Service */
+/** Function after FraymDelete. Added to the Service */
 #[Attribute(Attribute::TARGET_CLASS)]
 class PostDelete
 {
     public function __construct(
-        /** Имя функции  */
+        /** Function name */
         public string $callback = 'postDelete',
     ) {
     }

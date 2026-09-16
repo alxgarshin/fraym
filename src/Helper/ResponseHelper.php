@@ -19,7 +19,7 @@ use Fraym\Response\ArrayResponse;
 
 abstract class ResponseHelper implements Helper
 {
-    /** Служебные ключи конверта: всё остальное в теле ответа считается данными и уезжает в response_data */
+    /** Envelope service keys: everything else in the response body is treated as data and moved to response_data */
     private const ENVELOPE_KEYS = [
         'response',
         'response_text',
@@ -38,26 +38,26 @@ abstract class ResponseHelper implements Helper
         exit;
     }
 
-    /** Ответ 401: неавторизован */
+    /** 401 response: unauthorized */
     public static function response401(): never
     {
         self::responseWithErrorCode(ResponseErrorCodeEnum::unauthorized);
     }
 
-    /** Ответ 403: доступ запрещён (CSRF) */
+    /** 403 response: access denied (CSRF) */
     public static function response403(): never
     {
         self::responseWithErrorCode(ResponseErrorCodeEnum::forbidden);
     }
 
-    /** Ответ 404: объект не найден */
+    /** 404 response: object not found */
     public static function response404(): never
     {
         self::responseWithErrorCode(ResponseErrorCodeEnum::notFound);
     }
 
-    /** Приведение любого тела ответа к единому конверту.
-     *  Идемпотентно: применяется и в момент печати, и после дозаполнения сообщений в роутере. */
+    /** Bring any response body to the unified envelope.
+     *  Idempotent: applied both at output time and after the router fills in messages. */
     public static function buildEnvelope(array $payload, bool $setHttpStatus = true): array
     {
         $data = $payload['response_data'] ?? null;
@@ -113,7 +113,7 @@ abstract class ResponseHelper implements Helper
         return $envelope;
     }
 
-    /** Установка CORS-заголовков на основе ALLOWED_ORIGINS из .env */
+    /** Set CORS headers based on ALLOWED_ORIGINS from .env */
     public static function setCorsHeaders(): void
     {
         $allowedOrigins = array_filter(
@@ -138,7 +138,7 @@ abstract class ResponseHelper implements Helper
         }
     }
 
-    /** Формирование ответа браузеру после динамического запроса */
+    /** Build the browser response after a dynamic request */
     public static function response(
         array $messages,
         ?string $redirectPath = null,
@@ -177,14 +177,14 @@ abstract class ResponseHelper implements Helper
             }
 
             foreach ($fields as $field) {
-                $response['fields'][] = $field; //массив имен полей
+                $response['fields'][] = $field; //array of field names
             }
         }
 
         return new ArrayResponse($response);
     }
 
-    /** Сокращенное формирование одного ответа браузеру после динамического запроса */
+    /** Shorthand for building a single browser response after a dynamic request */
     public static function responseOneBlock(
         string $messageType,
         string $message,
@@ -200,7 +200,7 @@ abstract class ResponseHelper implements Helper
         self::terminate();
     }
 
-    /** Создание пути для перенаправления браузера пользователя по результатам операции */
+    /** Build the path to redirect the user's browser to based on the operation results */
     public static function redirectConstruct(bool $checkOnlyReferer = false, bool $doNotIncludeId = false): ?string
     {
         $redirectPath = null;
@@ -209,7 +209,7 @@ abstract class ResponseHelper implements Helper
         $goBackAfterSave = ($_REQUEST['go_back_after_save'][0] ?? null) === 'on';
 
         if (!is_null($refererPath) && $refererPath !== '' && $goBackAfterSave) {
-            /* если вдруг в $refererPath нет www, а в ABSOLUTE_PATH есть, делаем замену */
+            /* if $refererPath has no www but ABSOLUTE_PATH does, replace it */
             if (preg_match('#www\.#', ABSOLUTE_PATH) && !preg_match('#www\.#', $refererPath)) {
                 $refererPath = preg_replace(
                     '#' . preg_replace('#www\.#', '', ABSOLUTE_PATH) . '#',
@@ -218,7 +218,7 @@ abstract class ResponseHelper implements Helper
                 );
             }
 
-            /* если мы пришли сюда по прямой ссылке с внешнего сайта, то переходим просто в корневой раздел */
+            /* if we came here by a direct link from an external site, just go to the root section */
             if (!preg_match('#' . ABSOLUTE_PATH . '/#', $refererPath)) {
                 $refererPath = ABSOLUTE_PATH . '/' . KIND . '/';
             }
@@ -249,7 +249,7 @@ abstract class ResponseHelper implements Helper
         return $redirectPath;
     }
 
-    /** Перенаправление браузера пользователя */
+    /** Redirect the user's browser */
     public static function redirect(string $link, ?array $cookieParams = null): void
     {
         if (!is_null($cookieParams)) {
@@ -266,7 +266,7 @@ abstract class ResponseHelper implements Helper
         self::terminate();
     }
 
-    /** Создание пути для перенаправления из данных в cookie */
+    /** Build the redirect path from the cookie data */
     public static function createRedirect(): ?string
     {
         $redirectPath = null;
@@ -299,25 +299,25 @@ abstract class ResponseHelper implements Helper
         return $redirectPath;
     }
 
-    /** Добавление сообщения об успешном действии */
+    /** Add a success message */
     public static function success(string $str): void
     {
         self::addMessage('success', $str);
     }
 
-    /** Добавление сообщения о неуспешном действии / ошибке */
+    /** Add a failure / error message */
     public static function error(string $str): void
     {
         self::addMessage('error', $str);
     }
 
-    /** Добавление информационного сообщения */
+    /** Add an info message */
     public static function info(string $str): void
     {
         self::addMessage('information', $str);
     }
 
-    /** Завершение запроса машинным кодом ошибки: динамическому клиенту отдаём конверт, обычной загрузке — только статус */
+    /** Terminate the request with a machine-readable error code: a dynamic client gets the envelope, a regular page load only the status */
     private static function responseWithErrorCode(ResponseErrorCodeEnum $errorCode): never
     {
         if (!headers_sent()) {
@@ -336,7 +336,7 @@ abstract class ResponseHelper implements Helper
         self::terminate();
     }
 
-    /** Склейка текстов сообщений, соответствующих итоговому типу ответа */
+    /** Join the message texts matching the final response type */
     private static function joinMessages(array $messages, string $response): string
     {
         $suitableTypes = $response === 'error' ? ['error'] : ['success', 'information'];
@@ -351,7 +351,7 @@ abstract class ResponseHelper implements Helper
         return implode(' ', $texts);
     }
 
-    /** Добавление сообщения в cookie-массив */
+    /** Add a message to the cookie array */
     private static function addMessage(string $type, string $str): void
     {
         $cookieMessages = CookieHelper::getCookie('messages', true);

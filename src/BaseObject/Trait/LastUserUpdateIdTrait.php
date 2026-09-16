@@ -15,7 +15,7 @@ namespace Fraym\BaseObject\Trait;
 
 use Fraym\Element\{Attribute as Attribute, Item as Item};
 
-/** Последний поменявший объект пользователь */
+/** The user who last changed the object */
 trait LastUserUpdateIdTrait
 {
     #[Attribute\Hidden(

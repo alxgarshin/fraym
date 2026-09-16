@@ -16,10 +16,10 @@ namespace Fraym\Entity;
 use Fraym\BaseObject\BaseService;
 use Fraym\Enum\{SubstituteDataTypeEnum, TableFieldOrderEnum};
 
-/** Настройки сортировки сущности */
+/** Entity sorting settings */
 final class EntitySortingItem
 {
-    /** Родительская сущность */
+    /** Parent entity */
     public ?BaseEntity $entity = null;
 
     public ?BaseService $service {
@@ -27,31 +27,31 @@ final class EntitySortingItem
     }
 
     public function __construct(
-        /** Название колонки в таблице в БД (id автоматически скрывается, если сортировать по нему)  */
+        /** Column name in the DB table (id is hidden automatically when sorting by it) */
         public string $tableFieldName,
 
-        /** Порядок сортировки */
+        /** Sort order */
         public TableFieldOrderEnum $tableFieldOrder = TableFieldOrderEnum::ASC,
 
-        /** Показывать ли в сводной табличке / каталоге сущности данную переменную? */
+        /** Whether to show this variable in the entity summary table / catalog? */
         public bool $showFieldDataInEntityTable = true,
 
-        /** Показывать ли в строке каталога (или наследующей сущности) видимое название данной переменной? */
+        /** Whether to show the visible name of this variable in the catalog row (or descendant entity)? */
         public bool $showFieldShownNameInCatalogItemString = true,
 
-        /** По умолчанию не сортировать по этому полю, если только пользователь не выбрал прицельно именно этот тип сортировки */
+        /** Don't sort by this field by default, unless the user specifically chose this sorting type */
         public bool $doNotUseIfNotSortedByThisField = false,
 
-        /** Вообще никогда не сортировать по этому полю: только выводить из него данные в списках элементов сущности, если нужно */
+        /** Never sort by this field at all: only output its data in the entity item lists, if needed */
         public bool $doNotUseInSorting = false,
 
-        /** Убрать точку, которая автоматически ставится после текста в сводной табличке в типе CatalogAndItemsEntity */
+        /** Remove the period automatically added after the text in the summary table of the CatalogAndItemsEntity type */
         public bool $removeDotAfterText = false,
 
-        /** Подмена получаемого из таблицы значения на значение из другой таблицы, например: вместо id из колонки article_id выдать name из колонки article */
+        /** Replace the value from the table with a value from another table, e.g.: output name from the article table instead of the id from the article_id column */
         public ?SubstituteDataTypeEnum $substituteDataType = null,
 
-        /** Забитый массив данных или название функции объекта для получения массива в варианте SubstituteDataTypeEnum::ARRAY */
+        /** A hardcoded data array or the name of an object function returning the array for SubstituteDataTypeEnum::ARRAY */
         public null|array|string $substituteDataArray = null {
             get {
                 $defaultValue = $this->substituteDataArray;
@@ -72,7 +72,7 @@ final class EntitySortingItem
             }
         },
 
-        /** Имя таблицы для поиска при SubstituteDataTypeEnum::TABLE */
+        /** Table name to search in for SubstituteDataTypeEnum::TABLE */
         public ?string $substituteDataTableName = null {
             get => $this->substituteDataTableName;
             set(?string $value) {
@@ -84,7 +84,7 @@ final class EntitySortingItem
             }
         },
 
-        /** Идентификатор таблицы, с которым будет производиться сравнение значения, при SubstituteDataTypeEnum::TABLE */
+        /** Table identifier to compare the value against, for SubstituteDataTypeEnum::TABLE */
         public ?string $substituteDataTableId = null {
             get => $this->substituteDataTableId;
             set(?string $value) {
@@ -96,7 +96,7 @@ final class EntitySortingItem
             }
         },
 
-        /** Название ячейки таблицы, из которой будет взято значение для показа и сортировки, при SubstituteDataTypeEnum::TABLE */
+        /** Table cell name to take the value for display and sorting from, for SubstituteDataTypeEnum::TABLE */
         public ?string $substituteDataTableField = null {
             get => $this->substituteDataTableField;
             set(?string $value) {

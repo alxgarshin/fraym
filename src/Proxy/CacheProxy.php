@@ -17,8 +17,8 @@ use Fraym\Container;
 use Fraym\Interface\Cache;
 
 /**
- * Прокси-объект для константы CACHE.
- * Делегирует все вызовы в Container::make('cache').
+ * Proxy object for the CACHE constant.
+ * Delegates all calls to Container::make('cache').
  */
 final class CacheProxy implements Cache
 {

@@ -20,7 +20,7 @@ enum ApiParamTypeEnum: string
     case bool = 'bool';
     case array = 'array';
 
-    /** Приведение значения из $_REQUEST к объявленному типу */
+    /** Cast a value from $_REQUEST to the declared type */
     public function cast(mixed $value): mixed
     {
         return match ($this) {

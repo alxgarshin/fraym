@@ -20,31 +20,31 @@ use Fraym\Service\AuthTokenService;
 
 final class CurrentUser implements CurrentUserInterface
 {
-    /** Id пользователя */
+    /** User id */
     private int|string|null $id = null;
 
-    /** Sid пользователя */
+    /** User sid */
     private ?int $sid = null;
 
-    /** Права пользователя */
+    /** User rights */
     private array $allRights = [];
 
-    /** Количество элементов на одной странице по умолчанию */
+    /** Default number of items per page */
     private int $bazeCount = 50;
 
-    /** Отключение по умолчанию галочки перенаправления на предыдущую страницу при сохранении объекта */
+    /** Disables by default the checkbox for redirecting to the previous page after saving an object */
     private bool $blockSaveReferer = false;
 
-    /** Отключение по умолчанию перенаправления на последнюю посещенную перед уходом с сайта страницу */
+    /** Disables by default the redirect to the last page visited before leaving the site */
     private bool $blockAutoRedirect = false;
 
-    /** Массив настоящих данных пользователя-администратора при переключении на другой профиль */
+    /** Real data of the administrator user while switched to another profile */
     private ?array $adminData = null;
 
-    /** Аутентификация прошла через Authorization: Bearer (внешний API), а не cookie — CSRF пропускается */
+    /** Authentication went through Authorization: Bearer (external API), not a cookie — CSRF is skipped */
     private bool $authenticatedViaBearer = false;
 
-    /** Создание или получение текущего пользователя в константу. По умолчанию: CURRENT_USER */
+    /** Create or get the current user into a constant. Default: CURRENT_USER */
     public static function getInstance(string $constName = 'CURRENT_USER'): self
     {
         if (defined($constName)) {
@@ -54,13 +54,13 @@ final class CurrentUser implements CurrentUserInterface
         }
     }
 
-    /** Принудительное создание */
+    /** Forced creation */
     public static function forceCreate(): self
     {
         return new self();
     }
 
-    /** Проверка, запрещено ли пользователю видеть данные по профилям (своему и чужим) */
+    /** Check whether the user is forbidden to see profile data (their own and others') */
     public function blockedProfileEdit(): bool
     {
         if ($this->isAdmin()) {
@@ -70,19 +70,19 @@ final class CurrentUser implements CurrentUserInterface
         return $this->checkAllRights($_ENV['BLOCKED_PROFILE_EDIT_RIGHT']);
     }
 
-    /** Проверка залогиненности пользователя */
+    /** Check whether the user is logged in */
     public function isLogged(): bool
     {
         return $this->id() > 0;
     }
 
-    /** Проверка, забанен ли пользователь перманентно */
+    /** Check whether the user is permanently banned */
     public function isBanned(): bool
     {
         return $this->checkAllRights(BuiltInRights::BANNED->value);
     }
 
-    /** Проверка, является ли пользователь администратором */
+    /** Check whether the user is an administrator */
     public function isAdmin(bool $checkAdminDataAllRights = false): bool
     {
         return $this->checkAllRights(BuiltInRights::ADMIN->value) ||
@@ -93,13 +93,13 @@ final class CurrentUser implements CurrentUserInterface
             );
     }
 
-    /** Проверка прав */
+    /** Rights check */
     public function checkAllRights(string $right_id): bool
     {
         return in_array($right_id, $this->allRights);
     }
 
-    /** Разлогинивание пользователя на текущем устройстве: токены остальных его устройств живут дальше */
+    /** Log the user out on the current device: tokens of their other devices remain valid */
     public function authLogout(?string $byeMessage = null): void
     {
         $refreshToken = AuthHelper::getRefreshTokenCookie();
@@ -117,14 +117,14 @@ final class CurrentUser implements CurrentUserInterface
         ResponseHelper::redirect(ABSOLUTE_PATH . '/');
     }
 
-    /** Логин пользователя */
+    /** User login */
     public function auth(): void
     {
         $LOCALE = LocaleHelper::getLocale(['fraym', 'basefunc']);
 
-        /** JWT проверяем из httpOnly cookie (браузерный SPA), затем из Authorization: Bearer (внешние API).
-         * validateAuthToken проверяет подпись/alg/exp — payload доверенный, но несёт лишь id/sid,
-         * поэтому rights/bazecount/block_* берём свежими из БД (отзыв прав действует немедленно). */
+        /** JWT is checked from the httpOnly cookie (browser SPA), then from Authorization: Bearer (external APIs).
+         * validateAuthToken checks signature/alg/exp — the payload is trusted but carries only id/sid,
+         * so rights/bazecount/block_* are taken fresh from the DB (revoking rights takes effect immediately). */
         $authTokenFromCookie = AuthHelper::getAuthTokenFromCookie();
         $authToken = $authTokenFromCookie ?? AuthHelper::getAuthTokenFromBearer();
         $jwtTokenPayload = is_null($authToken) ? null : AuthHelper::validateAuthToken($authToken);
@@ -135,37 +135,37 @@ final class CurrentUser implements CurrentUserInterface
             if ($loginData) {
                 CURRENT_USER->authSetUserData($loginData);
 
-                /** CSRF пропускается только для аутентификации через Bearer (внешние API);
-                 * cookie-аутентифицированный SPA обязан слать X-CSRF-Token. */
+                /** CSRF is skipped only for authentication via Bearer (external APIs);
+                 * a cookie-authenticated SPA must send X-CSRF-Token. */
                 if (is_null($authTokenFromCookie)) {
                     CURRENT_USER->setAuthenticatedViaBearer(true);
                 }
             }
         } else {
-            /** Если токена нет, то проверяем наличие cookie */
+            /** If there is no token, check for the cookie */
             $refreshToken = AuthHelper::getRefreshTokenCookie();
 
             if (!is_null($refreshToken)) {
                 if (!REQUEST_TYPE->isDynamicRequest()) {
-                    /** Если это не динамический запрос (т.е. просто загружается страница по адресу) */
+                    /** If this is not a dynamic request (i.e. the page is simply loaded by its address) */
                     $loginData = AuthTokenService::findUserByRefreshToken($refreshToken);
 
                     if (!is_null($loginData)) {
                         CURRENT_USER->authSetUserData($loginData);
-                        /** Обновляем JWT-cookie на полной загрузке, чтобы последующие XHR были авторизованы */
+                        /** Refresh the JWT cookie on full page load so that subsequent XHRs are authorized */
                         AuthHelper::setAuthTokenCookie(AuthHelper::generateAuthToken());
                     } else {
-                        /** Токен просрочен или отозван: новый выдаётся только по паролю */
+                        /** The token is expired or revoked: a new one is issued only by password */
                         AuthHelper::removeRefreshTokenCookie();
                     }
                 } else {
-                    /** Это динамический запрос и куки есть, но токена нет, выдаем 401 */
+                    /** This is a dynamic request with cookies but no token, return 401 */
                     ResponseHelper::response401();
                 }
             }
         }
 
-        /** Если ничего не подошло, но действие = login, то проверяем логин и пароль */
+        /** If nothing matched but the action is login, check the login and password */
         if ('login' === ACTION && isset($_REQUEST['password'])) {
             if (!AuthHelper::validatePreAuthCsrfToken()) {
                 ResponseHelper::responseOneBlock('error', $LOCALE['wrong_login_or_password'], [], ResponseErrorCodeEnum::forbidden);
@@ -193,7 +193,7 @@ final class CurrentUser implements CurrentUserInterface
         }
 
         if (CURRENT_USER->isLogged()) {
-            /** Переключение администратора на другого пользователя */
+            /** Administrator switching to another user */
             if (CURRENT_USER->isAdmin(true)) {
                 $admUserRequest = $_REQUEST['adm_user'] ?? null;
                 $admUser = (int) ($admUserRequest ?? CookieHelper::getCookie('admUser'));
@@ -243,7 +243,7 @@ final class CurrentUser implements CurrentUserInterface
         }
     }
 
-    /** Выставляем набор данных пользователя при логине */
+    /** Set the user data on login */
     public function authSetUserData(array $userData): void
     {
         CURRENT_USER->setId($userData['id'])

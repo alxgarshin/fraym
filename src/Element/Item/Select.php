@@ -19,12 +19,12 @@ use Fraym\Element\Item\Trait\CloneTrait;
 use Fraym\Helper\{LocaleHelper, ObjectsHelper, TextHelper};
 use Fraym\Interface\ElementAttribute;
 
-/** Выпадающий список */
+/** Dropdown list */
 class Select extends BaseElement
 {
     use CloneTrait;
 
-    /** Значение */
+    /** Value */
     private int|string|null $fieldValue;
 
     private Attribute\Select $attribute;

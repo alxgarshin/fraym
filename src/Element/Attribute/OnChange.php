@@ -15,15 +15,15 @@ namespace Fraym\Element\Attribute;
 
 use Attribute;
 
-/** Данные используемые во время OnChange в качестве замены данных элемента */
+/** Data used during OnChange as a replacement for the element data */
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class OnChange
 {
     public function __construct(
-        /** Четкие данные элемента */
+        /** Exact element data */
         public mixed $data = null,
 
-        /** Имя функции, предоставляющей данные элемента */
+        /** Name of the function providing the element data */
         public ?string $callback = null,
     ) {
     }

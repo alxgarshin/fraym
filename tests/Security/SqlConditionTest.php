@@ -16,7 +16,7 @@ namespace Fraym\Tests\Security;
 use Fraym\Entity\Filters\SqlCondition;
 use PHPUnit\Framework\TestCase;
 
-/** P0-1: пользовательские значения фильтров попадают в SQL ТОЛЬКО плейсхолдером, само значение — в params */
+/** P0-1: user filter values get into SQL ONLY as a placeholder, the value itself goes to params */
 final class SqlConditionTest extends TestCase
 {
     public function testInjectionPayloadGoesToParamsNotSql(): void

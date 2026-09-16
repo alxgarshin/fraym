@@ -18,13 +18,13 @@ use Fraym\Element\Item\Trait\{CloneTrait, MinMaxChar};
 use Fraym\Helper\AuthHelper;
 use Fraym\Interface\ElementAttribute;
 
-/** Пароль */
+/** Password */
 class Password extends BaseElement
 {
     use CloneTrait;
     use MinMaxChar;
 
-    /** Значение */
+    /** Value */
     private ?string $fieldValue;
 
     private Attribute\Password $attribute;

@@ -258,9 +258,9 @@ abstract class BaseModel
             $rawContext = $property->getAttribute()->context;
             $context = $this->resolveCallback($rawContext);
 
-            /* default-контекст генерируется только если контекст не задан валидным способом:
-               resolveCallback вернул исходную строку-литерал (опечатка, prod) либо контекст пуст/не массив.
-               строка-метод, вернувшая массив (в т.ч. пустой), проходит как есть — поведение сохранено. */
+            /* the default context is generated only if the context isn't set in a valid way:
+               resolveCallback returned the original string literal (typo, prod) or the context is empty/not an array.
+               a method-name string that returned an array (even an empty one) passes as is — behavior is preserved. */
             if ($context === $rawContext && (!is_array($context) || count($context) === 0)) {
                 $objectName = ObjectsHelper::getClassShortNameFromCMSVCObject($this);
                 $propertiesWithListContext = $this->CMSVC->view->propertiesWithListContext;
@@ -347,11 +347,11 @@ abstract class BaseModel
         return $this;
     }
 
-    /** Резолвит строковый коллбек по имени метода: сперва сервис CMSVC, затем сама модель.
-     * Не-строка возвращается как есть. Строка, не соответствующая ни методу сервиса, ни методу
-     * модели, — вероятная опечатка в имени коллбека: в DEV бросает исключение (ловит тихие
-     * баги), иначе логирует и возвращает строку как литерал (сохраняя прежнее поведение).
-     * Null-safe по сервису: модуль без сервиса резолвит коллбек по методу модели без TypeError. */
+    /** Resolves a string callback by method name: first the CMSVC service, then the model itself.
+     * A non-string is returned as is. A string matching neither a service method nor a model
+     * method is a likely typo in the callback name: in DEV it throws an exception (catches silent
+     * bugs), otherwise it logs and returns the string as a literal (preserving the old behavior).
+     * Null-safe on the service: a module without a service resolves the callback by the model method without a TypeError. */
     private function resolveCallback(mixed $value, bool $throwOnMissing = true): mixed
     {
         if (!is_string($value)) {
@@ -368,8 +368,8 @@ abstract class BaseModel
             return $this->{$value}();
         }
 
-        // additional у MultiselectCreator содержит и имена методов, и литералы
-        // (в т.ч. строковые enum-значения вроде '1') — там строка-не-метод легитимна.
+        // MultiselectCreator's additional contains both method names and literals
+        // (including string enum values like '1') — a non-method string is legitimate there.
         if (!$throwOnMissing) {
             return $value;
         }

@@ -18,7 +18,7 @@ require_once __DIR__ . '/../fraym.php';
 $uploadType = $_REQUEST['type'] ?? false;
 $uploads = $_ENV['UPLOADS'];
 
-/** Если вдруг нет uploads[$uploadType], проверяем, не виртуальный ли это файл */
+/** If uploads[$uploadType] is missing, check whether this is a virtual file */
 if (!isset($uploads[$uploadType]) && isset($uploads[0]['virtual'])) {
     $searchData = $_FILES;
 

@@ -50,7 +50,7 @@ class NewsService extends BaseService
         return [$newsItems, $totalCount];
     }
 
-    /** Вывод новости */
+    /** News item output */
     public function showNews(array $newsData, bool $short = false): string
     {
         $LOCALE = LocaleHelper::getLocale(['news', 'global']);

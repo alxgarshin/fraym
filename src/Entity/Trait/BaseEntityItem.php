@@ -72,7 +72,7 @@ trait BaseEntityItem
             if (!REQUEST_TYPE->isApiRequest() && (($act === ActEnum::edit && $modelRights->changeRight) || ($act === ActEnum::add && $modelRights->addRight))) {
                 $referer = $_SERVER["HTTP_REFERER"] ?? '';
 
-                /** Защита от перехода из ServiceWorker */
+                /** Protection against navigation from a ServiceWorker */
                 if (preg_match('#\/js\/#', $referer)) {
                     $referer = null;
                 }
@@ -110,7 +110,7 @@ trait BaseEntityItem
 
             $modelElements = $model->elementsList;
 
-            /** Обработка групповых полей */
+            /** Group fields processing */
             $groupFieldsPresent = false;
             $groupCount = [];
             $groupJsonRowData = [];
@@ -123,7 +123,7 @@ trait BaseEntityItem
                     $elementsByGroups[$element->getGroup()][] = $element;
 
                     if ($act !== ActEnum::add) {
-                        /** Замена табуляции */
+                        /** Tab replacement */
                         $DATA_ITEM[$element->name] = preg_replace('/\t/', '\\t', $DATA_ITEM[$element->name] ?? '');
 
                         $jsonData = DataHelper::jsonFixedDecode($DATA_ITEM[$element->name]);
@@ -150,12 +150,12 @@ trait BaseEntityItem
                 }
             }
 
-            /** Простраиваем структуру групповых полей */
+            /** Build the structure of group fields */
             if ($groupFieldsPresent) {
-                /** Получили список элементов по группам. Теперь нам нужно поставить нужное количество повторений после последнего элемента группы. */
+                /** We have the list of elements by group. Now we need to add the required number of repetitions after the last element of the group. */
                 foreach ($groupCount as $groupKey => $groupValue) {
                     if ($groupValue > 1) {
-                        /** Находим последний элемент в группе */
+                        /** Find the last element in the group */
                         $lastElementInGroup = false;
 
                         foreach ($modelElements as $key => $elem) {
@@ -175,14 +175,14 @@ trait BaseEntityItem
                                     $insertedElements[] = $clonedField;
                                 }
                             }
-                            /** Вставляем элементы после соответствующего ключа */
+                            /** Insert the elements after the corresponding key */
                             array_splice($modelElements, $lastElementInGroup + 1, 0, $insertedElements);
                         }
                     }
                 }
             }
 
-            /** Установка значений полей */
+            /** Set field values */
             $groupJsonRowDataUsed = [];
 
             foreach ($modelElements as $modelElement) {
@@ -201,7 +201,7 @@ trait BaseEntityItem
                 }
             }
 
-            /** Построение закладок, если есть */
+            /** Build tabs, if any */
             if ($this instanceof TabbedEntity) {
                 foreach ($modelElements as $modelElementKey => $modelElement) {
                     if ($modelElement instanceof Item\Tab) {
@@ -229,7 +229,7 @@ trait BaseEntityItem
                 }
             }
 
-            /** Отрисовка полей */
+            /** Render fields */
             $elementTabindexNum = 1;
             $tabOpen = false;
             $lineNumber = 0;

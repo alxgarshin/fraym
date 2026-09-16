@@ -17,7 +17,7 @@ use Attribute;
 use Fraym\Enum\{ActEnum, MultiObjectsEntitySubTypeEnum};
 use Fraym\Helper\{LocaleHelper, TextHelper};
 
-/** Сущность, в которой на одной странице выводится сразу много объектов: в еxcel-подобном или карточном формате */
+/** Entity that outputs many objects on one page at once: in an excel-like or card format */
 #[Attribute(Attribute::TARGET_CLASS)]
 class MultiObjectsEntity extends BaseEntity
 {
@@ -33,7 +33,7 @@ class MultiObjectsEntity extends BaseEntity
         bool $useCustomView = false,
         bool $useCustomList = false,
 
-        /** Формат вывода объектов: excel-подобный или карточный */
+        /** Objects output format: excel-like or cards */
         public MultiObjectsEntitySubTypeEnum $subType = MultiObjectsEntitySubTypeEnum::Excel,
     ) {
         parent::__construct(
@@ -212,7 +212,7 @@ class MultiObjectsEntity extends BaseEntity
                 ($modelRights->changeRight && (is_null($modelRights->changeRestrict) || isset($changeRestrictIds[$DATA_ITEM['id']])) ? '' : ' readonly') .
                 '" id="line' . $lineNumber . '" obj_id="' . $DATA_ITEM['id'] . '">';
 
-            /** Права на изменения есть, но нет права на изменение данной конкретной строки */
+            /** There are rights to change, but no right to change this particular row */
             if ($modelRights->changeRight && !(is_null($modelRights->changeRestrict) || isset($changeRestrictIds[$DATA_ITEM['id']]))) {
                 $RESPONSE_DATA .= '<input type="hidden" name="readonly[' . $lineNumber . ']" value="' . $DATA_ITEM['id'] . '" />';
             }
@@ -294,7 +294,7 @@ class MultiObjectsEntity extends BaseEntity
         return $RESPONSE_DATA;
     }
 
-    /** У объектов типа MultiObjects обработка представления происходит только для всех объектов сразу: см. viewActList */
+    /** For MultiObjects objects, the view is processed only for all objects at once: see viewActList */
     public function viewActItem(array $DATA_ITEM, ?ActEnum $act = null, ?string $contextName = null): string
     {
         return '';

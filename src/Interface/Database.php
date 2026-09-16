@@ -17,7 +17,7 @@ use Generator;
 
 interface Database
 {
-    /** Исполнение запроса
+    /** Execute a query
      *
      * @param array<int, array{0: string, 1: mixed, 2: ?array}> $data
      *
@@ -29,19 +29,19 @@ interface Database
         bool $oneResult = false,
     ): false|array;
 
-    /** Получение id последней добавленной записи */
+    /** Get the id of the last inserted record */
     public function lastInsertId(?string $name = null): string|false;
 
-    /** Получение количества объектов таблицы из последнего PDOStatement'а */
+    /** Get the number of table objects from the last PDOStatement */
     public function selectCount(): int;
 
-    /** Получение количества объектов таблицы простым count в select'e */
+    /** Get the number of table objects with a simple count in select */
     public function count(
         string $tableName,
         ?array $criteria = null,
     ): int;
 
-    /** Получение данных из таблицы */
+    /** Get data from a table */
     public function select(
         string $tableName,
         ?array $criteria = null,
@@ -53,41 +53,41 @@ interface Database
         ?array $fieldsSet = null,
     ): false|array;
 
-    /** Вставка данных в таблицу */
+    /** Insert data into a table */
     public function insert(
         string $tableName,
         array $data,
         string $returningIdFieldName = 'id',
     ): false|array;
 
-    /** Изменение данных в таблице */
+    /** Update data in a table */
     public function update(
         string $tableName,
         array $data,
         array $criteria,
     ): false|array;
 
-    /** Удаление из таблицы */
+    /** Delete from a table */
     public function delete(
         string $tableName,
         array $criteria,
     ): false|array;
 
-    /** Исполнение скрипта данных без дополнительной фильтрации: использовать крайне осторожно */
+    /** Execute a data script without additional filtering: use with extreme caution */
     public function exec(string $SQL): true;
 
-    /** Получение количества строк, задетых последней операцией в базе данных */
+    /** Get the number of rows affected by the last database operation */
     public function rowCount(): int;
 
     public function beginTransaction(): bool;
 
-    /** Коммит транзакции */
+    /** Commit the transaction */
     public function commit(): bool;
 
-    /** Откат транзакции */
+    /** Roll back the transaction */
     public function rollBack(): bool;
 
-    /** Получение объекта на основе его id */
+    /** Get an object by its id */
     public function findObjectById(
         string|int $objId,
         string $objType,
@@ -95,14 +95,14 @@ interface Database
         bool $bySid = false,
     ): ?array;
 
-    /** Получение объектов на основе их id */
+    /** Get objects by their ids */
     public function findObjectsByIds(
         array $objIds,
         string $objType,
         bool $refresh = false,
     ): ?Generator;
 
-    /** Превращение в массив генератора соотношений данных из БД (id к name, например) */
+    /** Turn a generator of data mappings from the DB (e.g. id to name) into an array */
     public function getArrayOfItemsAsArray(
         string $query,
         string $id,
@@ -110,7 +110,7 @@ interface Database
         bool $nodata = true,
     ): array;
 
-    /** Создание массива соотношений данных из БД (id к name, например) */
+    /** Create an array of data mappings from the DB (e.g. id to name) */
     public function getArrayOfItems(
         string $query,
         string $id,
@@ -118,7 +118,7 @@ interface Database
         bool $nodata = true,
     ): Generator;
 
-    /** Создание дерева объектов из БД на основе родительского идентификатора */
+    /** Build an object tree from the DB based on the parent identifier */
     public function getTreeOfItems(
         bool $empty,
         string $table,
@@ -134,8 +134,8 @@ interface Database
         array $andQueryParams = [],
     ): array;
 
-    /** Удаление объектов из созданного дерева, чтобы остались только отобранные id и их parent'ы до верхнего уровня. При этом у каталоговых сущностей
-     * оставляем их наследников также. */
+    /** Remove objects from the built tree so that only the selected ids and their parents up to the top level remain. For catalog entities
+     * their descendants are kept as well. */
     public function chopOffTreeOfItemsBranches(
         array $objectsTree,
         array $listOfIds,

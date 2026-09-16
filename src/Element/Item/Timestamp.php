@@ -20,12 +20,12 @@ use Fraym\Element\Item\Trait\CloneTrait;
 use Fraym\Helper\{DateHelper};
 use Fraym\Interface\ElementAttribute;
 
-/** Отметка времени */
+/** Timestamp */
 class Timestamp extends BaseElement
 {
     use CloneTrait;
 
-    /** Значение */
+    /** Value */
     private ?DateTimeImmutable $fieldValue;
 
     private Attribute\Timestamp $attribute;

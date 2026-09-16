@@ -15,12 +15,12 @@ namespace Fraym\Entity;
 
 use Attribute;
 
-/** Функция перед OnCreate. Добавляется в Service */
+/** Function before OnCreate. Added to the Service */
 #[Attribute(Attribute::TARGET_CLASS)]
 class PreCreate
 {
     public function __construct(
-        /** Имя функции  */
+        /** Function name */
         public string $callback = 'preCreate',
     ) {
     }

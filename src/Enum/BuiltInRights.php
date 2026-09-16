@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Fraym\Enum;
 
-/** Встроенные права фреймворка (остальные типы — бизнес-логика проекта) */
+/** Built-in framework rights (other types are project business logic) */
 enum BuiltInRights: string
 {
     case ADMIN = 'admin';

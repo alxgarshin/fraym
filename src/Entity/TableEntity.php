@@ -19,7 +19,7 @@ use Fraym\Helper\{LocaleHelper, TextHelper};
 use Fraym\Interface\TabbedEntity;
 use Fraym\Service\GlobalTimerService;
 
-/** Обычная таблица с переходом на отдельные странички сущности */
+/** Regular table with navigation to separate entity pages */
 #[Attribute(Attribute::TARGET_CLASS)]
 class TableEntity extends BaseEntity implements TabbedEntity
 {

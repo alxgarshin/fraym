@@ -6,8 +6,8 @@ namespace App\CMSVC\AgentManifest;
 
 use Fraym\BaseObject\{BaseAgentManifestController, CMSVC};
 
-/** Машиночитаемое описание API проекта для автономного агента.
- *  По умолчанию открыт всем: чтобы закрыть, добавьте #[IsAccessible] или #[IsAdmin]. */
+/** Machine-readable description of the project API for an autonomous agent.
+ *  Open to everyone by default: to restrict it, add #[IsAccessible] or #[IsAdmin]. */
 #[CMSVC(
     controller: AgentManifestController::class,
 )]

@@ -17,62 +17,62 @@ use Fraym\Element\Item\LinkAt;
 
 interface ElementAttribute
 {
-    /** Обязательность элемента */
+    /** Whether the element is obligatory */
     public ?bool $obligatory { get; set; }
 
-    /** Класс в зависимости от обязательности элемента */
+    /** Class depending on whether the element is obligatory */
     public string $obligatoryStr { get; }
 
-    /** Css-класс подсказки по элементу */
+    /** Css class of the element hint */
     public ?string $helpClass { get; set; }
 
-    /** Номер последовательной группы элемента */
+    /** Number of the element's sequential group */
     public ?int $group { get; set; }
 
-    /** Управление элементом нестандартными обработчиками */
+    /** Control the element with non-standard handlers */
     public ?bool $noData { get; set; }
 
-    /** Виртуальность (хранение JSON-блока в одной ячейке таблицы) элемента */
+    /** Element virtuality (storing a JSON block in a single table cell) */
     public ?bool $virtual { get; set; }
 
-    /** Обертка для создания ссылок вокруг значения элемента */
+    /** Wrapper for creating links around the element value */
     public LinkAt $linkAt { get; set; }
 
-    /** Открывающая часть ссылки */
+    /** Opening part of the link */
     public ?string $linkAtBegin { get; set; }
 
-    /** Закрывающая часть ссылки */
+    /** Closing part of the link */
     public ?string $linkAtEnd { get; set; }
 
-    /** Использовать элемент в фильтрах */
+    /** Use the element in filters */
     public ?bool $useInFilters { get; set; }
 
-    /** Контекст отображения элемента: при отображении полей проверяется совпадение контекста элемента с заданным сейчас контекстом модели. Массив в формате: [модель:list|view|viewIfNotNull|create|update|embedded], например: ['user:view', 'user:add'] */
+    /** Element display context: when displaying fields, the element context is checked against the model's current context. Array in the format: [model:list|view|viewIfNotNull|create|update|embedded], e.g.: ['user:view', 'user:add'] */
     public string|array $context { get; set; }
 
-    /** Основные валидаторы элемента */
+    /** Main element validators */
     public array $basicElementValidators { get; set; }
 
-    /** Список дополнительных валидаторов конкретного элемента конкретной модели
+    /** List of additional validators of a specific element of a specific model
      * @var array<int, string> $additionalValidators
      */
     public array $additionalValidators { get; set; }
 
-    /** Сохранять данные поля с вычисткой и сохранением html в нем */
+    /** Save the field data with cleanup, keeping html in it */
     public ?bool $saveHtml { get; set; }
 
-    /** Использовать данные из данной колонки таблицы вместо колонки по названию элемента */
+    /** Use data from this table column instead of the column named after the element */
     public ?string $alternativeDataColumnName { get; set; }
 
-    /** Массив любых дополнительных данных */
+    /** Array of any additional data */
     public array $additionalData { get; set; }
 
-    /** Использовать соответствующую функцию из сервиса вместо стандартного asHTML */
+    /** Use the corresponding service function instead of the standard asHTML */
     public ?string $customAsHTMLRenderer { get; set; }
 
-    /** Проверка наличия контекста в списке контекстов */
+    /** Check whether the context is in the list of contexts */
     public function checkContext(string $context): bool;
 
-    /** Получение полного списка валидаторов, включая дополнительные */
+    /** Get the full list of validators, including additional ones */
     public function getValidators(array $additionalValidators): array;
 }

@@ -8,13 +8,13 @@ use Fraym\Interface\Helper;
 
 abstract class DesignHelper implements Helper
 {
-    /** Inline css-свойство background-image */
+    /** Inline css property background-image */
     public static function getCssBackgroundImage(string $path): string
     {
         return "background-image: url('" . $path . "')";
     }
 
-    /** Добавление залоговка к формам ввода */
+    /** Add a header to input forms */
     public static function insertHeader(string $content, ?string $header): string
     {
         if (preg_match('#<div class="maincontent_data([^"]*)"><h1 class="form_header">.*?</h1>#', $content)) {
@@ -32,13 +32,13 @@ abstract class DesignHelper implements Helper
         );
     }
 
-    /** Добавление script'ов внутрь основного div'а ответа */
+    /** Add scripts inside the main response div */
     public static function insertScripts(string $content, string $scripts): string
     {
         return mb_substr($content, 0, -6) . $scripts . '</div>';
     }
 
-    /** Оборачивание залоговка страницы в ссылку */
+    /** Wrap the page header in a link */
     public static function changePageHeaderTextToLink(?string $text, ?string $href = null): string
     {
         return (!is_null($href) ? '<a href="' . $href . '">' : '') . (string) $text . (!is_null($href) ? '</a>' : '');

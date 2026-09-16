@@ -1,4 +1,4 @@
-/** Редактирование новостей */
+/** News editing */
 
 if (withDocumentEvents) {
 

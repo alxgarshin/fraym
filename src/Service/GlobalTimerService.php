@@ -22,19 +22,19 @@ final class GlobalTimerService
         $this->startTimer();
     }
 
-    /** Запуск таймера */
+    /** Start the timer */
     public function startTimer(): void
     {
         $this->startTime = microtime(true);
     }
 
-    /** Получить текущую разницу с таймером */
+    /** Get the current difference from the timer */
     public function getTimerDiff(): string
     {
         return number_format(microtime(true) - $this->startTime, 10);
     }
 
-    /** Вывести текстом данные по разнице с таймером */
+    /** Output the timer difference data as text */
     public function getTimerDiffStr(string $text = '<!-- execution time: %ss-->'): string
     {
         return sprintf($text, $this->getTimerDiff());

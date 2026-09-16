@@ -18,17 +18,17 @@ use Fraym\Entity\Trait\{BaseEntityItem, Tabs};
 use Fraym\Helper\{LocaleHelper, TextHelper};
 use Fraym\Interface\TabbedEntity;
 
-/** Родительская сущность каталога "родительская сущность + наследующая", например: разделы сайта и текстовые страницы */
+/** Parent entity of a "parent entity + descendant" catalog, e.g.: site sections and text pages */
 #[Attribute(Attribute::TARGET_CLASS)]
 final class CatalogEntity extends BaseEntity implements CatalogInterface, TabbedEntity
 {
     use BaseEntityItem;
     use Tabs;
 
-    /** Наследующая сущность */
+    /** Descendant entity */
     public CatalogItemEntity $catalogItemEntity;
 
-    /** Массив оригинальных id, найденных при фильтрах и ограничениях видимости в запросе */
+    /** Original ids found by filters and visibility restrictions in the query */
     public array $catalogEntityFoundIds = [];
 
     private array $ITEMS = [];
@@ -131,7 +131,7 @@ final class CatalogEntity extends BaseEntity implements CatalogInterface, Tabbed
         return $RESPONSE_DATA;
     }
 
-    /** Поиск и удаление объектов-детей и приложенных к ним файлов */
+    /** Find and delete child objects and the files attached to them */
     public function clearDataByParent(string|int $id): void
     {
         $parentField = $this->catalogItemEntity->tableFieldWithParentId;
@@ -146,7 +146,7 @@ final class CatalogEntity extends BaseEntity implements CatalogInterface, Tabbed
             $currentLevel = $children ? array_column($children, 'id') : [];
         }
 
-        /** Удаляем от глубоких уровней к верхним — дети раньше родителей (FK-safe), per-item deleteItem сохранён */
+        /** Delete from deep levels up — children before parents (FK-safe), per-item deleteItem is preserved */
         foreach (array_reverse($idsToDelete) as $idToDelete) {
             $this->deleteItem($idToDelete);
         }

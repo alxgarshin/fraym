@@ -16,7 +16,7 @@ namespace Fraym\BaseObject\Trait;
 use Fraym\Element\{Attribute as Attribute, Item as Item};
 use Fraym\Helper\DateHelper;
 
-/** Дата обновления объекта */
+/** Object update date */
 trait CreatedUpdatedAtTrait
 {
     #[Attribute\Timestamp(

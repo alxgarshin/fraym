@@ -15,7 +15,7 @@ namespace Fraym\BaseObject\Trait;
 
 use Fraym\Element\{Attribute as Attribute, Item as Item};
 
-/** Id объекта */
+/** Object id */
 trait IdTrait
 {
     #[Attribute\Hidden(

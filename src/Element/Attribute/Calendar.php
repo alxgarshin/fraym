@@ -19,7 +19,7 @@ use Fraym\Element\Validator\ObligatoryValidator;
 use Fraym\Interface\HasDefaultValue;
 use InvalidArgumentException;
 
-/** Календарь в формате "дата" или "дата+время" */
+/** Calendar in "date" or "date+time" format */
 /** @implements HasDefaultValue<null|string|DateTimeImmutable> */
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class Calendar extends BaseElement implements HasDefaultValue
@@ -28,7 +28,7 @@ class Calendar extends BaseElement implements HasDefaultValue
         ObligatoryValidator::class,
     ];
 
-    /** Значение по умолчанию */
+    /** Default value */
     public mixed $defaultValue {
         get => $this->_val;
         set {
@@ -44,9 +44,9 @@ class Calendar extends BaseElement implements HasDefaultValue
 
     public function __construct(
         mixed $defaultValue = null,
-        /** Показывать простой календарь или дата+время? */
+        /** Show a simple calendar or date+time? */
         public ?bool $showDatetime = null,
-        /** Записывать в базу в формате "timestamp" */
+        /** Save to the database in "timestamp" format */
         public ?bool $saveAsTimestamp = null,
         ?bool $obligatory = null,
         ?string $helpClass = null,

@@ -14,109 +14,109 @@ declare(strict_types=1);
 namespace Fraym\Interface;
 
 /**
- * Интерфейс диалекта базы данных (Strategy Pattern).
+ * Database dialect interface (Strategy Pattern).
  *
- * Инкапсулирует все SQL-конструкции и настройки, специфичные для конкретного
- * движка СУБД. При добавлении нового диалекта — создать класс, реализующий
- * этот интерфейс, и расширить DbTypeEnum. Все точки ветвления по типу БД
- * строго сосредоточены здесь.
+ * Encapsulates all SQL constructs and settings specific to a particular
+ * DBMS engine. To add a new dialect, create a class implementing
+ * this interface and extend DbTypeEnum. All branching points by DB type
+ * are strictly concentrated here.
  *
- * Доступ из кода: DB->dialect->method()
+ * Access from code: DB->dialect->method()
  */
 interface DatabaseDialect
 {
-    /** Дополнительные опции строки DSN-подключения (например, charset для MySQL) */
+    /** Additional options of the DSN connection string (e.g. charset for MySQL) */
     public function getDsnOptions(): string;
 
-    /** Оператор сравнения с учётом NULL (MySQL: <=>, PostgreSQL: =) */
+    /** NULL-safe comparison operator (MySQL: <=>, PostgreSQL: =) */
     public function getNullSafeEqualOperator(): string;
 
-    /** Суффикс INSERT-запроса для получения ID вставленной строки */
+    /** INSERT query suffix for getting the ID of the inserted row */
     public function getInsertReturningClause(string $fieldName): string;
 
     /**
-     * Извлечение ID из результата INSERT.
-     * null  — диалект не поддерживает RETURNING; следует использовать PDO::lastInsertId().
-     * false — RETURNING поддерживается, но результат пуст.
-     * string — извлечённый ID.
+     * Extract the ID from the INSERT result.
+     * null  — the dialect doesn't support RETURNING; PDO::lastInsertId() should be used.
+     * false — RETURNING is supported, but the result is empty.
+     * string — the extracted ID.
      */
     public function extractLastInsertId(array|false $queryResult): string|false|null;
 
-    /** Символ-обёртка значения в LIKE-паттерне при поиске внутри JSON-групп */
+    /** Wrapper character for the value in a LIKE pattern when searching inside JSON groups */
     public function getGroupFieldQuerySign(): string;
 
     /**
-     * SQL для принудительного отключения всех соединений к БД перед её удалением.
-     * null — операция не требуется для данного диалекта.
+     * SQL for forcibly terminating all DB connections before dropping it.
+     * null — the operation isn't required for this dialect.
      */
     public function terminateConnectionsSql(string $dbName): ?string;
 
-    /** SQL для проверки существования базы данных */
+    /** SQL for checking whether a database exists */
     public function checkDatabaseExistsSql(string $dbName): string;
 
     /**
-     * SQL для переключения активной БД (MySQL: USE db; PostgreSQL: не требуется).
-     * null — операция не требуется для данного диалекта.
+     * SQL for switching the active DB (MySQL: USE db; PostgreSQL: not required).
+     * null — the operation isn't required for this dialect.
      */
     public function useDatabaseSql(string $dbQuoted): ?string;
 
-    /** SQL для проверки существования пользователя БД */
+    /** SQL for checking whether a DB user exists */
     public function checkUserExistsSql(string $user): string;
 
-    /** SQL для создания пользователя БД */
+    /** SQL for creating a DB user */
     public function createUserSql(string $userQuoted, string $user, string $password): string;
 
-    /** SQL для изменения пароля существующего пользователя БД */
+    /** SQL for changing the password of an existing DB user */
     public function alterUserSql(string $userQuoted, string $user, string $password): string;
 
     /**
-     * Суффикс оператора CREATE DATABASE для назначения владельца.
+     * CREATE DATABASE statement suffix for assigning the owner.
      * PostgreSQL: " OWNER user". MySQL: "".
      */
     public function createDatabaseOwnerSuffix(string $userQuoted): string;
 
-    /** SQL для выдачи пользователю полных привилегий на базу данных */
+    /** SQL for granting a user full privileges on a database */
     public function grantPrivilegesSql(string $dbQuoted, string $userQuoted, string $user): string;
 
     /**
-     * SQL-запрос, выполняемый после GRANT (MySQL: FLUSH PRIVILEGES).
-     * null — дополнительный запрос не требуется.
+     * SQL query executed after GRANT (MySQL: FLUSH PRIVILEGES).
+     * null — no additional query is required.
      */
     public function afterGrantSql(): ?string;
 
-    /** DDL для создания служебной таблицы учёта миграций */
+    /** DDL for creating the service table that tracks migrations */
     public function createMigrationTableSql(): string;
 
-    /** SQL для установки часового пояса соединения после выполнения миграции */
+    /** SQL for setting the connection timezone after running a migration */
     public function setTimezoneSql(): string;
 
     /**
-     * SQL для сортировки строк по пользовательскому порядку значений поля.
-     * MySQL использует FIELD(), PostgreSQL — CASE WHEN.
+     * SQL for sorting rows by a custom order of field values.
+     * MySQL uses FIELD(), PostgreSQL uses CASE WHEN.
      *
-     * @param string $field Имя колонки (например, 'type')
-     * @param string[] $values Значения в нужном порядке
-     * @param string $tieBreakField Поле для вторичной сортировки (при равенстве)
+     * @param string $field Column name (e.g. 'type')
+     * @param string[] $values Values in the required order
+     * @param string $tieBreakField Field for secondary sorting (on ties)
      * @return array{selectExtra: string, orderBy: string}
-     *                                                     selectExtra — фрагмент, добавляемый в SELECT (пустая строка, если не нужен)
-     *                                                     orderBy     — полная фраза ORDER BY
+     *                                                     selectExtra — fragment added to SELECT (empty string if not needed)
+     *                                                     orderBy     — full ORDER BY clause
      */
     public function orderByCustomValuesSql(string $field, array $values, string $tieBreakField): array;
 
-    /** Значение checkbox-поля в БД */
+    /** Checkbox field value in the DB */
     public function checkboxDbValue(bool $value): bool|int|string;
 
     /**
-     * SQL-выражение «колонка содержит JSON-элемент» для multiselect-колонок.
-     * Обёртка IFNULL/NULLIF (MySQL) или COALESCE/NULLIF (PostgreSQL) гарантирует,
-     * что NULL и пустая строка не ломают JSON-парсер.
+     * SQL expression "column contains a JSON element" for multiselect columns.
+     * The IFNULL/NULLIF (MySQL) or COALESCE/NULLIF (PostgreSQL) wrapper ensures
+     * that NULL and an empty string don't break the JSON parser.
      *
-     * @param string $column Имя колонки — при необходимости уже квалифицированное (напр. "t1.tags")
-     * @param string $needle Либо bind-плейсхолдер (":name"), либо SQL-литерал с JSON внутри
-     * @param bool $negate Если true — вернуть выражение «не содержит»
+     * @param string $column Column name — already qualified if needed (e.g. "t1.tags")
+     * @param string $needle Either a bind placeholder (":name") or an SQL literal with JSON inside
+     * @param bool $negate If true — return a "does not contain" expression
      */
     public function jsonContainsExpression(string $column, string $needle, bool $negate = false): string;
 
-    /** SQL-выражение, возвращающее первый элемент JSON-массива для LEFT JOIN при сортировке */
+    /** SQL expression returning the first element of a JSON array for LEFT JOIN when sorting */
     public function jsonLeftJoinFirstElement(string $fieldName): string;
 }

@@ -21,7 +21,7 @@ use Fraym\Interface\{ElementItem, Helper};
 
 abstract class LocaleHelper implements Helper
 {
-    /** Получение списка локалей */
+    /** Get the list of locales */
     public static function getLocalesList(): ?array
     {
         $filePath = INNER_PATH . 'src/Template/localesList.json';
@@ -35,7 +35,7 @@ abstract class LocaleHelper implements Helper
         return $result;
     }
 
-    /** Получение локали */
+    /** Get a locale */
     public static function getLocale(?array $entityPathInLocale = null, ?string $locale = null): ?array
     {
         $localeKey = $locale ? '_LOCALE_' . $locale : '_LOCALE';
@@ -59,7 +59,7 @@ abstract class LocaleHelper implements Helper
         return $temp;
     }
 
-    /** Получение названия поля объекта из локали */
+    /** Get an object field name from the locale */
     public static function getElementText(BaseEntity $entity, ElementItem $baseElement, LocalableFieldsEnum $propertyName): array|string|null
     {
         $entityName = TextHelper::camelCaseToSnakeCase($entity->name);
@@ -68,7 +68,7 @@ abstract class LocaleHelper implements Helper
         return $LOCALE[$propertyName->value] ?? null;
     }
 
-    /** Добавление окончания к глаголам в зависимости от пола пользователя */
+    /** Add endings to verbs depending on the user's gender */
     public static function declineVerb(BaseModel $userData): string
     {
         $LOCALE = self::getLocale(['fraym', 'decline']);
@@ -80,7 +80,7 @@ abstract class LocaleHelper implements Helper
         return $LOCALE['verb']['male'];
     }
 
-    /** Добавление окончаний к прилагательным среднего рода по количеству */
+    /** Add endings to neuter adjectives depending on the count */
     public static function declineNeuterAdjective(int $count): string
     {
         $LOCALE = self::getLocale(['fraym', 'decline']);
@@ -94,7 +94,7 @@ abstract class LocaleHelper implements Helper
         return $result;
     }
 
-    /** Добавление окончаний к прилагательным мужского рода по количеству */
+    /** Add endings to masculine adjectives depending on the count */
     public static function declineMaleAdjective(int $count): string
     {
         $LOCALE = self::getLocale(['fraym', 'decline']);
@@ -108,7 +108,7 @@ abstract class LocaleHelper implements Helper
         return $result;
     }
 
-    /** Добавление окончаний к словам мужского рода по количеству */
+    /** Add endings to masculine words depending on the count */
     public static function declineMale(int $count): string
     {
         $LOCALE = self::getLocale(['fraym', 'decline']);
@@ -126,7 +126,7 @@ abstract class LocaleHelper implements Helper
         return $result;
     }
 
-    /** Добавление окончаний к словам женского рода по количеству */
+    /** Add endings to feminine words depending on the count */
     public static function declineFemale(int $count, int $case = 1): string
     {
         $LOCALE = self::getLocale(['fraym', 'decline']);
@@ -144,7 +144,7 @@ abstract class LocaleHelper implements Helper
         return $result;
     }
 
-    /** Добавление окончаний к словам среднего рода по количеству */
+    /** Add endings to neuter words depending on the count */
     public static function declineNeuter(int $count): string
     {
         $LOCALE = self::getLocale(['fraym', 'decline']);
@@ -162,7 +162,7 @@ abstract class LocaleHelper implements Helper
         return $result;
     }
 
-    /** Подгрузка файла локали */
+    /** Load a locale file */
     private static function loadLocale(string $entityName, ?string $locale = null): void
     {
         if (!$locale) {

@@ -16,7 +16,7 @@ namespace Fraym\Tests\Unit\Element;
 use Fraym\Element\{Attribute, Item};
 use PHPUnit\Framework\TestCase;
 
-/** S2: приведение значения к формату сохранения — полиморфный coerceForSave вместо instanceof-цепочки */
+/** S2: casting a value to the save format — polymorphic coerceForSave instead of an instanceof chain */
 final class CoerceForSaveTest extends TestCase
 {
     public function testNumberCoercion(): void

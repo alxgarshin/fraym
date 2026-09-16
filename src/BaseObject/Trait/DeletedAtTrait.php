@@ -17,7 +17,7 @@ use DateTimeImmutable;
 use Fraym\Element\{Attribute as Attribute, Item as Item};
 use Fraym\Helper\DateHelper;
 
-/** Дата мягкого удаления объекта */
+/** Object soft delete date */
 trait DeletedAtTrait
 {
     #[Attribute\Timestamp(

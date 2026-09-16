@@ -15,9 +15,9 @@ namespace Fraym\Element\Validator;
 
 use Fraym\Interface\ElementItem;
 
-/** Значения полей приходят с индексом объекта: name[0]. Скаляр (name=Test) прочитался бы
- *  строковым смещением PHP как первый байт и молча сохранился обрезанным, поэтому
- *  валидатор получает сырое значение $_REQUEST[$element->name] целиком, а не срез по строке. */
+/** Field values arrive with an object index: name[0]. A scalar (name=Test) would be read
+ *  as the first byte via PHP string offset and silently saved truncated, so
+ *  the validator receives the raw value of $_REQUEST[$element->name] as a whole, not a per-line slice. */
 final class ArrayFormatValidator extends BaseValidator
 {
     public static function validate(ElementItem $element, mixed $value, array $options): bool

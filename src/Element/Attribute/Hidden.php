@@ -18,7 +18,7 @@ use Fraym\Element\Validator\ObligatoryValidator;
 use Fraym\Interface\HasDefaultValue;
 use InvalidArgumentException;
 
-/** Скрытое поле */
+/** Hidden field */
 /** @implements HasDefaultValue<null|string> */
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class Hidden extends BaseElement implements HasDefaultValue
@@ -27,7 +27,7 @@ class Hidden extends BaseElement implements HasDefaultValue
         ObligatoryValidator::class,
     ];
 
-    /** Значение по умолчанию */
+    /** Default value */
     public mixed $defaultValue {
         get => $this->_val;
         set {

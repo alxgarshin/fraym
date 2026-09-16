@@ -21,7 +21,7 @@ use Generator;
 use InvalidArgumentException;
 use RuntimeException;
 
-/** Множественный выбор */
+/** Multiple choice */
 /** @implements HasDefaultValue<null|string|array|Generator> */
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class Multiselect extends BaseElement implements HasDefaultValue
@@ -30,7 +30,7 @@ class Multiselect extends BaseElement implements HasDefaultValue
         ObligatoryValidator::class,
     ];
 
-    /** Значение по умолчанию */
+    /** Default value */
     public mixed $defaultValue {
         get => $this->_val;
         set {
@@ -47,7 +47,7 @@ class Multiselect extends BaseElement implements HasDefaultValue
     public function __construct(
         mixed $defaultValue = null,
 
-        /** Массив возможных значений: массив или строка с callback функции */
+        /** Possible values: an array or a callback function name string */
         public null|string|array $values = null {
             set(null|string|array|Generator $values) {
                 if ($values instanceof Generator) {
@@ -58,7 +58,7 @@ class Multiselect extends BaseElement implements HasDefaultValue
             }
         },
 
-        /** Заблокированные к изменению значения: массив или строка с callback функции */
+        /** Values locked from changes: an array or a callback function name string */
         public null|string|array $locked = null {
             set(null|string|array|Generator $locked) {
                 if ($locked instanceof Generator) {
@@ -69,10 +69,10 @@ class Multiselect extends BaseElement implements HasDefaultValue
             }
         },
 
-        /** Одновыборность (radio) из всего массива */
+        /** Single choice (radio) from the whole array */
         public bool $one = false,
 
-        /** Массив данных, из которых создаются картинки для соответствующих значений: массив или строка с callback функции */
+        /** Data used to create images for the corresponding values: an array or a callback function name string */
         public null|string|array $images = null {
             set(null|string|array|Generator $images) {
                 if ($images instanceof Generator) {
@@ -83,19 +83,19 @@ class Multiselect extends BaseElement implements HasDefaultValue
             }
         },
 
-        /** Путь до папки картинок $images */
+        /** Path to the $images folder */
         public ?string $path = null,
 
-        /** Добавить строку внутреннего фильтра выборов */
+        /** Add an internal choices filter line */
         public ?bool $search = null,
 
-        /** Механизм пополнения списка путем вписания нового объекта в имеющуюся связанную таблицу */
+        /** Mechanism for extending the list by adding a new object to the existing related table */
         public ?MultiselectCreator $creator = null,
 
-        /** Legacy-поиск по устаревшему dash-формату (`-v1-v2-`) в дополнение к JSON.
-         *  По умолчанию false: фильтры генерируют только быстрые JSON-условия. Ставить true
-         *  только для полей, у которых в БД остались старые dash-данные
-         *  (проверить командой `database:scan-multiselect-formats`). */
+        /** Legacy search by the outdated dash format (`-v1-v2-`) in addition to JSON.
+         *  False by default: filters generate only fast JSON conditions. Set to true
+         *  only for fields that still have old dash data in the DB
+         *  (check with the `database:scan-multiselect-formats` command). */
         public bool $legacySearch = false,
         ?bool $obligatory = null,
         ?string $helpClass = null,
